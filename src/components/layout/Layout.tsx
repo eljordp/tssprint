@@ -16,7 +16,7 @@ export default function Layout() {
     <div className="min-h-screen flex flex-col relative">
       <CursorGlow />
       <Header />
-      <main className="flex-1 pt-16 md:pt-18 pb-16 md:pb-0">
+      <main className="flex-1 pt-16 md:pt-20 pb-16 md:pb-0">
         <Outlet />
       </main>
       <Footer />
