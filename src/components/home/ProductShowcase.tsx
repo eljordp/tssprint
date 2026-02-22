@@ -2,22 +2,25 @@ import { Link } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import { ArrowRight } from 'lucide-react'
 
+import curatedBarbershop from '@/assets/projects/curated-barbershop.jpeg'
+import safewayTruck from '@/assets/projects/safeway-truck.jpeg'
+
 const showcases = [
   {
     title: 'Custom Stickers That Last',
     subtitle: 'Waterproof, durable, precision cut',
-    description: 'From die-cut vinyl to holographic finishes, our stickers are built to stick anywhere and withstand anything.',
+    description: 'From die-cut vinyl to holographic finishes, our stickers are built to stick anywhere and withstand anything. Perfect for branding, packaging, and personal expression.',
     cta: 'Shop Stickers',
     href: '/order',
-    gradient: 'from-primary/20 to-primary/5',
+    image: curatedBarbershop,
   },
   {
     title: 'The Perfect Fit for Products',
-    subtitle: 'High-quality labels on rolls',
-    description: 'Professional product labels and packaging stickers. Printed with precision for a flawless finish.',
+    subtitle: 'High-quality labels & packaging',
+    description: 'Professional product labels, packaging stickers, and custom mylar bags. Printed with precision for a flawless finish on every product you ship.',
     cta: 'Shop Labels',
     href: '/order',
-    gradient: 'from-[hsl(200,80%,50%)]/20 to-[hsl(200,80%,50%)]/5',
+    image: safewayTruck,
   },
 ]
 
@@ -27,15 +30,32 @@ export default function ProductShowcase() {
       <div className="section-container">
         <div className="grid md:grid-cols-2 gap-6">
           {showcases.map((item, index) => (
-            <motion.div key={item.title} initial={{ opacity: 0, y: 30 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.5, delay: index * 0.15 }}>
-              <Link to={item.href} className="group block relative overflow-hidden rounded-2xl border border-border bg-card hover:border-primary/30 transition-all duration-300">
-                <div className={`absolute inset-0 bg-gradient-to-br ${item.gradient} opacity-50`} />
-                <div className="relative p-8 md:p-10 flex flex-col min-h-[320px] md:min-h-[380px]">
-                  <div className="flex-1">
-                    <p className="text-primary font-semibold text-sm mb-2 uppercase tracking-wider">{item.subtitle}</p>
-                    <h3 className="text-2xl md:text-3xl font-black mb-4 leading-tight">{item.title}</h3>
-                    <p className="text-muted-foreground max-w-sm mb-6">{item.description}</p>
-                  </div>
+            <motion.div
+              key={item.title}
+              initial={{ opacity: 0, y: 30 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.5, delay: index * 0.15 }}
+            >
+              <Link
+                to={item.href}
+                className="group block relative overflow-hidden rounded-2xl border border-border hover:border-primary/30 transition-all duration-300"
+              >
+                {/* Image section */}
+                <div className="relative h-56 md:h-72 overflow-hidden">
+                  <img
+                    src={item.image}
+                    alt={item.title}
+                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-card via-card/50 to-transparent" />
+                </div>
+
+                {/* Content section */}
+                <div className="relative bg-card p-6 md:p-8 -mt-12">
+                  <p className="text-primary font-semibold text-sm mb-2 uppercase tracking-wider">{item.subtitle}</p>
+                  <h3 className="text-2xl md:text-3xl font-black mb-3 leading-tight">{item.title}</h3>
+                  <p className="text-muted-foreground mb-4 text-sm md:text-base">{item.description}</p>
                   <div className="flex items-center gap-2 text-primary font-bold group-hover:gap-3 transition-all">
                     {item.cta}<ArrowRight size={18} />
                   </div>
