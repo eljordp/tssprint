@@ -3,6 +3,7 @@ import { Link, useLocation } from 'react-router-dom'
 import { Menu, X } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useCart } from '@/context/CartContext'
+import tssLogo from '@/assets/tss-logo-new.png'
 
 const navLinks = [
   { href: '/order', label: 'Order Stickers', primary: true },
@@ -41,7 +42,7 @@ export default function Header() {
           <nav className="flex items-center justify-between h-16 md:h-20">
             <Link to="/" className="flex items-center group">
               <img
-                src="/logo.png"
+                src={tssLogo}
                 alt="The Sticker Smith"
                 className="h-10 md:h-12 w-auto transition-transform group-hover:scale-105"
               />

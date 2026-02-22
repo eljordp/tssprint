@@ -1,4 +1,5 @@
 import { Link } from 'react-router-dom'
+import tssLogo from '@/assets/tss-logo-new.png'
 
 const footerLinks = {
   services: [
@@ -23,7 +24,7 @@ export default function Footer() {
         <div className="grid grid-cols-1 md:grid-cols-4 gap-12">
           <div className="md:col-span-2">
             <Link to="/" className="flex items-center gap-2 mb-4">
-              <img src="/logo.png" alt="The Sticker Smith" className="h-12 w-auto" />
+              <img src={tssLogo} alt="The Sticker Smith" className="h-12 w-auto" />
             </Link>
             <p className="text-muted-foreground max-w-sm mb-6">
               Premium print and branding studio. Custom stickers, packaging, signage, and vehicle graphics. You approve
