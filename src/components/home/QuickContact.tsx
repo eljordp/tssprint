@@ -24,6 +24,21 @@ export default function QuickContact() {
 
   const handleSubmit = (e: FormEvent) => {
     e.preventDefault()
+
+    const body = [
+      `Name: ${formData.name}`,
+      `Email: ${formData.email}`,
+      formData.phone ? `Phone: ${formData.phone}` : '',
+      formData.service ? `Service: ${formData.service}` : '',
+      '',
+      formData.message,
+    ].filter(Boolean).join('\n')
+
+    const mailtoUrl = `mailto:thestickersmith@gmail.com?subject=${encodeURIComponent(
+      'Quick Question'
+    )}&body=${encodeURIComponent(body)}`
+
+    window.location.href = mailtoUrl
     setSubmitted(true)
   }
 

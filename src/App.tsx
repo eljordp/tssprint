@@ -14,6 +14,8 @@ import Cart from '@/pages/Cart'
 import Checkout from '@/pages/Checkout'
 import Projects from '@/pages/Projects'
 import Contact from '@/pages/Contact'
+import About from '@/pages/About'
+import NotFound from '@/pages/NotFound'
 
 export default function App() {
   return (
@@ -34,6 +36,8 @@ export default function App() {
             <Route path="/checkout" element={<Checkout />} />
             <Route path="/projects" element={<Projects />} />
             <Route path="/contact" element={<Contact />} />
+            <Route path="/about" element={<About />} />
+            <Route path="*" element={<NotFound />} />
           </Route>
         </Routes>
       </CartProvider>

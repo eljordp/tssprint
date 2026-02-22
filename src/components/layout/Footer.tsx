@@ -12,6 +12,7 @@ const footerLinks = {
     { label: 'Mylar Packaging', href: '/mylar-packaging' },
   ],
   company: [
+    { label: 'About Us', href: '/about' },
     { label: 'Projects', href: '/projects' },
     { label: 'Contact', href: '/contact' },
   ],
@@ -19,7 +20,7 @@ const footerLinks = {
 
 export default function Footer() {
   return (
-    <footer className="bg-surface-overlay border-t border-border">
+    <footer className="bg-surface-overlay border-t border-border pb-16 md:pb-0">
       <div className="section-container py-16">
         <div className="grid grid-cols-1 md:grid-cols-4 gap-12">
           <div className="md:col-span-2">

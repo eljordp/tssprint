@@ -83,7 +83,7 @@ export default function Cart() {
               <span className="text-lg font-bold">${total.toFixed(2)}</span>
             </div>
             <p className="text-xs text-muted-foreground mb-4">
-              Shipping and tax calculated at checkout.
+              Shipping discussed after proof approval. Bay Area pickup available.
             </p>
             <Link to="/checkout">
               <Button className="w-full" size="lg">

@@ -1,10 +1,10 @@
 import { Link } from 'react-router-dom'
 import { motion } from 'framer-motion'
-import { ArrowRight, Clock, MapPin, Shield } from 'lucide-react'
+import { ArrowRight, Clock, Package, Shield } from 'lucide-react'
 
 const trustItems = [
   { icon: Clock, label: '24hr Proof Turnaround' },
-  { icon: MapPin, label: 'Free Shipping Available' },
+  { icon: Package, label: 'Free Shipping Available' },
   { icon: Shield, label: 'Quality Guaranteed' },
 ]
 

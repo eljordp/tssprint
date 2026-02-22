@@ -1,12 +1,11 @@
 import { useState, useMemo, useCallback } from 'react'
-import { Upload, X, Hand, Layers, ScrollText, Paintbrush, FileCheck, ArrowLeft, ShoppingCart } from 'lucide-react'
+import { Upload, X, Paintbrush, FileCheck, ArrowLeft, ShoppingCart } from 'lucide-react'
 import { useCart } from '@/context/CartContext'
 
 const QUANTITY_TIERS = [50, 100, 200, 300, 500, 1000] as const
 type QuantityTier = (typeof QUANTITY_TIERS)[number]
 type Shape = 'circle' | 'square' | 'rectangle' | 'die-cut'
 type Material = 'matte' | 'gloss' | 'clear' | 'holographic' | 'paper' | 'embossed/UV'
-type MockupType = 'hand-held' | 'sheet' | 'roll'
 
 const baseCirclePrices: Record<number, Record<QuantityTier, number>> = {
   2: { 50: 60, 100: 70, 200: 90, 300: 105, 500: 135, 1000: 200 },
@@ -25,7 +24,7 @@ const materialMultipliers: Record<Material, number> = {
   matte: 1, gloss: 1, clear: 1.15, holographic: 1.25, paper: 0.9, 'embossed/UV': 2,
 }
 
-const SIZE_OPTIONS = [
+const SQUARE_sizeOptions = [
   { label: '2" x 2"', diameter: 2, width: 2, height: 2 },
   { label: '3" x 3"', diameter: 3, width: 3, height: 3 },
   { label: '4" x 4"', diameter: 4, width: 4, height: 4 },
@@ -34,6 +33,17 @@ const SIZE_OPTIONS = [
   { label: '7" x 7"', diameter: 7, width: 7, height: 7 },
   { label: '8" x 8"', diameter: 8, width: 8, height: 8 },
   { label: '9" x 9"', diameter: 9, width: 9, height: 9 },
+]
+
+const RECT_sizeOptions = [
+  { label: '3" x 2"', diameter: 3, width: 3, height: 2 },
+  { label: '4" x 2"', diameter: 4, width: 4, height: 2 },
+  { label: '4" x 3"', diameter: 4, width: 4, height: 3 },
+  { label: '5" x 3"', diameter: 5, width: 5, height: 3 },
+  { label: '6" x 4"', diameter: 6, width: 6, height: 4 },
+  { label: '7" x 5"', diameter: 7, width: 7, height: 5 },
+  { label: '8" x 5"', diameter: 8, width: 8, height: 5 },
+  { label: '9" x 6"', diameter: 9, width: 9, height: 6 },
 ]
 
 function getArea(shape: Shape, diameter: number, width: number, height: number): number {
@@ -78,13 +88,13 @@ function calculatePrice(shape: Shape, diameter: number, width: number, height: n
   return { total, unit, discount: discount > 0 ? discount : undefined }
 }
 
-const materials: { value: Material; label: string; color: string }[] = [
-  { value: 'matte', label: 'Matte', color: 'bg-gradient-to-br from-zinc-300 to-zinc-400' },
-  { value: 'gloss', label: 'Gloss', color: 'bg-gradient-to-br from-white to-zinc-200' },
-  { value: 'clear', label: 'Clear', color: 'bg-gradient-to-br from-zinc-100/50 to-zinc-300/50' },
-  { value: 'holographic', label: 'Holographic', color: 'bg-gradient-to-br from-pink-200 via-purple-200 to-cyan-200' },
-  { value: 'paper', label: 'Paper', color: 'bg-gradient-to-br from-amber-100 to-amber-200' },
-  { value: 'embossed/UV', label: 'Embossed/UV', color: 'bg-gradient-to-br from-zinc-200 via-white to-zinc-300' },
+const materials: { value: Material; label: string; color: string; desc: string }[] = [
+  { value: 'matte', label: 'Matte', color: 'bg-gradient-to-br from-zinc-300 to-zinc-400', desc: 'Smooth, no-glare finish' },
+  { value: 'gloss', label: 'Gloss', color: 'bg-gradient-to-br from-white to-zinc-200', desc: 'Shiny, vibrant colors' },
+  { value: 'clear', label: 'Clear', color: 'bg-gradient-to-br from-zinc-100/50 to-zinc-300/50', desc: 'Transparent background' },
+  { value: 'holographic', label: 'Holographic', color: 'bg-gradient-to-br from-pink-200 via-purple-200 to-cyan-200', desc: 'Rainbow shimmer effect' },
+  { value: 'paper', label: 'Paper', color: 'bg-gradient-to-br from-amber-100 to-amber-200', desc: 'Eco-friendly, writable' },
+  { value: 'embossed/UV', label: 'Embossed/UV', color: 'bg-gradient-to-br from-zinc-200 via-white to-zinc-300', desc: 'Raised texture, premium' },
 ]
 
 export default function Order() {
@@ -92,7 +102,6 @@ export default function Order() {
   const [uploadedFile, setUploadedFile] = useState<File | null>(null)
   const [previewUrl, setPreviewUrl] = useState<string | null>(null)
   const [isDragging, setIsDragging] = useState(false)
-  const [activeMockup, setActiveMockup] = useState<MockupType>('hand-held')
   const [designChoice, setDesignChoice] = useState<'none' | 'need' | 'have'>('none')
   const [added, setAdded] = useState(false)
 
@@ -113,7 +122,8 @@ export default function Order() {
   }, [])
 
   const [shape, setShape] = useState<Shape>('die-cut')
-  const [selectedSize, setSelectedSize] = useState(SIZE_OPTIONS[0])
+  const sizeOptions = shape === 'rectangle' ? RECT_sizeOptions : SQUARE_sizeOptions
+  const [selectedSize, setSelectedSize] = useState(SQUARE_sizeOptions[0])
   const [customWidth, setCustomWidth] = useState(3)
   const [customHeight, setCustomHeight] = useState(3)
   const [useCustomSize, setUseCustomSize] = useState(false)
@@ -151,12 +161,6 @@ export default function Order() {
     setAdded(true)
     setTimeout(() => setAdded(false), 2000)
   }
-
-  const mockupTabs = [
-    { id: 'hand-held' as MockupType, label: 'Hand-held', icon: Hand },
-    { id: 'sheet' as MockupType, label: 'Sheet', icon: Layers },
-    { id: 'roll' as MockupType, label: 'Roll', icon: ScrollText },
-  ]
 
   return (
     <div className="min-h-screen bg-background py-8 md:py-16">
@@ -214,6 +218,7 @@ export default function Order() {
                   <span className={`text-xs font-medium ${material === m.value ? 'text-foreground' : 'text-muted-foreground'}`}>
                     {m.label}
                   </span>
+                  <span className="text-[9px] text-muted-foreground leading-tight">{m.desc}</span>
                 </button>
               ))}
             </div>
@@ -223,7 +228,7 @@ export default function Order() {
           <div>
             <h3 className="text-base font-semibold text-foreground mb-3">Size, inch (WxH)</h3>
             <div className="space-y-1.5 max-h-[320px] overflow-y-auto pr-1">
-              {SIZE_OPTIONS.map((size) => (
+              {sizeOptions.map((size) => (
                 <button
                   key={size.label}
                   onClick={() => { setSelectedSize(size); setUseCustomSize(false) }}
@@ -389,24 +394,9 @@ export default function Order() {
             )}
           </div>
 
-          {/* Mockup Preview */}
+          {/* Design Preview */}
           <div className="rounded-2xl border border-border bg-card p-4 min-h-[280px] flex flex-col">
-            <div className="flex justify-center gap-1 mb-3">
-              {mockupTabs.map((tab) => (
-                <button
-                  key={tab.id}
-                  onClick={() => setActiveMockup(tab.id)}
-                  className={`flex items-center gap-1 rounded-full px-3 py-1.5 text-[10px] font-medium transition-colors cursor-pointer ${
-                    activeMockup === tab.id
-                      ? 'bg-primary text-primary-foreground'
-                      : 'bg-muted text-muted-foreground hover:text-foreground'
-                  }`}
-                >
-                  <tab.icon className="h-3 w-3" />
-                  {tab.label}
-                </button>
-              ))}
-            </div>
+            <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground text-center mb-3">Preview</p>
             <div className="rounded-xl bg-muted/50 border border-border flex-1 flex items-center justify-center">
               <div className="relative flex items-center justify-center h-44">
                 {previewUrl ? (

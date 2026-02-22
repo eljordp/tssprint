@@ -137,7 +137,7 @@ export default function ServicePage({
                   <ArrowRight className="w-4 h-4" />
                 </Button>
               </Link>
-              <a href="tel:+15101234567">
+              <a href="tel:+15106348203">
                 <Button variant="outline" size="lg">Call Now</Button>
               </a>
             </div>

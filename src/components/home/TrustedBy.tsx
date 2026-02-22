@@ -11,13 +11,13 @@ import norcalLogo from '@/assets/brands/norcal.png'
 import elevated925Logo from '@/assets/brands/elevated925.png'
 import teeNDeesLogo from '@/assets/brands/tee-n-dees.png'
 
-const brandLogos = [
-  { name: 'Safeway', logo: safewayLogo, id: 1 },
+const brandLogos: { name: string; logo: string; id: number; className?: string }[] = [
+  { name: 'Safeway', logo: safewayLogo, id: 1, className: 'max-h-[140px] md:max-h-[150px] max-w-[300px]' },
   { name: 'Albertsons', logo: albertsonsLogo, id: 2 },
   { name: 'WHCI', logo: whciLogo, id: 3 },
-  { name: "Mayar's Meat", logo: mayarsMeatLogo, id: 4 },
-  { name: 'The Traffic Guys', logo: trafficGuysLogo, id: 5 },
-  { name: 'Consolidated Engineering', logo: consolidatedLogo, id: 6 },
+  { name: "Mayar's Meat", logo: mayarsMeatLogo, id: 4, className: 'max-h-[140px] md:max-h-[150px] max-w-[300px]' },
+  { name: 'The Traffic Guys', logo: trafficGuysLogo, id: 5, className: 'max-h-[140px] md:max-h-[150px] max-w-[300px]' },
+  { name: 'Consolidated Engineering', logo: consolidatedLogo, id: 6, className: 'max-h-[140px] md:max-h-[150px] max-w-[300px]' },
   { name: 'HUK', logo: hukLogo, id: 7 },
   { name: 'NorCal Entertainment', logo: norcalLogo, id: 8 },
   { name: 'Elevated 925', logo: elevated925Logo, id: 9 },
@@ -48,7 +48,7 @@ export default function TrustedBy() {
               key={`${brand.id}-${i}`}
               className="flex items-center justify-center h-[110px] w-[260px] md:h-[130px] md:w-[300px] px-6 opacity-90 hover:opacity-100 transition-opacity duration-300 cursor-default"
             >
-              <img src={brand.logo} alt={`${brand.name} logo`} className="max-h-[110px] md:max-h-[120px] max-w-[260px] object-contain" />
+              <img src={brand.logo} alt={`${brand.name} logo`} className={brand.className || "max-h-[110px] md:max-h-[120px] max-w-[260px] object-contain"} />
             </div>
           ))}
         </div>

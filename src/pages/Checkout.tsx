@@ -1,6 +1,6 @@
 import { useState, type FormEvent } from 'react'
 import { Link } from 'react-router-dom'
-import { Lock, ArrowLeft, Loader2 } from 'lucide-react'
+import { Mail, ArrowLeft, Loader2 } from 'lucide-react'
 import { useCart } from '@/context/CartContext'
 import Button from '@/components/ui/Button'
 import FadeIn from '@/components/ui/FadeIn'
@@ -28,26 +28,30 @@ export default function Checkout() {
     setLoading(true)
 
     try {
-      // In production, this would call a Supabase edge function
-      // that creates a Square checkout session
-      const response = await fetch('/api/checkout', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ items, customer: form }),
-      })
+      // Build mailto body with order details
+      const orderLines = items.map(
+        (i) => `${i.name} (${i.option}) x${i.quantity} — $${(i.price * i.quantity).toFixed(2)}`
+      ).join('\n')
 
-      if (response.ok) {
-        const data = await response.json()
-        if (data.checkoutUrl) {
-          window.location.href = data.checkoutUrl
-          return
-        }
-      }
+      const body = [
+        `Name: ${form.firstName} ${form.lastName}`,
+        `Email: ${form.email}`,
+        `Phone: ${form.phone}`,
+        `Address: ${form.address}, ${form.city}, ${form.state} ${form.zip}`,
+        '',
+        'Order:',
+        orderLines,
+        '',
+        `Total: $${total.toFixed(2)}`,
+      ].join('\n')
 
-      // Fallback: show success message
-      alert('Order submitted! We\'ll send your proof within 24 hours.')
+      const mailtoUrl = `mailto:thestickersmith@gmail.com?subject=${encodeURIComponent(
+        `New Order — $${total.toFixed(2)}`
+      )}&body=${encodeURIComponent(body)}`
+
+      window.location.href = mailtoUrl
     } catch {
-      alert('Order submitted! We\'ll contact you shortly with your proof.')
+      alert('Something went wrong. Please email us directly at thestickersmith@gmail.com')
     } finally {
       setLoading(false)
     }
@@ -177,14 +181,14 @@ export default function Checkout() {
                     </>
                   ) : (
                     <>
-                      <Lock className="w-4 h-4" />
-                      Place Order – ${total.toFixed(2)}
+                      <Mail className="w-4 h-4" />
+                      Send Order – ${total.toFixed(2)}
                     </>
                   )}
                 </Button>
 
                 <p className="text-xs text-muted-foreground text-center">
-                  Secure checkout powered by Square. We'll send a proof within 24 hours before printing.
+                  This will open your email to send us your order. We'll reply within 24 hours with a proof before printing.
                 </p>
               </form>
             </FadeIn>

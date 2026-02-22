@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://the-sticker-smith.vercel.app/sitemap.xml

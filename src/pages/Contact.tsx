@@ -1,5 +1,5 @@
-import { useState, type FormEvent, type ChangeEvent } from 'react'
-import { Phone, Mail, MapPin, Clock, Send, Upload, CheckCircle, Zap } from 'lucide-react'
+import { useState, type FormEvent } from 'react'
+import { Phone, Mail, MapPin, Clock, Send, CheckCircle, Zap } from 'lucide-react'
 import Button from '@/components/ui/Button'
 import FadeIn from '@/components/ui/FadeIn'
 
@@ -16,7 +16,6 @@ const serviceOptions = [
 
 export default function Contact() {
   const [submitted, setSubmitted] = useState(false)
-  const [files, setFiles] = useState<File[]>([])
   const [form, setForm] = useState({
     name: '',
     email: '',
@@ -29,15 +28,23 @@ export default function Contact() {
     setForm((prev) => ({ ...prev, [field]: value }))
   }
 
-  const handleFileChange = (e: ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files) {
-      setFiles(Array.from(e.target.files))
-    }
-  }
-
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault()
-    // In production, this would call a Supabase edge function
+
+    const body = [
+      `Name: ${form.name}`,
+      `Email: ${form.email}`,
+      form.phone ? `Phone: ${form.phone}` : '',
+      `Service: ${form.service}`,
+      '',
+      form.message,
+    ].filter(Boolean).join('\n')
+
+    const mailtoUrl = `mailto:thestickersmith@gmail.com?subject=${encodeURIComponent(
+      `Quote Request — ${form.service}`
+    )}&body=${encodeURIComponent(body)}`
+
+    window.location.href = mailtoUrl
     setSubmitted(true)
   }
 
@@ -76,7 +83,7 @@ export default function Contact() {
                         required
                         value={form.name}
                         onChange={(e) => handleChange('name', e.target.value)}
-                        className="w-full bg-background border border-border rounded-lg px-4 py-2.5 text-sm text-foreground placeholder:text-muted-foregroundfocus:outline-none focus:border-primary transition-colors"
+                        className="w-full bg-background border border-border rounded-lg px-4 py-2.5 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary transition-colors"
                         placeholder="Your name"
                       />
                     </div>
@@ -87,7 +94,7 @@ export default function Contact() {
                         required
                         value={form.email}
                         onChange={(e) => handleChange('email', e.target.value)}
-                        className="w-full bg-background border border-border rounded-lg px-4 py-2.5 text-sm text-foreground placeholder:text-muted-foregroundfocus:outline-none focus:border-primary transition-colors"
+                        className="w-full bg-background border border-border rounded-lg px-4 py-2.5 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary transition-colors"
                         placeholder="you@email.com"
                       />
                     </div>
@@ -100,7 +107,7 @@ export default function Contact() {
                         type="tel"
                         value={form.phone}
                         onChange={(e) => handleChange('phone', e.target.value)}
-                        className="w-full bg-background border border-border rounded-lg px-4 py-2.5 text-sm text-foreground placeholder:text-muted-foregroundfocus:outline-none focus:border-primary transition-colors"
+                        className="w-full bg-background border border-border rounded-lg px-4 py-2.5 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary transition-colors"
                         placeholder="(510) 000-0000"
                       />
                     </div>
@@ -127,22 +134,14 @@ export default function Contact() {
                       required
                       value={form.message}
                       onChange={(e) => handleChange('message', e.target.value)}
-                      className="w-full bg-background border border-border rounded-lg px-4 py-2.5 text-sm text-foreground placeholder:text-muted-foregroundfocus:outline-none focus:border-primary transition-colors resize-none"
+                      className="w-full bg-background border border-border rounded-lg px-4 py-2.5 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary transition-colors resize-none"
                       placeholder="Tell us about your project – sizes, quantities, materials, timeline..."
                     />
                   </div>
 
-                  {/* File Upload */}
-                  <div>
-                    <label className="block text-sm text-muted-foreground mb-1.5">Attach Files (optional)</label>
-                    <label className="flex flex-col items-center justify-center w-full h-28 border-2 border-dashed border-border rounded-xl hover:border-primary/50 transition-colors cursor-pointer bg-background">
-                      <Upload className="w-6 h-6 text-muted-foreground mb-2" />
-                      <span className="text-sm text-muted-foreground">
-                        {files.length > 0 ? `${files.length} file(s) selected` : 'Click to upload artwork or reference files'}
-                      </span>
-                      <input type="file" multiple onChange={handleFileChange} className="hidden" />
-                    </label>
-                  </div>
+                  <p className="text-xs text-muted-foreground">
+                    Have artwork files? Mention it above and we'll reply with a link to upload them securely.
+                  </p>
 
                   <Button type="submit" className="w-full" size="lg">
                     Send Message
@@ -160,11 +159,11 @@ export default function Contact() {
                 <h3 className="font-semibold mb-4">Get In Touch</h3>
                 <ul className="space-y-4">
                   <li>
-                    <a href="tel:+15101234567" className="flex items-start gap-3 text-sm text-muted-foreground hover:text-primary transition-colors">
+                    <a href="tel:+15106348203" className="flex items-start gap-3 text-sm text-muted-foreground hover:text-primary transition-colors">
                       <Phone className="w-4 h-4 mt-0.5 text-primary shrink-0" />
                       <div>
                         <p className="text-foreground font-medium">Phone</p>
-                        <p>(510) 123-4567</p>
+                        <p>(510) 634-8203</p>
                       </div>
                     </a>
                   </li>
@@ -177,12 +176,15 @@ export default function Contact() {
                       </div>
                     </a>
                   </li>
-                  <li className="flex items-start gap-3 text-sm text-muted-foreground">
-                    <MapPin className="w-4 h-4 mt-0.5 text-primary shrink-0" />
-                    <div>
-                      <p className="text-foreground font-medium">Address</p>
-                      <p>23673 Connecticut St.<br />Hayward, CA 94545</p>
-                    </div>
+                  <li>
+                    <a href="https://maps.google.com/?q=23673+Connecticut+St+Hayward+CA+94545" target="_blank" rel="noopener noreferrer" className="flex items-start gap-3 text-sm text-muted-foreground hover:text-primary transition-colors">
+                      <MapPin className="w-4 h-4 mt-0.5 text-primary shrink-0" />
+                      <div>
+                        <p className="text-foreground font-medium">Address</p>
+                        <p>23673 Connecticut St.<br />Hayward, CA 94545</p>
+                        <p className="text-xs text-primary mt-1">View on Google Maps &rarr;</p>
+                      </div>
+                    </a>
                   </li>
                   <li className="flex items-start gap-3 text-sm text-muted-foreground">
                     <Clock className="w-4 h-4 mt-0.5 text-primary shrink-0" />
