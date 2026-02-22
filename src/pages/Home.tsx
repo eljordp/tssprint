@@ -1,7 +1,10 @@
 import Hero from '@/components/home/Hero'
 import TrustedBy from '@/components/home/TrustedBy'
+import ProductCategories from '@/components/home/ProductCategories'
+import ProductShowcase from '@/components/home/ProductShowcase'
+import HowItWorks from '@/components/home/HowItWorks'
 import ServicesOverview from '@/components/home/ServicesOverview'
-import ProofProcess from '@/components/home/ProofProcess'
+import FAQ from '@/components/home/FAQ'
 import QuickContact from '@/components/home/QuickContact'
 import Reviews from '@/components/home/Reviews'
 
@@ -10,10 +13,13 @@ export default function Home() {
     <>
       <Hero />
       <TrustedBy />
+      <ProductCategories />
+      <ProductShowcase />
+      <HowItWorks />
       <ServicesOverview />
-      <ProofProcess />
-      <QuickContact />
       <Reviews />
+      <FAQ />
+      <QuickContact />
     </>
   )
 }

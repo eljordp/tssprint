@@ -28,16 +28,16 @@ export default function TrustedBy() {
   const duplicated = [...brandLogos, ...brandLogos]
 
   return (
-    <section className="w-full pt-16 md:pt-18 pb-2 md:pb-3 overflow-hidden" style={{ backgroundColor: 'hsl(0 0% 8%)' }}>
-      <div className="section-container mb-6 md:mb-8">
+    <section className="w-full py-12 md:py-16 overflow-hidden border-y border-border/50 bg-card/30">
+      <div className="section-container mb-8">
         <motion.p
           initial={{ opacity: 0, y: 10 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
           transition={{ duration: 0.5 }}
-          className="text-center text-foreground text-3xl md:text-4xl font-bold tracking-tight"
+          className="text-center text-muted-foreground text-sm uppercase tracking-widest font-semibold"
         >
-          Trusted by <span className="text-primary">brands, creators, and businesses of all kinds.</span>
+          Trusted by brands, creators, and businesses
         </motion.p>
       </div>
 
@@ -46,7 +46,7 @@ export default function TrustedBy() {
           {duplicated.map((brand, i) => (
             <div
               key={`${brand.id}-${i}`}
-              className="flex items-center justify-center h-[110px] w-[260px] md:h-[130px] md:w-[300px] px-6 opacity-90 hover:opacity-100 transition-opacity duration-300 cursor-default"
+              className="flex items-center justify-center h-[110px] w-[260px] md:h-[130px] md:w-[300px] px-6 opacity-60 hover:opacity-100 transition-opacity duration-300 cursor-default"
             >
               <img src={brand.logo} alt={`${brand.name} logo`} className={brand.className || "max-h-[110px] md:max-h-[120px] max-w-[260px] object-contain"} />
             </div>
