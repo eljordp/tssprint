@@ -28,6 +28,10 @@ import BusinessCards from '@/pages/services/BusinessCards'
 import MarketingCollateral from '@/pages/services/MarketingCollateral'
 import OfficePrinting from '@/pages/services/OfficePrinting'
 import PromotionalMaterials from '@/pages/services/PromotionalMaterials'
+import DoorSpotGraphics from '@/pages/services/DoorSpotGraphics'
+import PartialWraps from '@/pages/services/PartialWraps'
+import FullWraps from '@/pages/services/FullWraps'
+import FleetBranding from '@/pages/services/FleetBranding'
 
 export default function App() {
   return (
@@ -65,6 +69,12 @@ export default function App() {
             <Route path="/business-print/marketing-collateral" element={<MarketingCollateral />} />
             <Route path="/business-print/office-printing" element={<OfficePrinting />} />
             <Route path="/business-print/promotional-materials" element={<PromotionalMaterials />} />
+
+            {/* Vehicle graphics sub-pages */}
+            <Route path="/vehicle-graphics/door-spot" element={<DoorSpotGraphics />} />
+            <Route path="/vehicle-graphics/partial-wraps" element={<PartialWraps />} />
+            <Route path="/vehicle-graphics/full-wraps" element={<FullWraps />} />
+            <Route path="/vehicle-graphics/fleet-branding" element={<FleetBranding />} />
 
             <Route path="*" element={<NotFound />} />
           </Route>
