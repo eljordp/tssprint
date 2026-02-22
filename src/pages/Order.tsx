@@ -1,13 +1,15 @@
 import { useState, useMemo, useCallback } from 'react'
-import { Upload, X, Paintbrush, FileCheck, ArrowLeft, ShoppingCart } from 'lucide-react'
+import { Upload, X, Hand, Layers, ScrollText, Paintbrush, FileCheck, ArrowLeft, ShoppingCart } from 'lucide-react'
 import { useCart } from '@/context/CartContext'
 
 const QUANTITY_TIERS = [50, 100, 200, 300, 500, 1000] as const
 type QuantityTier = (typeof QUANTITY_TIERS)[number]
-type Shape = 'circle' | 'square' | 'rectangle' | 'die-cut'
+type Shape = 'circle' | 'square' | 'rectangle' | 'die-cut' | 'kiss-cut'
 type Material = 'matte' | 'gloss' | 'clear' | 'holographic' | 'paper' | 'embossed/UV'
+type MockupType = 'hand-held' | 'sheet' | 'roll'
 
 const baseCirclePrices: Record<number, Record<QuantityTier, number>> = {
+  1: { 50: 51, 100: 60, 200: 70, 300: 75, 500: 90, 1000: 125 },
   2: { 50: 60, 100: 70, 200: 90, 300: 105, 500: 135, 1000: 200 },
   3: { 50: 70, 100: 90, 200: 120, 300: 145, 500: 200, 1000: 310 },
   4: { 50: 80, 100: 110, 200: 155, 300: 199, 500: 275, 1000: 450 },
@@ -16,6 +18,7 @@ const baseCirclePrices: Record<number, Record<QuantityTier, number>> = {
   7: { 50: 130, 100: 190, 200: 300, 300: 400, 500: 585, 1000: 990 },
   8: { 50: 145, 100: 225, 200: 355, 300: 480, 500: 705, 1000: 1210 },
   9: { 50: 155, 100: 236, 200: 385, 300: 525, 500: 771, 1000: 1325 },
+  11: { 50: 210, 100: 337, 200: 563, 300: 765, 500: 1141, 1000: 2140 },
 }
 
 const KNOWN_DIAMETERS = Object.keys(baseCirclePrices).map(Number).sort((a, b) => a - b)
@@ -24,7 +27,7 @@ const materialMultipliers: Record<Material, number> = {
   matte: 1, gloss: 1, clear: 1.15, holographic: 1.25, paper: 0.9, 'embossed/UV': 2,
 }
 
-const SQUARE_sizeOptions = [
+const SQUARE_SIZE_OPTIONS = [
   { label: '2" x 2"', diameter: 2, width: 2, height: 2 },
   { label: '3" x 3"', diameter: 3, width: 3, height: 3 },
   { label: '4" x 4"', diameter: 4, width: 4, height: 4 },
@@ -35,7 +38,7 @@ const SQUARE_sizeOptions = [
   { label: '9" x 9"', diameter: 9, width: 9, height: 9 },
 ]
 
-const RECT_sizeOptions = [
+const RECT_SIZE_OPTIONS = [
   { label: '3" x 2"', diameter: 3, width: 3, height: 2 },
   { label: '4" x 2"', diameter: 4, width: 4, height: 2 },
   { label: '4" x 3"', diameter: 4, width: 4, height: 3 },
@@ -53,6 +56,7 @@ function getArea(shape: Shape, diameter: number, width: number, height: number):
 }
 
 function mapAreaToDiameter(area: number): number | null {
+  if (area <= 0) return null
   for (const d of KNOWN_DIAMETERS) {
     if (Math.PI * Math.pow(d / 2, 2) >= area) return d
   }
@@ -88,6 +92,103 @@ function calculatePrice(shape: Shape, diameter: number, width: number, height: n
   return { total, unit, discount: discount > 0 ? discount : undefined }
 }
 
+// Mockup sizing helpers
+function getStickerStyle(shape: Shape, diameter: number, width: number, height: number, baseSize = 80) {
+  const maxDim = 11
+  const minScale = 0.3
+  const maxScale = 1.2
+  let w: number, h: number
+
+  if (shape === 'circle') {
+    const scale = minScale + (diameter / maxDim) * (maxScale - minScale)
+    w = h = Math.round(baseSize * scale)
+  } else if (shape === 'square') {
+    const scale = minScale + (width / maxDim) * (maxScale - minScale)
+    w = h = Math.round(baseSize * scale)
+  } else {
+    const maxSide = Math.max(width, height)
+    const scale = minScale + (maxSide / maxDim) * (maxScale - minScale)
+    const aspectRatio = height > 0 ? width / height : 1
+    if (aspectRatio >= 1) {
+      w = Math.round(baseSize * scale)
+      h = Math.round((baseSize * scale) / aspectRatio)
+    } else {
+      h = Math.round(baseSize * scale)
+      w = Math.round(baseSize * scale * aspectRatio)
+    }
+  }
+  return { width: Math.max(24, w), height: Math.max(24, h) }
+}
+
+function getStickerBorderRadius(shape: Shape): string {
+  if (shape === 'circle') return '9999px'
+  return '4px'
+}
+
+interface MockupProps { previewUrl: string | null; shape: Shape; diameter: number; width: number; height: number }
+
+const HandHeldMockup = ({ previewUrl, shape, diameter, width, height }: MockupProps) => {
+  const size = getStickerStyle(shape, diameter, width, height, 90)
+  const borderRadius = getStickerBorderRadius(shape)
+  return (
+    <div className="relative flex items-center justify-center h-44">
+      <div className="absolute bottom-0 left-1/2 -translate-x-1/2">
+        <svg width="110" height="90" viewBox="0 0 120 100" className="text-zinc-700">
+          <path d="M60 95 C30 95 15 75 15 55 C15 40 25 30 35 25 L35 15 C35 8 40 5 45 5 L50 5 L50 20 L55 20 L55 5 L60 5 L60 20 L65 20 L65 5 L70 5 L70 20 L75 20 L75 8 C80 8 85 12 85 20 L85 30 C95 35 105 45 105 60 C105 80 90 95 60 95Z" fill="currentColor" />
+        </svg>
+      </div>
+      <div
+        className="relative z-10 border-2 border-primary/30 bg-zinc-800 overflow-hidden shadow-lg transform -rotate-6 transition-all duration-300"
+        style={{ width: size.width, height: size.height, borderRadius }}
+      >
+        {previewUrl ? (
+          <img src={previewUrl} alt="Sticker" className="w-full h-full object-cover" />
+        ) : (
+          <div className="w-full h-full flex items-center justify-center text-[10px] text-zinc-500">Your Design</div>
+        )}
+      </div>
+    </div>
+  )
+}
+
+const SheetMockup = ({ previewUrl, shape, diameter, width, height }: MockupProps) => {
+  const size = getStickerStyle(shape, diameter, width, height, 38)
+  const borderRadius = getStickerBorderRadius(shape)
+  return (
+    <div className="relative flex items-center justify-center h-44">
+      <div className="relative w-40 h-32 bg-white rounded-lg shadow-lg p-2">
+        <div className="flex flex-wrap gap-1.5 h-full items-center justify-center">
+          {Array.from({ length: 9 }).map((_, i) => (
+            <div key={i} className="bg-zinc-100 border border-zinc-200 overflow-hidden flex-shrink-0" style={{ width: size.width, height: size.height, borderRadius }}>
+              {previewUrl ? <img src={previewUrl} alt="Sticker" className="w-full h-full object-cover" /> : <div className="w-full h-full bg-zinc-200" />}
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  )
+}
+
+const RollMockup = ({ previewUrl, shape, diameter, width, height }: MockupProps) => {
+  const size = getStickerStyle(shape, diameter, width, height, 22)
+  const borderRadius = getStickerBorderRadius(shape)
+  return (
+    <div className="relative flex items-center justify-center h-44">
+      <div className="relative">
+        <div className="w-14 h-28 bg-gradient-to-r from-zinc-600 via-zinc-500 to-zinc-600 rounded-full shadow-lg" />
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-5 h-5 bg-zinc-800 rounded-full border-2 border-zinc-700" />
+        <div className="absolute top-6 left-12 w-28 h-5 bg-white rounded-r-sm shadow-md flex items-center gap-1 px-1">
+          {Array.from({ length: 4 }).map((_, i) => (
+            <div key={i} className="bg-zinc-100 border border-zinc-200 flex-shrink-0 overflow-hidden" style={{ width: size.width, height: size.height, borderRadius }}>
+              {previewUrl ? <img src={previewUrl} alt="Sticker" className="w-full h-full object-cover" /> : <div className="w-full h-full bg-zinc-200" />}
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  )
+}
+
 const materials: { value: Material; label: string; color: string; desc: string }[] = [
   { value: 'matte', label: 'Matte', color: 'bg-gradient-to-br from-zinc-300 to-zinc-400', desc: 'Smooth, no-glare finish' },
   { value: 'gloss', label: 'Gloss', color: 'bg-gradient-to-br from-white to-zinc-200', desc: 'Shiny, vibrant colors' },
@@ -104,6 +205,7 @@ export default function Order() {
   const [isDragging, setIsDragging] = useState(false)
   const [designChoice, setDesignChoice] = useState<'none' | 'need' | 'have'>('none')
   const [added, setAdded] = useState(false)
+  const [activeMockup, setActiveMockup] = useState<MockupType>('hand-held')
 
   const handleDragOver = useCallback((e: React.DragEvent) => { e.preventDefault(); setIsDragging(true) }, [])
   const handleDragLeave = useCallback((e: React.DragEvent) => { e.preventDefault(); setIsDragging(false) }, [])
@@ -122,14 +224,21 @@ export default function Order() {
   }, [])
 
   const [shape, setShape] = useState<Shape>('die-cut')
-  const sizeOptions = shape === 'rectangle' ? RECT_sizeOptions : SQUARE_sizeOptions
-  const [selectedSize, setSelectedSize] = useState(SQUARE_sizeOptions[0])
+  const sizeOptions = shape === 'rectangle' ? RECT_SIZE_OPTIONS : SQUARE_SIZE_OPTIONS
+  const [selectedSize, setSelectedSize] = useState(SQUARE_SIZE_OPTIONS[0])
   const [customWidth, setCustomWidth] = useState(3)
   const [customHeight, setCustomHeight] = useState(3)
   const [useCustomSize, setUseCustomSize] = useState(false)
   const [quantity, setQuantity] = useState(50)
   const [customQuantity, setCustomQuantity] = useState('')
   const [material, setMaterial] = useState<Material>('matte')
+
+  const handleShapeChange = (newShape: Shape) => {
+    setShape(newShape)
+    const newOptions = newShape === 'rectangle' ? RECT_SIZE_OPTIONS : SQUARE_SIZE_OPTIONS
+    setSelectedSize(newOptions[0])
+    setUseCustomSize(false)
+  }
 
   const diameter = useCustomSize ? customWidth : selectedSize.diameter
   const width = useCustomSize ? customWidth : selectedSize.width
@@ -157,10 +266,18 @@ export default function Order() {
       option: `${quantity} pcs · ${material}`,
       price: result.total,
       quantity: 1,
+      material,
+      shape,
     })
     setAdded(true)
     setTimeout(() => setAdded(false), 2000)
   }
+
+  const mockupTabs = [
+    { id: 'hand-held' as MockupType, label: 'Hand-held', icon: Hand },
+    { id: 'sheet' as MockupType, label: 'Sheet', icon: Layers },
+    { id: 'roll' as MockupType, label: 'Roll', icon: ScrollText },
+  ]
 
   return (
     <div className="min-h-screen bg-background py-8 md:py-16">
@@ -183,10 +300,11 @@ export default function Order() {
                 { label: 'Circle', value: 'circle' as Shape, icon: '○' },
                 { label: 'Rectangle', value: 'rectangle' as Shape, icon: '▢' },
                 { label: 'Die Cut', value: 'die-cut' as Shape, icon: '◇' },
+                { label: 'Kiss Cut', value: 'kiss-cut' as Shape, icon: '◇' },
               ]).map((s) => (
                 <button
                   key={s.value}
-                  onClick={() => setShape(s.value)}
+                  onClick={() => handleShapeChange(s.value)}
                   className={`w-full flex items-center gap-3 rounded-lg border px-4 py-3 text-sm font-medium transition-colors text-left cursor-pointer ${
                     shape === s.value
                       ? 'border-primary bg-primary/5 text-foreground'
@@ -394,19 +512,28 @@ export default function Order() {
             )}
           </div>
 
-          {/* Design Preview */}
+          {/* Mockup Preview */}
           <div className="rounded-2xl border border-border bg-card p-4 min-h-[280px] flex flex-col">
-            <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground text-center mb-3">Preview</p>
+            <div className="flex justify-center gap-1 mb-3">
+              {mockupTabs.map((tab) => (
+                <button
+                  key={tab.id}
+                  onClick={() => setActiveMockup(tab.id)}
+                  className={`flex items-center gap-1 rounded-full px-3 py-1.5 text-[10px] font-medium transition-colors cursor-pointer ${
+                    activeMockup === tab.id
+                      ? 'bg-primary text-primary-foreground'
+                      : 'bg-muted text-muted-foreground hover:text-foreground'
+                  }`}
+                >
+                  <tab.icon className="h-3 w-3" />
+                  {tab.label}
+                </button>
+              ))}
+            </div>
             <div className="rounded-xl bg-muted/50 border border-border flex-1 flex items-center justify-center">
-              <div className="relative flex items-center justify-center h-44">
-                {previewUrl ? (
-                  <img src={previewUrl} alt="Preview" className="max-h-32 max-w-32 rounded-lg object-contain" />
-                ) : (
-                  <div className="w-20 h-20 rounded-full border-2 border-dashed border-border flex items-center justify-center">
-                    <span className="text-[10px] text-muted-foreground text-center">Your Design</span>
-                  </div>
-                )}
-              </div>
+              {activeMockup === 'hand-held' && <HandHeldMockup previewUrl={previewUrl} shape={shape} diameter={diameter} width={width} height={height} />}
+              {activeMockup === 'sheet' && <SheetMockup previewUrl={previewUrl} shape={shape} diameter={diameter} width={width} height={height} />}
+              {activeMockup === 'roll' && <RollMockup previewUrl={previewUrl} shape={shape} diameter={diameter} width={width} height={height} />}
             </div>
             <p className="mt-2 text-center text-[10px] text-muted-foreground">
               {previewUrl ? 'Your design preview' : 'Upload artwork to preview'}
@@ -423,7 +550,7 @@ export default function Order() {
                 <span className="capitalize">{shape}</span>
                 {shape === 'circle' && ` · ${diameter}"`}
                 {shape === 'square' && ` · ${width}" × ${width}"`}
-                {(shape === 'rectangle' || shape === 'die-cut') && ` · ${width}" × ${height}"`}
+                {(shape === 'rectangle' || shape === 'die-cut' || shape === 'kiss-cut') && ` · ${width}" × ${height}"`}
               </p>
               <p className="text-[11px] text-muted-foreground">
                 {materials.find((m) => m.value === material)?.label}

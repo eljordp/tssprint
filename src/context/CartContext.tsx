@@ -7,6 +7,10 @@ export interface CartItem {
   option: string
   price: number
   quantity: number
+  addOns?: { name: string; price: number }[]
+  material?: string
+  shape?: string
+  dimensions?: string
 }
 
 interface CartContextType {
@@ -16,6 +20,7 @@ interface CartContextType {
   updateQuantity: (id: string, quantity: number) => void
   clearCart: () => void
   total: number
+  totalItems: number
 }
 
 const CART_STORAGE_KEY = 'tss-cart'
@@ -64,10 +69,15 @@ export function CartProvider({ children }: { children: ReactNode }) {
 
   const clearCart = () => setItems([])
 
-  const total = items.reduce((sum, i) => sum + i.price * i.quantity, 0)
+  const totalItems = items.reduce((sum, i) => sum + i.quantity, 0)
+  const total = items.reduce((sum, i) => {
+    const itemTotal = i.price * i.quantity
+    const addOnsTotal = i.addOns?.reduce((a, addon) => a + addon.price, 0) || 0
+    return sum + itemTotal + addOnsTotal * i.quantity
+  }, 0)
 
   return (
-    <CartContext.Provider value={{ items, addItem, removeItem, updateQuantity, clearCart, total }}>
+    <CartContext.Provider value={{ items, addItem, removeItem, updateQuantity, clearCart, total, totalItems }}>
       {children}
     </CartContext.Provider>
   )
