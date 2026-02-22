@@ -1,213 +1,486 @@
-import { useState } from 'react'
-import { Circle, Square, RectangleHorizontal, Hexagon, Sparkles, ShoppingCart, Check } from 'lucide-react'
-import FadeIn from '@/components/ui/FadeIn'
-import Button from '@/components/ui/Button'
+import { useState, useMemo, useCallback } from 'react'
+import { Upload, X, Hand, Layers, ScrollText, Paintbrush, FileCheck, ArrowLeft, ShoppingCart } from 'lucide-react'
 import { useCart } from '@/context/CartContext'
 
-const shapes = [
-  { id: 'circle', label: 'Circle', icon: Circle },
-  { id: 'square', label: 'Square', icon: Square },
-  { id: 'rectangle', label: 'Rectangle', icon: RectangleHorizontal },
-  { id: 'oval', label: 'Oval', icon: Hexagon },
-  { id: 'die-cut', label: 'Custom Die-Cut', icon: Sparkles },
+const QUANTITY_TIERS = [50, 100, 200, 300, 500, 1000] as const
+type QuantityTier = (typeof QUANTITY_TIERS)[number]
+type Shape = 'circle' | 'square' | 'rectangle' | 'die-cut'
+type Material = 'matte' | 'gloss' | 'clear' | 'holographic' | 'paper' | 'embossed/UV'
+type MockupType = 'hand-held' | 'sheet' | 'roll'
+
+const baseCirclePrices: Record<number, Record<QuantityTier, number>> = {
+  2: { 50: 60, 100: 70, 200: 90, 300: 105, 500: 135, 1000: 200 },
+  3: { 50: 70, 100: 90, 200: 120, 300: 145, 500: 200, 1000: 310 },
+  4: { 50: 80, 100: 110, 200: 155, 300: 199, 500: 275, 1000: 450 },
+  5: { 50: 95, 100: 130, 200: 199, 300: 255, 500: 365, 1000: 605 },
+  6: { 50: 110, 100: 160, 200: 245, 300: 325, 500: 470, 1000: 790 },
+  7: { 50: 130, 100: 190, 200: 300, 300: 400, 500: 585, 1000: 990 },
+  8: { 50: 145, 100: 225, 200: 355, 300: 480, 500: 705, 1000: 1210 },
+  9: { 50: 155, 100: 236, 200: 385, 300: 525, 500: 771, 1000: 1325 },
+}
+
+const KNOWN_DIAMETERS = Object.keys(baseCirclePrices).map(Number).sort((a, b) => a - b)
+
+const materialMultipliers: Record<Material, number> = {
+  matte: 1, gloss: 1, clear: 1.15, holographic: 1.25, paper: 0.9, 'embossed/UV': 2,
+}
+
+const SIZE_OPTIONS = [
+  { label: '2" x 2"', diameter: 2, width: 2, height: 2 },
+  { label: '3" x 3"', diameter: 3, width: 3, height: 3 },
+  { label: '4" x 4"', diameter: 4, width: 4, height: 4 },
+  { label: '5" x 5"', diameter: 5, width: 5, height: 5 },
+  { label: '6" x 6"', diameter: 6, width: 6, height: 6 },
+  { label: '7" x 7"', diameter: 7, width: 7, height: 7 },
+  { label: '8" x 8"', diameter: 8, width: 8, height: 8 },
+  { label: '9" x 9"', diameter: 9, width: 9, height: 9 },
 ]
 
-const sizePresets = [
-  { label: '2" x 2"', value: '2x2' },
-  { label: '3" x 3"', value: '3x3' },
-  { label: '4" x 4"', value: '4x4' },
-  { label: '3" x 4"', value: '3x4' },
-  { label: '4" x 6"', value: '4x6' },
-  { label: '5" x 5"', value: '5x5' },
-]
+function getArea(shape: Shape, diameter: number, width: number, height: number): number {
+  if (shape === 'circle') return Math.PI * Math.pow(diameter / 2, 2)
+  if (shape === 'square') return width * width
+  return width * height
+}
 
-const materials = [
-  { id: 'glossy', label: 'Glossy Vinyl', description: 'High-shine, vibrant colors', priceMultiplier: 1 },
-  { id: 'matte', label: 'Matte Vinyl', description: 'Smooth, no-glare finish', priceMultiplier: 1 },
-  { id: 'clear', label: 'Clear Vinyl', description: 'Transparent background', priceMultiplier: 1.3 },
-  { id: 'holographic', label: 'Holographic', description: 'Rainbow shimmer effect', priceMultiplier: 1.6 },
-]
+function mapAreaToDiameter(area: number): number | null {
+  for (const d of KNOWN_DIAMETERS) {
+    if (Math.PI * Math.pow(d / 2, 2) >= area) return d
+  }
+  return null
+}
 
-const quantityTiers = [
-  { qty: 50, unitPrice: 1.50 },
-  { qty: 100, unitPrice: 1.20 },
-  { qty: 250, unitPrice: 0.85 },
-  { qty: 500, unitPrice: 0.60 },
-  { qty: 1000, unitPrice: 0.40 },
-  { qty: 2500, unitPrice: 0.28 },
+function calculatePrice(shape: Shape, diameter: number, width: number, height: number, qty: number, material: Material) {
+  const area = getArea(shape, diameter, width, height)
+  const mappedDiameter = mapAreaToDiameter(area)
+  if (!mappedDiameter) return { total: null, unit: null, reason: 'Size is above our online calculator range.' }
+
+  const baseRow = baseCirclePrices[mappedDiameter]
+  if (!baseRow) return { total: null, unit: null, reason: 'No pricing tier found.' }
+
+  const sortedTiers = [...QUANTITY_TIERS].sort((a, b) => a - b)
+  let tierQty: QuantityTier = sortedTiers[0]
+  for (const t of sortedTiers) { if (qty >= t) tierQty = t }
+
+  const base = baseRow[tierQty]
+  if (!base) return { total: null, unit: null, reason: 'Quantity not supported.' }
+
+  const baseUnitPrice = base / tierQty
+  const materialMult = materialMultipliers[material] ?? 1
+  let discount = 0
+  if (qty >= 1000) discount = 30
+  else if (qty >= 500) discount = 22
+  else if (qty >= 300) discount = 15
+  else if (qty >= 200) discount = 10
+  else if (qty >= 100) discount = 5
+
+  const total = Math.round(baseUnitPrice * qty * materialMult * (1 - discount / 100) * 100) / 100
+  const unit = Math.round((total / qty) * 1000) / 1000
+  return { total, unit, discount: discount > 0 ? discount : undefined }
+}
+
+const materials: { value: Material; label: string; color: string }[] = [
+  { value: 'matte', label: 'Matte', color: 'bg-gradient-to-br from-zinc-300 to-zinc-400' },
+  { value: 'gloss', label: 'Gloss', color: 'bg-gradient-to-br from-white to-zinc-200' },
+  { value: 'clear', label: 'Clear', color: 'bg-gradient-to-br from-zinc-100/50 to-zinc-300/50' },
+  { value: 'holographic', label: 'Holographic', color: 'bg-gradient-to-br from-pink-200 via-purple-200 to-cyan-200' },
+  { value: 'paper', label: 'Paper', color: 'bg-gradient-to-br from-amber-100 to-amber-200' },
+  { value: 'embossed/UV', label: 'Embossed/UV', color: 'bg-gradient-to-br from-zinc-200 via-white to-zinc-300' },
 ]
 
 export default function Order() {
-  const [shape, setShape] = useState('circle')
-  const [size, setSize] = useState('3x3')
-  const [material, setMaterial] = useState('glossy')
-  const [quantityIdx, setQuantityIdx] = useState(2)
-  const [added, setAdded] = useState(false)
   const { addItem } = useCart()
+  const [uploadedFile, setUploadedFile] = useState<File | null>(null)
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null)
+  const [isDragging, setIsDragging] = useState(false)
+  const [activeMockup, setActiveMockup] = useState<MockupType>('hand-held')
+  const [designChoice, setDesignChoice] = useState<'none' | 'need' | 'have'>('none')
+  const [added, setAdded] = useState(false)
 
-  const selectedMaterial = materials.find((m) => m.id === material)!
-  const tier = quantityTiers[quantityIdx]
-  const unitPrice = tier.unitPrice * selectedMaterial.priceMultiplier
-  const totalPrice = unitPrice * tier.qty
+  const handleDragOver = useCallback((e: React.DragEvent) => { e.preventDefault(); setIsDragging(true) }, [])
+  const handleDragLeave = useCallback((e: React.DragEvent) => { e.preventDefault(); setIsDragging(false) }, [])
+  const handleDrop = useCallback((e: React.DragEvent) => {
+    e.preventDefault(); setIsDragging(false)
+    const file = e.dataTransfer.files?.[0]
+    if (file && (file.type.startsWith('image/') || file.type === 'application/pdf')) {
+      setUploadedFile(file); setPreviewUrl(URL.createObjectURL(file))
+    }
+  }, [])
+  const handleFileSelect = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (file && (file.type.startsWith('image/') || file.type === 'application/pdf')) {
+      setUploadedFile(file); setPreviewUrl(URL.createObjectURL(file))
+    }
+  }, [])
+
+  const [shape, setShape] = useState<Shape>('die-cut')
+  const [selectedSize, setSelectedSize] = useState(SIZE_OPTIONS[0])
+  const [customWidth, setCustomWidth] = useState(3)
+  const [customHeight, setCustomHeight] = useState(3)
+  const [useCustomSize, setUseCustomSize] = useState(false)
+  const [quantity, setQuantity] = useState(50)
+  const [customQuantity, setCustomQuantity] = useState('')
+  const [material, setMaterial] = useState<Material>('matte')
+
+  const diameter = useCustomSize ? customWidth : selectedSize.diameter
+  const width = useCustomSize ? customWidth : selectedSize.width
+  const height = useCustomSize ? customHeight : selectedSize.height
+
+  const result = useMemo(
+    () => calculatePrice(shape, Math.max(0, diameter), Math.max(0, width), Math.max(0, height), quantity, material),
+    [shape, diameter, width, height, quantity, material]
+  )
+
+  const tierPrices = useMemo(() =>
+    QUANTITY_TIERS.map((qty) => ({
+      qty,
+      ...calculatePrice(shape, Math.max(0, diameter), Math.max(0, width), Math.max(0, height), qty, material),
+    })),
+    [shape, diameter, width, height, material]
+  )
 
   const handleAddToCart = () => {
-    const shapeName = shapes.find((s) => s.id === shape)?.label ?? shape
+    if (!result.total) return
     addItem({
-      id: `${shape}-${size}-${material}-${tier.qty}`,
-      name: `${shapeName} Stickers (${size})`,
-      size,
-      option: selectedMaterial.label,
-      price: unitPrice,
-      quantity: tier.qty,
+      id: `sticker-${shape}-${diameter}-${material}-${quantity}-${Date.now()}`,
+      name: 'Custom Stickers',
+      size: shape === 'circle' ? `${shape} ${diameter}"` : `${shape} ${width}" x ${height}"`,
+      option: `${quantity} pcs · ${material}`,
+      price: result.total,
+      quantity: 1,
     })
     setAdded(true)
     setTimeout(() => setAdded(false), 2000)
   }
 
+  const mockupTabs = [
+    { id: 'hand-held' as MockupType, label: 'Hand-held', icon: Hand },
+    { id: 'sheet' as MockupType, label: 'Sheet', icon: Layers },
+    { id: 'roll' as MockupType, label: 'Roll', icon: ScrollText },
+  ]
+
   return (
-    <div className="py-20">
-      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
-        <FadeIn>
-          <div className="text-center mb-12">
-            <h1 className="text-4xl sm:text-5xl font-bold">Order Stickers</h1>
-            <p className="mt-4 text-muted-foreground text-lg">
-              Configure your custom stickers below. Proof within 24 hours.
-            </p>
+    <div className="min-h-screen bg-background py-8 md:py-16">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6">
+        <header className="mb-10">
+          <h1 className="text-2xl md:text-4xl font-bold tracking-tight text-foreground">Print customized stickers</h1>
+          <p className="mt-2 text-sm md:text-base text-muted-foreground max-w-2xl">
+            Choose your desired cutline, size, quantity and material. Upload your design and go to checkout.
+          </p>
+        </header>
+
+        {/* 4-Column Configurator */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+          {/* Shape */}
+          <div>
+            <h3 className="text-base font-semibold text-foreground mb-3">Shape</h3>
+            <div className="space-y-2">
+              {([
+                { label: 'Square', value: 'square' as Shape, icon: '□' },
+                { label: 'Circle', value: 'circle' as Shape, icon: '○' },
+                { label: 'Rectangle', value: 'rectangle' as Shape, icon: '▢' },
+                { label: 'Die Cut', value: 'die-cut' as Shape, icon: '◇' },
+              ]).map((s) => (
+                <button
+                  key={s.value}
+                  onClick={() => setShape(s.value)}
+                  className={`w-full flex items-center gap-3 rounded-lg border px-4 py-3 text-sm font-medium transition-colors text-left cursor-pointer ${
+                    shape === s.value
+                      ? 'border-primary bg-primary/5 text-foreground'
+                      : 'border-border bg-card text-muted-foreground hover:text-foreground hover:border-foreground/20'
+                  }`}
+                >
+                  <span className="text-lg opacity-60">{s.icon}</span>
+                  {s.label}
+                </button>
+              ))}
+            </div>
           </div>
-        </FadeIn>
 
-        <FadeIn delay={0.1}>
-          <div className="bg-card border border-border rounded-2xl p-6 sm:p-8 space-y-8">
-            {/* Shape */}
-            <div>
-              <h3 className="font-semibold mb-3">1. Choose Shape</h3>
-              <div className="grid grid-cols-2 sm:grid-cols-5 gap-2">
-                {shapes.map((s) => (
-                  <button
-                    key={s.id}
-                    onClick={() => setShape(s.id)}
-                    className={`flex flex-col items-center gap-2 p-4 rounded-xl border transition-all cursor-pointer ${
-                      shape === s.id
-                        ? 'border-primary bg-primary/10 text-primary'
-                        : 'border-border bg-background text-muted hover:border-border-hover'
-                    }`}
-                  >
-                    <s.icon className="w-6 h-6" />
-                    <span className="text-xs font-medium">{s.label}</span>
-                  </button>
-                ))}
-              </div>
+          {/* Material */}
+          <div>
+            <h3 className="text-base font-semibold text-foreground mb-3">Material</h3>
+            <div className="grid grid-cols-2 gap-2">
+              {materials.map((m) => (
+                <button
+                  key={m.value}
+                  onClick={() => setMaterial(m.value)}
+                  className={`flex flex-col items-center gap-2 rounded-lg border p-3 transition-colors cursor-pointer ${
+                    material === m.value
+                      ? 'border-primary bg-primary/5'
+                      : 'border-border bg-card hover:border-foreground/20'
+                  }`}
+                >
+                  <div className={`w-12 h-12 rounded-full ${m.color} border border-border shadow-inner`} />
+                  <span className={`text-xs font-medium ${material === m.value ? 'text-foreground' : 'text-muted-foreground'}`}>
+                    {m.label}
+                  </span>
+                </button>
+              ))}
             </div>
+          </div>
 
-            {/* Size */}
-            <div>
-              <h3 className="font-semibold mb-3">2. Select Size</h3>
-              <div className="grid grid-cols-3 sm:grid-cols-6 gap-2">
-                {sizePresets.map((s) => (
-                  <button
-                    key={s.value}
-                    onClick={() => setSize(s.value)}
-                    className={`px-3 py-2.5 text-sm rounded-lg border transition-all cursor-pointer ${
-                      size === s.value
-                        ? 'border-primary bg-primary/10 text-primary'
-                        : 'border-border bg-background text-muted hover:border-border-hover'
-                    }`}
-                  >
-                    {s.label}
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            {/* Material */}
-            <div>
-              <h3 className="font-semibold mb-3">3. Pick Material</h3>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                {materials.map((m) => (
-                  <button
-                    key={m.id}
-                    onClick={() => setMaterial(m.id)}
-                    className={`flex items-center gap-3 p-4 rounded-xl border transition-all cursor-pointer text-left ${
-                      material === m.id
-                        ? 'border-primary bg-primary/10'
-                        : 'border-border bg-background hover:border-border-hover'
-                    }`}
-                  >
-                    <div className={`w-4 h-4 rounded-full border-2 flex items-center justify-center shrink-0 ${
-                      material === m.id ? 'border-primary' : 'border-muted'
-                    }`}>
-                      {material === m.id && <div className="w-2 h-2 rounded-full bg-primary" />}
+          {/* Size */}
+          <div>
+            <h3 className="text-base font-semibold text-foreground mb-3">Size, inch (WxH)</h3>
+            <div className="space-y-1.5 max-h-[320px] overflow-y-auto pr-1">
+              {SIZE_OPTIONS.map((size) => (
+                <button
+                  key={size.label}
+                  onClick={() => { setSelectedSize(size); setUseCustomSize(false) }}
+                  className={`w-full rounded-lg border px-4 py-3 text-sm font-medium transition-colors text-left cursor-pointer ${
+                    !useCustomSize && selectedSize.label === size.label
+                      ? 'border-primary bg-primary text-primary-foreground'
+                      : 'border-border bg-card text-muted-foreground hover:text-foreground hover:border-foreground/20'
+                  }`}
+                >
+                  {size.label}
+                </button>
+              ))}
+              <div className={`rounded-lg border p-3 transition-colors ${useCustomSize ? 'border-primary bg-primary/5' : 'border-border bg-card'}`}>
+                <button
+                  onClick={() => setUseCustomSize(true)}
+                  className={`w-full text-left text-sm font-medium mb-2 cursor-pointer ${useCustomSize ? 'text-foreground' : 'text-muted-foreground'}`}
+                >
+                  Custom size
+                </button>
+                {useCustomSize && (
+                  <div className="grid grid-cols-2 gap-2">
+                    <div>
+                      <label className="text-xs text-muted-foreground">Width</label>
+                      <input type="number" min={0.5} step={0.5} value={customWidth}
+                        onChange={(e) => setCustomWidth(parseFloat(e.target.value) || 1)}
+                        className="mt-1 w-full px-3 py-2 rounded-md border border-border bg-background text-foreground text-sm focus:outline-none focus:border-primary"
+                      />
                     </div>
                     <div>
-                      <p className={`text-sm font-medium ${material === m.id ? 'text-primary' : 'text-foreground'}`}>
-                        {m.label}
-                      </p>
-                      <p className="text-xs text-muted">{m.description}</p>
+                      <label className="text-xs text-muted-foreground">Height</label>
+                      <input type="number" min={0.5} step={0.5} value={customHeight}
+                        onChange={(e) => setCustomHeight(parseFloat(e.target.value) || 1)}
+                        className="mt-1 w-full px-3 py-2 rounded-md border border-border bg-background text-foreground text-sm focus:outline-none focus:border-primary"
+                      />
                     </div>
-                    {m.priceMultiplier > 1 && (
-                      <span className="ml-auto text-xs text-muted">+{((m.priceMultiplier - 1) * 100).toFixed(0)}%</span>
-                    )}
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            {/* Quantity */}
-            <div>
-              <h3 className="font-semibold mb-3">4. Quantity</h3>
-              <div className="grid grid-cols-3 sm:grid-cols-6 gap-2">
-                {quantityTiers.map((t, i) => (
-                  <button
-                    key={t.qty}
-                    onClick={() => setQuantityIdx(i)}
-                    className={`px-3 py-3 rounded-lg border transition-all cursor-pointer ${
-                      quantityIdx === i
-                        ? 'border-primary bg-primary/10'
-                        : 'border-border bg-background hover:border-border-hover'
-                    }`}
-                  >
-                    <p className={`text-sm font-semibold ${quantityIdx === i ? 'text-primary' : 'text-foreground'}`}>
-                      {t.qty.toLocaleString()}
-                    </p>
-                    <p className="text-xs text-muted">
-                      ${(t.unitPrice * selectedMaterial.priceMultiplier).toFixed(2)}/ea
-                    </p>
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            {/* Summary */}
-            <div className="border-t border-border pt-6">
-              <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4">
-                <div>
-                  <div className="flex items-center gap-3 mb-2">
-                    <span className="text-sm text-muted">
-                      {shapes.find((s) => s.id === shape)?.label} · {size} · {selectedMaterial.label} · {tier.qty.toLocaleString()} stickers
-                    </span>
                   </div>
-                  <div className="flex items-baseline gap-2">
-                    <span className="text-3xl font-bold text-primary">${totalPrice.toFixed(2)}</span>
-                    <span className="text-sm text-muted">(${unitPrice.toFixed(2)} each)</span>
-                  </div>
-                </div>
-                <Button onClick={handleAddToCart} size="lg" className="w-full sm:w-auto">
-                  {added ? (
-                    <>
-                      <Check className="w-4 h-4" />
-                      Added to Cart!
-                    </>
-                  ) : (
-                    <>
-                      <ShoppingCart className="w-4 h-4" />
-                      Add to Cart
-                    </>
-                  )}
-                </Button>
+                )}
               </div>
             </div>
           </div>
-        </FadeIn>
+
+          {/* Quantity */}
+          <div>
+            <h3 className="text-base font-semibold text-foreground mb-3">Quantity</h3>
+            <div className="space-y-1.5 max-h-[260px] overflow-y-auto pr-1">
+              {tierPrices.map(({ qty, total, discount }) => (
+                <button
+                  key={qty}
+                  onClick={() => { setQuantity(qty); setCustomQuantity('') }}
+                  className={`w-full flex items-center justify-between rounded-lg border px-4 py-3 text-sm transition-colors cursor-pointer ${
+                    quantity === qty && !customQuantity
+                      ? 'border-primary bg-primary text-primary-foreground'
+                      : 'border-border bg-card hover:border-foreground/20'
+                  }`}
+                >
+                  <span className={`font-medium ${quantity === qty && !customQuantity ? 'text-primary-foreground' : 'text-muted-foreground'}`}>
+                    {qty} pcs
+                  </span>
+                  <div className="flex items-center gap-2">
+                    <span className={`font-semibold ${quantity === qty && !customQuantity ? 'text-primary-foreground' : 'text-foreground'}`}>
+                      ${total?.toFixed(0) ?? '—'}
+                    </span>
+                    {discount && (
+                      <span className={`text-xs font-medium ${quantity === qty && !customQuantity ? 'text-primary-foreground/80' : 'text-green-500'}`}>
+                        -{discount}%
+                      </span>
+                    )}
+                  </div>
+                </button>
+              ))}
+            </div>
+            <div className="mt-3 rounded-lg bg-muted/50 p-3">
+              <p className="text-xs font-medium text-muted-foreground text-center mb-2">Custom quantity</p>
+              <div className="flex items-center gap-3">
+                <input type="number" min={1} placeholder="Enter qty" value={customQuantity}
+                  onChange={(e) => {
+                    setCustomQuantity(e.target.value)
+                    const num = parseInt(e.target.value, 10)
+                    if (!isNaN(num) && num > 0) setQuantity(num)
+                  }}
+                  className="flex-1 px-3 py-2 rounded-md border border-border bg-background text-foreground text-sm focus:outline-none focus:border-primary"
+                />
+                <span className="text-sm font-semibold text-foreground min-w-[60px] text-right">
+                  ${result.total?.toFixed(0) ?? '—'}
+                </span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Three Columns: Artwork, Mockup, Summary */}
+        <div className="grid gap-6 lg:grid-cols-3">
+          {/* Artwork */}
+          <div
+            className={`flex flex-col justify-center rounded-2xl border bg-card p-6 text-center transition-colors min-h-[280px] ${
+              isDragging && designChoice === 'have' ? 'border-primary ring-2 ring-primary/20' : 'border-border'
+            }`}
+            onDragOver={designChoice === 'have' ? handleDragOver : undefined}
+            onDragLeave={designChoice === 'have' ? handleDragLeave : undefined}
+            onDrop={designChoice === 'have' ? handleDrop : undefined}
+          >
+            {designChoice === 'none' && (
+              <div className="flex flex-col items-center gap-5">
+                <div>
+                  <p className="text-sm font-medium text-foreground">Do you have artwork ready?</p>
+                  <p className="mt-1 text-xs text-muted-foreground">Let us know so we can help you best</p>
+                </div>
+                <div className="flex flex-col gap-2 w-full max-w-[200px]">
+                  <button onClick={() => setDesignChoice('need')} className="flex items-center justify-center gap-2 p-3 rounded-xl border border-border bg-muted/50 hover:border-primary hover:bg-primary/5 transition-all cursor-pointer">
+                    <Paintbrush className="h-4 w-4 text-primary" />
+                    <span className="text-xs font-medium text-foreground">I need a design</span>
+                  </button>
+                  <button onClick={() => setDesignChoice('have')} className="flex items-center justify-center gap-2 p-3 rounded-xl border border-border bg-muted/50 hover:border-primary hover:bg-primary/5 transition-all cursor-pointer">
+                    <FileCheck className="h-4 w-4 text-primary" />
+                    <span className="text-xs font-medium text-foreground">I have a design</span>
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {designChoice === 'need' && (
+              <div className="flex flex-col items-center gap-3">
+                <div className="flex h-12 w-12 items-center justify-center rounded-full bg-primary/10">
+                  <Paintbrush className="h-5 w-5 text-primary" />
+                </div>
+                <div>
+                  <p className="text-sm font-medium text-foreground">We can help with that!</p>
+                  <p className="mt-1 text-xs text-muted-foreground">Describe your vision in the notes. Our team will create a design proof for you.</p>
+                </div>
+                <button onClick={() => setDesignChoice('none')} className="inline-flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground transition-colors cursor-pointer">
+                  <ArrowLeft className="h-3 w-3" /> Go back
+                </button>
+              </div>
+            )}
+
+            {designChoice === 'have' && (
+              <div className="flex flex-col items-center gap-3">
+                <div className="flex h-12 w-12 items-center justify-center rounded-full bg-muted">
+                  <Upload className="h-5 w-5 text-muted-foreground" />
+                </div>
+                <div>
+                  <p className="text-sm font-medium text-foreground">Drag & drop your artwork</p>
+                  <p className="mt-1 text-xs text-muted-foreground">PNG, JPG, PDF, or SVG</p>
+                </div>
+                <div className="flex flex-wrap items-center justify-center gap-2">
+                  <label className="inline-flex cursor-pointer items-center gap-2 rounded-full bg-primary px-4 py-1.5 text-xs font-medium text-primary-foreground hover:bg-primary/90 transition-colors">
+                    <span>Upload file</span>
+                    <input type="file" accept="image/*,.pdf,.svg" className="hidden" onChange={handleFileSelect} />
+                  </label>
+                  {uploadedFile && (
+                    <button onClick={() => { setUploadedFile(null); setPreviewUrl(null) }} className="inline-flex items-center gap-1 rounded-full border border-border px-3 py-1.5 text-[10px] text-muted-foreground hover:bg-muted transition-colors cursor-pointer">
+                      <X className="h-3 w-3" /> Clear
+                    </button>
+                  )}
+                </div>
+                {uploadedFile && (
+                  <p className="text-[10px] text-muted-foreground"><span className="font-medium text-foreground">{uploadedFile.name}</span></p>
+                )}
+                <button onClick={() => { setDesignChoice('none'); setUploadedFile(null); setPreviewUrl(null) }} className="inline-flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground transition-colors cursor-pointer">
+                  <ArrowLeft className="h-3 w-3" /> Go back
+                </button>
+              </div>
+            )}
+          </div>
+
+          {/* Mockup Preview */}
+          <div className="rounded-2xl border border-border bg-card p-4 min-h-[280px] flex flex-col">
+            <div className="flex justify-center gap-1 mb-3">
+              {mockupTabs.map((tab) => (
+                <button
+                  key={tab.id}
+                  onClick={() => setActiveMockup(tab.id)}
+                  className={`flex items-center gap-1 rounded-full px-3 py-1.5 text-[10px] font-medium transition-colors cursor-pointer ${
+                    activeMockup === tab.id
+                      ? 'bg-primary text-primary-foreground'
+                      : 'bg-muted text-muted-foreground hover:text-foreground'
+                  }`}
+                >
+                  <tab.icon className="h-3 w-3" />
+                  {tab.label}
+                </button>
+              ))}
+            </div>
+            <div className="rounded-xl bg-muted/50 border border-border flex-1 flex items-center justify-center">
+              <div className="relative flex items-center justify-center h-44">
+                {previewUrl ? (
+                  <img src={previewUrl} alt="Preview" className="max-h-32 max-w-32 rounded-lg object-contain" />
+                ) : (
+                  <div className="w-20 h-20 rounded-full border-2 border-dashed border-border flex items-center justify-center">
+                    <span className="text-[10px] text-muted-foreground text-center">Your Design</span>
+                  </div>
+                )}
+              </div>
+            </div>
+            <p className="mt-2 text-center text-[10px] text-muted-foreground">
+              {previewUrl ? 'Your design preview' : 'Upload artwork to preview'}
+            </p>
+          </div>
+
+          {/* Order Summary */}
+          <div className="space-y-4 rounded-2xl border border-border bg-card p-5 min-h-[280px]">
+            <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground text-center">Order Summary</p>
+
+            <div className="space-y-1.5 text-center">
+              <p className="text-base font-medium text-foreground">{quantity.toLocaleString()} stickers</p>
+              <p className="text-xs text-muted-foreground">
+                <span className="capitalize">{shape}</span>
+                {shape === 'circle' && ` · ${diameter}"`}
+                {shape === 'square' && ` · ${width}" × ${width}"`}
+                {(shape === 'rectangle' || shape === 'die-cut') && ` · ${width}" × ${height}"`}
+              </p>
+              <p className="text-[11px] text-muted-foreground">
+                {materials.find((m) => m.value === material)?.label}
+              </p>
+            </div>
+
+            <div className="h-px bg-border" />
+
+            {result.total != null ? (
+              <div className="space-y-1 text-center">
+                <p className="text-[10px] text-primary">Total</p>
+                <p className="text-3xl font-bold text-foreground">
+                  ${result.total.toLocaleString(undefined, { minimumFractionDigits: 2 })}
+                </p>
+                <div className="flex items-center justify-center gap-2">
+                  <p className="text-[10px] text-primary">≈ ${result.unit?.toFixed(3)}/ea</p>
+                  {result.discount && <span className="text-[10px] font-medium text-green-500">{result.discount}% off</span>}
+                </div>
+              </div>
+            ) : (
+              <div className="space-y-1 text-center">
+                <p className="text-xs text-amber-500 font-medium">Custom quote needed</p>
+                <p className="text-[10px] text-muted-foreground">{result.reason}</p>
+              </div>
+            )}
+
+            <div className="h-px bg-border" />
+
+            {result.total != null ? (
+              <button
+                onClick={handleAddToCart}
+                className="w-full inline-flex items-center justify-center gap-2 rounded-full bg-primary px-5 py-2.5 text-sm font-semibold text-primary-foreground hover:bg-primary/90 transition-colors cursor-pointer"
+              >
+                <ShoppingCart className="w-4 h-4" />
+                {added ? 'Added!' : 'Add to Cart'}
+              </button>
+            ) : (
+              <a href="/contact" className="w-full inline-flex items-center justify-center rounded-full bg-primary px-5 py-2.5 text-sm font-semibold text-primary-foreground hover:bg-primary/90 transition-colors">
+                Request Custom Quote →
+              </a>
+            )}
+
+            <p className="text-[10px] text-muted-foreground text-center">
+              Digital proof within 24 hours. Nothing prints until you approve.
+            </p>
+          </div>
+        </div>
       </div>
     </div>
   )
