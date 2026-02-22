@@ -70,7 +70,7 @@ export default function ServicePage({
                   <feature.icon className="w-5 h-5 text-primary" />
                 </div>
                 <h3 className="font-semibold text-foreground mb-2">{feature.title}</h3>
-                <p className="text-sm text-muted leading-relaxed">{feature.description}</p>
+                <p className="text-sm text-muted-foreground leading-relaxed">{feature.description}</p>
               </div>
             </FadeIn>
           ))}
@@ -102,10 +102,10 @@ export default function ServicePage({
                     )}
                     <h3 className="font-semibold text-foreground text-lg">{tier.name}</h3>
                     <p className="text-2xl font-bold text-primary mt-2">{tier.price}</p>
-                    <p className="text-sm text-muted mt-2 mb-4">{tier.description}</p>
+                    <p className="text-sm text-muted-foreground mt-2 mb-4">{tier.description}</p>
                     <ul className="space-y-2 flex-1">
                       {tier.features.map((f) => (
-                        <li key={f} className="flex items-center gap-2 text-sm text-foreground-dim">
+                        <li key={f} className="flex items-center gap-2 text-sm text-muted-foreground">
                           <div className="w-1.5 h-1.5 rounded-full bg-primary shrink-0" />
                           {f}
                         </li>

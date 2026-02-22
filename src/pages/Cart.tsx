@@ -42,20 +42,20 @@ export default function Cart() {
               <div className="bg-card border border-border rounded-xl p-4 sm:p-5 flex items-center gap-4">
                 <div className="flex-1 min-w-0">
                   <h3 className="font-medium text-foreground truncate">{item.name}</h3>
-                  <p className="text-sm text-muted">{item.option} · ${item.price.toFixed(2)} each</p>
+                  <p className="text-sm text-muted-foreground">{item.option} · ${item.price.toFixed(2)} each</p>
                 </div>
 
                 <div className="flex items-center gap-2">
                   <button
                     onClick={() => updateQuantity(item.id, item.quantity - 1)}
-                    className="w-8 h-8 rounded-lg border border-border flex items-center justify-center text-muted hover:text-foreground hover:border-border-hover transition-colors cursor-pointer"
+                    className="w-8 h-8 rounded-lg border border-border flex items-center justify-center text-muted-foreground hover:text-foreground hover:border-primary/30 transition-colors cursor-pointer"
                   >
                     <Minus className="w-3.5 h-3.5" />
                   </button>
                   <span className="w-12 text-center text-sm font-medium">{item.quantity}</span>
                   <button
                     onClick={() => updateQuantity(item.id, item.quantity + 1)}
-                    className="w-8 h-8 rounded-lg border border-border flex items-center justify-center text-muted hover:text-foreground hover:border-border-hover transition-colors cursor-pointer"
+                    className="w-8 h-8 rounded-lg border border-border flex items-center justify-center text-muted-foreground hover:text-foreground hover:border-primary/30 transition-colors cursor-pointer"
                   >
                     <Plus className="w-3.5 h-3.5" />
                   </button>
@@ -67,7 +67,7 @@ export default function Cart() {
 
                 <button
                   onClick={() => removeItem(item.id)}
-                  className="p-2 text-muted hover:text-red-400 transition-colors cursor-pointer"
+                  className="p-2 text-muted-foreground hover:text-red-400 transition-colors cursor-pointer"
                 >
                   <Trash2 className="w-4 h-4" />
                 </button>
@@ -79,10 +79,10 @@ export default function Cart() {
         <FadeIn delay={0.2}>
           <div className="bg-card border border-border rounded-xl p-5">
             <div className="flex justify-between items-center mb-4">
-              <span className="text-muted">Subtotal</span>
+              <span className="text-muted-foreground">Subtotal</span>
               <span className="text-lg font-bold">${total.toFixed(2)}</span>
             </div>
-            <p className="text-xs text-muted mb-4">
+            <p className="text-xs text-muted-foreground mb-4">
               Shipping and tax calculated at checkout.
             </p>
             <Link to="/checkout">

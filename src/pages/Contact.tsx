@@ -71,23 +71,23 @@ export default function Contact() {
                 <form onSubmit={handleSubmit} className="bg-card border border-border rounded-2xl p-6 sm:p-8 space-y-5">
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div>
-                      <label className="block text-sm text-muted mb-1.5">Full Name *</label>
+                      <label className="block text-sm text-muted-foreground mb-1.5">Full Name *</label>
                       <input
                         required
                         value={form.name}
                         onChange={(e) => handleChange('name', e.target.value)}
-                        className="w-full bg-background border border-border rounded-lg px-4 py-2.5 text-sm text-foreground placeholder:text-muted focus:outline-none focus:border-primary transition-colors"
+                        className="w-full bg-background border border-border rounded-lg px-4 py-2.5 text-sm text-foreground placeholder:text-muted-foregroundfocus:outline-none focus:border-primary transition-colors"
                         placeholder="Your name"
                       />
                     </div>
                     <div>
-                      <label className="block text-sm text-muted mb-1.5">Email *</label>
+                      <label className="block text-sm text-muted-foreground mb-1.5">Email *</label>
                       <input
                         type="email"
                         required
                         value={form.email}
                         onChange={(e) => handleChange('email', e.target.value)}
-                        className="w-full bg-background border border-border rounded-lg px-4 py-2.5 text-sm text-foreground placeholder:text-muted focus:outline-none focus:border-primary transition-colors"
+                        className="w-full bg-background border border-border rounded-lg px-4 py-2.5 text-sm text-foreground placeholder:text-muted-foregroundfocus:outline-none focus:border-primary transition-colors"
                         placeholder="you@email.com"
                       />
                     </div>
@@ -95,17 +95,17 @@ export default function Contact() {
 
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div>
-                      <label className="block text-sm text-muted mb-1.5">Phone</label>
+                      <label className="block text-sm text-muted-foreground mb-1.5">Phone</label>
                       <input
                         type="tel"
                         value={form.phone}
                         onChange={(e) => handleChange('phone', e.target.value)}
-                        className="w-full bg-background border border-border rounded-lg px-4 py-2.5 text-sm text-foreground placeholder:text-muted focus:outline-none focus:border-primary transition-colors"
+                        className="w-full bg-background border border-border rounded-lg px-4 py-2.5 text-sm text-foreground placeholder:text-muted-foregroundfocus:outline-none focus:border-primary transition-colors"
                         placeholder="(510) 000-0000"
                       />
                     </div>
                     <div>
-                      <label className="block text-sm text-muted mb-1.5">Service Type *</label>
+                      <label className="block text-sm text-muted-foreground mb-1.5">Service Type *</label>
                       <select
                         required
                         value={form.service}
@@ -121,23 +121,23 @@ export default function Contact() {
                   </div>
 
                   <div>
-                    <label className="block text-sm text-muted mb-1.5">Project Details *</label>
+                    <label className="block text-sm text-muted-foreground mb-1.5">Project Details *</label>
                     <textarea
                       rows={4}
                       required
                       value={form.message}
                       onChange={(e) => handleChange('message', e.target.value)}
-                      className="w-full bg-background border border-border rounded-lg px-4 py-2.5 text-sm text-foreground placeholder:text-muted focus:outline-none focus:border-primary transition-colors resize-none"
+                      className="w-full bg-background border border-border rounded-lg px-4 py-2.5 text-sm text-foreground placeholder:text-muted-foregroundfocus:outline-none focus:border-primary transition-colors resize-none"
                       placeholder="Tell us about your project – sizes, quantities, materials, timeline..."
                     />
                   </div>
 
                   {/* File Upload */}
                   <div>
-                    <label className="block text-sm text-muted mb-1.5">Attach Files (optional)</label>
+                    <label className="block text-sm text-muted-foreground mb-1.5">Attach Files (optional)</label>
                     <label className="flex flex-col items-center justify-center w-full h-28 border-2 border-dashed border-border rounded-xl hover:border-primary/50 transition-colors cursor-pointer bg-background">
-                      <Upload className="w-6 h-6 text-muted mb-2" />
-                      <span className="text-sm text-muted">
+                      <Upload className="w-6 h-6 text-muted-foreground mb-2" />
+                      <span className="text-sm text-muted-foreground">
                         {files.length > 0 ? `${files.length} file(s) selected` : 'Click to upload artwork or reference files'}
                       </span>
                       <input type="file" multiple onChange={handleFileChange} className="hidden" />
@@ -160,7 +160,7 @@ export default function Contact() {
                 <h3 className="font-semibold mb-4">Get In Touch</h3>
                 <ul className="space-y-4">
                   <li>
-                    <a href="tel:+15101234567" className="flex items-start gap-3 text-sm text-muted hover:text-primary transition-colors">
+                    <a href="tel:+15101234567" className="flex items-start gap-3 text-sm text-muted-foreground hover:text-primary transition-colors">
                       <Phone className="w-4 h-4 mt-0.5 text-primary shrink-0" />
                       <div>
                         <p className="text-foreground font-medium">Phone</p>
@@ -169,7 +169,7 @@ export default function Contact() {
                     </a>
                   </li>
                   <li>
-                    <a href="mailto:thestickersmith@gmail.com" className="flex items-start gap-3 text-sm text-muted hover:text-primary transition-colors">
+                    <a href="mailto:thestickersmith@gmail.com" className="flex items-start gap-3 text-sm text-muted-foreground hover:text-primary transition-colors">
                       <Mail className="w-4 h-4 mt-0.5 text-primary shrink-0" />
                       <div>
                         <p className="text-foreground font-medium">Email</p>
@@ -177,14 +177,14 @@ export default function Contact() {
                       </div>
                     </a>
                   </li>
-                  <li className="flex items-start gap-3 text-sm text-muted">
+                  <li className="flex items-start gap-3 text-sm text-muted-foreground">
                     <MapPin className="w-4 h-4 mt-0.5 text-primary shrink-0" />
                     <div>
                       <p className="text-foreground font-medium">Address</p>
                       <p>23673 Connecticut St.<br />Hayward, CA 94545</p>
                     </div>
                   </li>
-                  <li className="flex items-start gap-3 text-sm text-muted">
+                  <li className="flex items-start gap-3 text-sm text-muted-foreground">
                     <Clock className="w-4 h-4 mt-0.5 text-primary shrink-0" />
                     <div>
                       <p className="text-foreground font-medium">Hours</p>
@@ -201,7 +201,7 @@ export default function Contact() {
                   <Zap className="w-4 h-4 text-primary" />
                   <h3 className="font-semibold text-sm">Response Time</h3>
                 </div>
-                <ul className="space-y-2 text-sm text-muted">
+                <ul className="space-y-2 text-sm text-muted-foreground">
                   <li className="flex items-center gap-2">
                     <div className="w-1.5 h-1.5 rounded-full bg-green-500" />
                     Proof within 24 hours

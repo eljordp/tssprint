@@ -57,7 +57,7 @@ export default function MylarPackaging() {
 
               <div className="space-y-6">
                 <div>
-                  <label className="block text-sm text-muted mb-2">Bag Size</label>
+                  <label className="block text-sm text-muted-foreground mb-2">Bag Size</label>
                   <div className="grid grid-cols-3 gap-2">
                     {sizes.map((size) => (
                       <button
@@ -66,7 +66,7 @@ export default function MylarPackaging() {
                         className={`px-3 py-2.5 text-sm rounded-lg border transition-all cursor-pointer ${
                           selectedSize.value === size.value
                             ? 'border-primary bg-primary/10 text-primary'
-                            : 'border-border bg-background text-muted hover:border-border-hover'
+                            : 'border-border bg-background text-muted-foreground hover:border-primary/30'
                         }`}
                       >
                         {size.label}
@@ -76,7 +76,7 @@ export default function MylarPackaging() {
                 </div>
 
                 <div>
-                  <label className="block text-sm text-muted mb-2">Quantity</label>
+                  <label className="block text-sm text-muted-foreground mb-2">Quantity</label>
                   <div className="grid grid-cols-3 sm:grid-cols-6 gap-2">
                     {quantityTiers.map((qty) => (
                       <button
@@ -85,7 +85,7 @@ export default function MylarPackaging() {
                         className={`px-3 py-2.5 text-sm rounded-lg border transition-all cursor-pointer ${
                           quantity === qty
                             ? 'border-primary bg-primary/10 text-primary'
-                            : 'border-border bg-background text-muted hover:border-border-hover'
+                            : 'border-border bg-background text-muted-foreground hover:border-primary/30'
                         }`}
                       >
                         {qty.toLocaleString()}
@@ -96,12 +96,12 @@ export default function MylarPackaging() {
 
                 <div className="border-t border-border pt-4 space-y-2">
                   <div className="flex justify-between text-sm">
-                    <span className="text-muted">Unit price</span>
+                    <span className="text-muted-foreground">Unit price</span>
                     <span className="text-foreground">${unitPrice.toFixed(2)} / bag</span>
                   </div>
                   {discount > 0 && (
                     <div className="flex justify-between text-sm">
-                      <span className="text-muted">Volume discount</span>
+                      <span className="text-muted-foreground">Volume discount</span>
                       <span className="text-primary">-{(discount * 100).toFixed(0)}%</span>
                     </div>
                   )}
@@ -138,7 +138,7 @@ export default function MylarPackaging() {
                   <feature.icon className="w-5 h-5 text-primary" />
                 </div>
                 <h3 className="font-semibold text-foreground mb-2">{feature.title}</h3>
-                <p className="text-sm text-muted leading-relaxed">{feature.description}</p>
+                <p className="text-sm text-muted-foreground leading-relaxed">{feature.description}</p>
               </div>
             </FadeIn>
           ))}

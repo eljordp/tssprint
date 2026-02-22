@@ -16,7 +16,7 @@ const Button = forwardRef<HTMLButtonElement, ButtonProps>(
           {
             'bg-primary text-white hover:bg-primary-light shadow-[0_0_20px_var(--color-primary-glow)] hover:shadow-[0_0_30px_var(--color-primary-glow)]':
               variant === 'primary',
-            'bg-card text-foreground border border-border hover:border-border-hover hover:bg-card-hover':
+            'bg-card text-foreground border border-border hover:border-primary/30 hover:bg-muted':
               variant === 'secondary',
             'bg-transparent text-foreground border border-border hover:border-primary hover:text-primary':
               variant === 'outline',

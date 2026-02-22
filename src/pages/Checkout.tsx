@@ -71,7 +71,7 @@ export default function Checkout() {
     <div className="py-20">
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
         <FadeIn>
-          <Link to="/cart" className="inline-flex items-center gap-1.5 text-sm text-muted hover:text-foreground transition-colors mb-6">
+          <Link to="/cart" className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors mb-6">
             <ArrowLeft className="w-4 h-4" />
             Back to Cart
           </Link>
@@ -87,7 +87,7 @@ export default function Checkout() {
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-sm text-muted mb-1.5">First Name</label>
+                    <label className="block text-sm text-muted-foreground mb-1.5">First Name</label>
                     <input
                       required
                       value={form.firstName}
@@ -96,7 +96,7 @@ export default function Checkout() {
                     />
                   </div>
                   <div>
-                    <label className="block text-sm text-muted mb-1.5">Last Name</label>
+                    <label className="block text-sm text-muted-foreground mb-1.5">Last Name</label>
                     <input
                       required
                       value={form.lastName}
@@ -108,7 +108,7 @@ export default function Checkout() {
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-sm text-muted mb-1.5">Email</label>
+                    <label className="block text-sm text-muted-foreground mb-1.5">Email</label>
                     <input
                       type="email"
                       required
@@ -118,7 +118,7 @@ export default function Checkout() {
                     />
                   </div>
                   <div>
-                    <label className="block text-sm text-muted mb-1.5">Phone</label>
+                    <label className="block text-sm text-muted-foreground mb-1.5">Phone</label>
                     <input
                       type="tel"
                       required
@@ -130,7 +130,7 @@ export default function Checkout() {
                 </div>
 
                 <div>
-                  <label className="block text-sm text-muted mb-1.5">Address</label>
+                  <label className="block text-sm text-muted-foreground mb-1.5">Address</label>
                   <input
                     required
                     value={form.address}
@@ -141,7 +141,7 @@ export default function Checkout() {
 
                 <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
                   <div>
-                    <label className="block text-sm text-muted mb-1.5">City</label>
+                    <label className="block text-sm text-muted-foreground mb-1.5">City</label>
                     <input
                       required
                       value={form.city}
@@ -150,7 +150,7 @@ export default function Checkout() {
                     />
                   </div>
                   <div>
-                    <label className="block text-sm text-muted mb-1.5">State</label>
+                    <label className="block text-sm text-muted-foreground mb-1.5">State</label>
                     <input
                       required
                       value={form.state}
@@ -159,7 +159,7 @@ export default function Checkout() {
                     />
                   </div>
                   <div>
-                    <label className="block text-sm text-muted mb-1.5">ZIP</label>
+                    <label className="block text-sm text-muted-foreground mb-1.5">ZIP</label>
                     <input
                       required
                       value={form.zip}
@@ -183,7 +183,7 @@ export default function Checkout() {
                   )}
                 </Button>
 
-                <p className="text-xs text-muted text-center">
+                <p className="text-xs text-muted-foreground text-center">
                   Secure checkout powered by Square. We'll send a proof within 24 hours before printing.
                 </p>
               </form>
@@ -200,7 +200,7 @@ export default function Checkout() {
                     <div key={item.id} className="flex justify-between text-sm">
                       <div className="flex-1 min-w-0">
                         <p className="text-foreground truncate">{item.name}</p>
-                        <p className="text-xs text-muted">{item.option} × {item.quantity}</p>
+                        <p className="text-xs text-muted-foreground">{item.option} × {item.quantity}</p>
                       </div>
                       <span className="ml-3 font-medium">${(item.price * item.quantity).toFixed(2)}</span>
                     </div>
