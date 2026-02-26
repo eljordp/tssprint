@@ -3,8 +3,6 @@ import { motion } from 'framer-motion'
 import { ArrowRight, Clock, MapPin, Shield } from 'lucide-react'
 
 import stickerGroup from '@/assets/stickers/sticker-group.png'
-import dieCutSticker from '@/assets/stickers/die-cut-sticker.png'
-import holoSticker from '@/assets/stickers/holographic-sticker.png'
 import stickerPack from '@/assets/stickers/sticker-pack.png'
 
 export default function Hero() {
@@ -15,7 +13,7 @@ export default function Hero() {
 
       {/* Content */}
       <div className="section-container relative z-10 w-full">
-        <div className="grid lg:grid-cols-2 gap-12 items-center">
+        <div className="grid lg:grid-cols-[1.2fr_0.8fr] gap-12 items-center">
           {/* Left: Text */}
           <div>
             <motion.h1 initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6, delay: 0.2 }} className="text-5xl md:text-6xl lg:text-7xl font-black mb-6 leading-[1.1] tracking-tight">
@@ -55,46 +53,27 @@ export default function Hero() {
             transition={{ duration: 0.8, delay: 0.3 }}
             className="hidden lg:block relative"
           >
-            <div className="relative w-full aspect-square max-w-lg mx-auto">
+            <div className="relative w-full aspect-square max-w-md mx-auto">
               {/* Main sticker group - centered */}
               <motion.div
                 animate={{ y: [0, -8, 0] }}
                 transition={{ duration: 4, repeat: Infinity, ease: 'easeInOut' }}
                 className="absolute inset-0 flex items-center justify-center z-20"
               >
-                <img src={stickerGroup} alt="Custom sticker collection" className="w-[85%] h-auto drop-shadow-2xl" />
-              </motion.div>
-
-              {/* Floating die-cut sticker */}
-              <motion.div
-                animate={{ y: [0, -12, 0], rotate: [0, 3, 0] }}
-                transition={{ duration: 5, repeat: Infinity, ease: 'easeInOut', delay: 0.5 }}
-                className="absolute -top-2 -left-4 w-[40%] z-30"
-              >
-                <img src={dieCutSticker} alt="Die-cut sticker" className="w-full h-auto rounded-2xl shadow-xl" />
-              </motion.div>
-
-              {/* Floating holographic sticker */}
-              <motion.div
-                animate={{ y: [0, -10, 0], rotate: [0, -2, 0] }}
-                transition={{ duration: 4.5, repeat: Infinity, ease: 'easeInOut', delay: 1 }}
-                className="absolute -bottom-2 -right-4 w-[45%] z-30"
-              >
-                <img src={holoSticker} alt="Holographic sticker" className="w-full h-auto rounded-2xl shadow-xl" />
+                <img src={stickerGroup} alt="Custom sticker collection" className="w-full h-auto drop-shadow-2xl" />
               </motion.div>
 
               {/* Sticker pack accent */}
               <motion.div
                 animate={{ y: [0, -6, 0] }}
                 transition={{ duration: 3.5, repeat: Infinity, ease: 'easeInOut', delay: 1.5 }}
-                className="absolute bottom-8 -left-8 w-[35%] z-10"
+                className="absolute -bottom-4 -left-8 w-[40%] z-30"
               >
-                <img src={stickerPack} alt="Sticker pack" className="w-full h-auto rounded-xl shadow-lg opacity-80" />
+                <img src={stickerPack} alt="Sticker pack" className="w-full h-auto drop-shadow-xl" />
               </motion.div>
 
               {/* Decorative glows */}
               <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-64 h-64 bg-primary/10 rounded-full blur-3xl" />
-              <div className="absolute -bottom-8 -right-8 w-40 h-40 bg-primary/8 rounded-full blur-2xl" />
             </div>
           </motion.div>
         </div>
