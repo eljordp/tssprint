@@ -48,7 +48,7 @@ export default function ProductCategories() {
             >
               <Link
                 to={cat.href}
-                className="group block overflow-hidden rounded-2xl border border-border bg-gray-100 hover:border-primary/40 hover:shadow-lg transition-all duration-300"
+                className="group block overflow-hidden rounded-2xl border border-border bg-card hover:border-primary/40 hover:shadow-lg transition-all duration-300"
               >
                 {/* Image */}
                 <div className="flex items-center justify-center p-6 md:p-8 aspect-square">
