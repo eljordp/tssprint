@@ -48,7 +48,7 @@ export default function ProductCategories() {
             >
               <Link
                 to={cat.href}
-                className="group block overflow-hidden rounded-2xl border border-border bg-card hover:border-primary/40 hover:shadow-lg transition-all duration-300"
+                className="group block overflow-hidden rounded-2xl border border-border bg-gray-100 hover:border-primary/40 hover:shadow-lg transition-all duration-300"
               >
                 {/* Image */}
                 <div className="flex items-center justify-center p-6 md:p-8 aspect-square">
@@ -61,8 +61,8 @@ export default function ProductCategories() {
 
                 {/* Content below */}
                 <div className="text-center pb-5 md:pb-6 px-4">
-                  <h3 className="font-black text-lg md:text-xl mb-1">{cat.title}</h3>
-                  <p className="text-muted-foreground text-sm">{cat.description}</p>
+                  <h3 className="font-black text-lg md:text-xl mb-1 text-gray-900">{cat.title}</h3>
+                  <p className="text-gray-500 text-sm">{cat.description}</p>
                 </div>
               </Link>
             </motion.div>
