@@ -26,12 +26,15 @@ export default function Order() {
   }
 
   return (
-    <section className="py-8 md:py-16">
-      <div className="section-container">
-        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="text-center mb-12">
-          <h1 className="text-4xl md:text-6xl font-black mb-4">Order Custom Stickers</h1>
-          <p className="text-muted-foreground text-lg">Configure your stickers and add to cart</p>
+    <>
+      <div className="-mt-16 md:-mt-18 pt-24 md:pt-32 pb-10 md:pb-14" style={{ backgroundColor: 'hsl(199 89% 64%)' }}>
+        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="text-center section-container">
+          <h1 className="text-4xl md:text-6xl font-black mb-4 text-white">Order Custom Stickers</h1>
+          <p className="text-white/80 text-lg">Configure your stickers and add to cart</p>
         </motion.div>
+      </div>
+      <section className="py-8 md:py-16">
+        <div className="section-container">
         <div className="max-w-4xl mx-auto grid md:grid-cols-2 gap-8">
           <div className="space-y-6">
             <div>
@@ -81,7 +84,8 @@ export default function Order() {
             </div>
           </div>
         </div>
-      </div>
-    </section>
+        </div>
+      </section>
+    </>
   )
 }

@@ -24,24 +24,27 @@ const projects = [
 
 export default function Projects() {
   return (
-    <section className="py-8 md:py-16">
-      <div className="section-container">
-        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="text-center mb-12">
-          <h1 className="text-4xl md:text-6xl font-black mb-4">Our Projects</h1>
-          <div className="mx-auto w-24 h-1 rounded-full bg-gradient-to-r from-primary to-primary/40 mb-4" />
-          <p className="text-muted-foreground text-lg">A look at some of our recent work</p>
+    <>
+      <div className="-mt-16 md:-mt-18 pt-24 md:pt-32 pb-10 md:pb-14" style={{ backgroundColor: 'hsl(199 89% 64%)' }}>
+        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="text-center section-container">
+          <h1 className="text-4xl md:text-6xl font-black mb-4 text-white">Our Projects</h1>
+          <p className="text-white/80 text-lg">A look at some of our recent work</p>
         </motion.div>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {projects.map((project, index) => (
-            <motion.div key={project.title} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: index * 0.05 }} className="group relative overflow-hidden rounded-2xl border border-border aspect-[4/3]">
-              <img src={project.image} alt={project.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
-              <div className="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent opacity-0 group-hover:opacity-100 transition-opacity flex items-end p-4">
-                <h3 className="text-white font-bold">{project.title}</h3>
-              </div>
-            </motion.div>
-          ))}
-        </div>
       </div>
-    </section>
+      <section className="py-8 md:py-16">
+        <div className="section-container">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {projects.map((project, index) => (
+              <motion.div key={project.title} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: index * 0.05 }} className="group relative overflow-hidden rounded-2xl border border-border aspect-[4/3]">
+                <img src={project.image} alt={project.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent opacity-0 group-hover:opacity-100 transition-opacity flex items-end p-4">
+                  <h3 className="text-white font-bold">{project.title}</h3>
+                </div>
+              </motion.div>
+            ))}
+          </div>
+        </div>
+      </section>
+    </>
   )
 }
