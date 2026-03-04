@@ -35,7 +35,7 @@ export default function BusinessPrint() {
             </div>
           </motion.div>
 
-          <ProductOrder categoryNames={['Business Print Essentials']} />
+          <ProductOrder categoryNames={['Business Cards', 'Flyers & Door Hangers', 'Postcards', 'Vehicle Magnets']} />
         </div>
       </section>
     </>

@@ -54,6 +54,7 @@ export default function ProductOrder({ categoryNames }: Props) {
   const [customQty, setCustomQty] = useState(250)
   const [selectedAddOns, setSelectedAddOns] = useState<Set<string>>(new Set())
   const [added, setAdded] = useState(false)
+  const [activeGroup, setActiveGroup] = useState(0)
 
   const category = categories[activeCategory]
   if (!category) return null
@@ -115,6 +116,7 @@ export default function ProductOrder({ categoryNames }: Props) {
     setSelectedQtyIndex(0)
     setCustomQty(250)
     setSelectedAddOns(new Set())
+    setActiveGroup(0)
   }
 
   const displayName = (size: string) => {
@@ -158,29 +160,45 @@ export default function ProductOrder({ categoryNames }: Props) {
             <label className="block text-sm font-bold mb-3 uppercase tracking-wider">Select Product</label>
             {hasGroups ? (
               <div className="space-y-4">
-                {groups.map(group => (
-                  <div key={group.label}>
-                    <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground mb-2 pl-1">{group.label}</p>
-                    <div className="grid gap-2">
-                      {group.items.map(({ item: p, globalIndex }) => (
-                        <button
-                          key={p.size}
-                          onClick={() => { setSelectedItem(globalIndex); setSelectedQtyIndex(0) }}
-                          className={`px-4 py-3 rounded-xl text-sm font-medium border transition-all text-left ${
-                            selectedItem === globalIndex
-                              ? 'border-primary bg-primary/10 text-primary'
-                              : 'border-border hover:border-primary/30'
-                          }`}
-                        >
-                          <span>{displayName(p.size)}</span>
-                          <span className="float-right text-muted-foreground">
-                            from ${Math.min(...p.quantities.map(q => q.price)).toFixed(2)}
-                          </span>
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-                ))}
+                {/* Sub-category filter buttons */}
+                <div className="flex flex-wrap gap-2">
+                  {groups.map((group, gi) => (
+                    <button
+                      key={group.label}
+                      onClick={() => {
+                        setActiveGroup(gi)
+                        const firstItem = groups[gi].items[0]
+                        if (firstItem) { setSelectedItem(firstItem.globalIndex); setSelectedQtyIndex(0) }
+                      }}
+                      className={`px-4 py-2 rounded-full text-sm font-semibold transition-all ${
+                        activeGroup === gi
+                          ? 'bg-primary text-white'
+                          : 'bg-card border border-border text-muted-foreground hover:text-foreground hover:border-primary/30'
+                      }`}
+                    >
+                      {group.label}
+                    </button>
+                  ))}
+                </div>
+                {/* Items for active sub-group */}
+                <div className="grid gap-2">
+                  {(groups[activeGroup]?.items || []).map(({ item: p, globalIndex }) => (
+                    <button
+                      key={p.size}
+                      onClick={() => { setSelectedItem(globalIndex); setSelectedQtyIndex(0) }}
+                      className={`px-4 py-3 rounded-xl text-sm font-medium border transition-all text-left ${
+                        selectedItem === globalIndex
+                          ? 'border-primary bg-primary/10 text-primary'
+                          : 'border-border hover:border-primary/30'
+                      }`}
+                    >
+                      <span>{displayName(p.size)}</span>
+                      <span className="float-right text-muted-foreground">
+                        from ${Math.min(...p.quantities.map(q => q.price)).toFixed(2)}
+                      </span>
+                    </button>
+                  ))}
+                </div>
               </div>
             ) : (
               <div className="grid gap-2">

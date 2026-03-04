@@ -99,7 +99,7 @@ const categoryTabs = [
   { id: 'backdrops', label: 'Backdrops', productIndex: 2 },
   { id: 'tablecovers', label: 'Table Covers', productIndex: 3 },
   { id: 'banners', label: 'Banners', productIndex: 4 },
-  { id: 'businessprint', label: 'Biz Print', productIndex: 5 },
+  { id: 'bizcards', label: 'Biz Cards', productIndex: 5 },
   { id: 'storefront', label: 'Storefront', productIndex: 6 },
   { id: 'aframes', label: 'A-Frames', productIndex: 7 },
   { id: 'wallgraphics', label: 'Wall Graphics', productIndex: 8 },
@@ -109,6 +109,10 @@ const categoryTabs = [
   { id: 'frosted', label: 'Frosted Film', productIndex: 12 },
   { id: 'solar', label: 'Solar Film', productIndex: 13 },
   { id: 'security', label: 'Security Film', productIndex: 14 },
+  { id: 'autotint', label: 'Auto Tint', productIndex: 15 },
+  { id: 'flyers', label: 'Flyers', productIndex: 16 },
+  { id: 'postcards', label: 'Postcards', productIndex: 17 },
+  { id: 'magnets', label: 'Magnets', productIndex: 18 },
   { id: 'addons', label: 'Add-Ons' },
 ]
 

@@ -9,6 +9,7 @@ const features = [
   'Decorative Window Graphics',
   'Custom Cut Logos & Lettering',
   'Anti-Graffiti Film',
+  'Automotive Window Tint',
 ]
 
 export default function WindowFilm() {
@@ -35,7 +36,7 @@ export default function WindowFilm() {
             </div>
           </motion.div>
 
-          <ProductOrder categoryNames={['Frosted & Decorative', 'Solar & UV Protection', 'Security Film']} />
+          <ProductOrder categoryNames={['Frosted & Decorative', 'Solar & UV Protection', 'Security Film', 'Automotive Window Tint']} />
         </div>
       </section>
     </>

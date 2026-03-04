@@ -106,19 +106,11 @@ export const defaultPricing: PricingConfig = {
       { name: 'Outdoor Base', type: 'flat', value: 40 },
       { name: 'Travel Case', type: 'flat', value: 25 },
     ]},
-    // 5: Business Print Essentials
-    { name: 'Business Print Essentials', items: [
-      { size: 'Business Cards – Standard (3.5"×2")', quantities: [{ qty: 250, price: 49 }, { qty: 500, price: 79 }, { qty: 1000, price: 129 }] },
-      { size: 'Business Cards – Square (2.5"×2.5")', quantities: [{ qty: 250, price: 59 }, { qty: 500, price: 89 }, { qty: 1000, price: 149 }] },
-      { size: 'Business Cards – Mini (3"×1")', quantities: [{ qty: 250, price: 39 }, { qty: 500, price: 59 }, { qty: 1000, price: 99 }] },
-      { size: 'Flyers – 8.5"×11"', quantities: [{ qty: 100, price: 55 }, { qty: 250, price: 99 }, { qty: 500, price: 159 }, { qty: 1000, price: 249 }] },
-      { size: 'Flyers – 5.5"×8.5"', quantities: [{ qty: 100, price: 39 }, { qty: 250, price: 69 }, { qty: 500, price: 109 }, { qty: 1000, price: 179 }] },
-      { size: 'Door Hangers', quantities: [{ qty: 100, price: 69 }, { qty: 250, price: 119 }, { qty: 500, price: 189 }, { qty: 1000, price: 299 }] },
-      { size: 'Postcards – 4"×6"', quantities: [{ qty: 100, price: 45 }, { qty: 250, price: 79 }, { qty: 500, price: 129 }, { qty: 1000, price: 199 }] },
-      { size: 'Postcards – 5"×7"', quantities: [{ qty: 100, price: 55 }, { qty: 250, price: 95 }, { qty: 500, price: 149 }, { qty: 1000, price: 239 }] },
-      { size: 'Vehicle Magnets – 12"×18"', quantities: [{ qty: 1, price: 35 }, { qty: 2, price: 30 }, { qty: 5, price: 25 }] },
-      { size: 'Vehicle Magnets – 18"×24"', quantities: [{ qty: 1, price: 49 }, { qty: 2, price: 42 }, { qty: 5, price: 35 }] },
-      { size: 'Vehicle Magnets – 24"×36"', quantities: [{ qty: 1, price: 69 }, { qty: 2, price: 59 }, { qty: 5, price: 49 }] },
+    // 5: Business Cards
+    { name: 'Business Cards', items: [
+      { size: 'Standard (3.5"×2")', quantities: [{ qty: 250, price: 49 }, { qty: 500, price: 79 }, { qty: 1000, price: 129 }] },
+      { size: 'Square (2.5"×2.5")', quantities: [{ qty: 250, price: 59 }, { qty: 500, price: 89 }, { qty: 1000, price: 149 }] },
+      { size: 'Mini (3"×1")', quantities: [{ qty: 250, price: 39 }, { qty: 500, price: 59 }, { qty: 1000, price: 99 }] },
     ], addOns: [
       { name: 'Soft-Touch', type: 'flat', value: 15 },
       { name: 'Spot UV', type: 'flat', value: 25 },
@@ -239,6 +231,48 @@ export const defaultPricing: PricingConfig = {
       { name: 'Anchored Frame System', type: 'flat', value: 300 },
       { name: 'Tinted Security', type: 'flat', value: 150 },
     ]},
+    // 15: Automotive Window Tint
+    { name: 'Automotive Window Tint', items: [
+      { size: 'Sedan – Front 2 Windows', quantities: [{ qty: 1, price: 120 }] },
+      { size: 'Sedan – Rear + Back Window', quantities: [{ qty: 1, price: 180 }] },
+      { size: 'Sedan – Full Car (all windows)', quantities: [{ qty: 1, price: 280 }] },
+      { size: 'SUV / Truck – Front 2 Windows', quantities: [{ qty: 1, price: 140 }] },
+      { size: 'SUV / Truck – Rear + Back Window', quantities: [{ qty: 1, price: 220 }] },
+      { size: 'SUV / Truck – Full Vehicle (all windows)', quantities: [{ qty: 1, price: 350 }] },
+      { size: 'Windshield Visor Strip', quantities: [{ qty: 1, price: 60 }] },
+      { size: 'Full Windshield Tint', quantities: [{ qty: 1, price: 150 }] },
+    ], addOns: [
+      { name: 'Ceramic Tint Upgrade', type: 'flat', value: 100 },
+      { name: 'Carbon Tint Upgrade', type: 'flat', value: 60 },
+      { name: 'Old Tint Removal', type: 'flat', value: 50 },
+    ]},
+    // 16: Flyers & Door Hangers
+    { name: 'Flyers & Door Hangers', items: [
+      { size: '8.5"×11" Flyer', quantities: [{ qty: 100, price: 55 }, { qty: 250, price: 99 }, { qty: 500, price: 159 }, { qty: 1000, price: 249 }] },
+      { size: '5.5"×8.5" Half-Page Flyer', quantities: [{ qty: 100, price: 39 }, { qty: 250, price: 69 }, { qty: 500, price: 109 }, { qty: 1000, price: 179 }] },
+      { size: 'Door Hangers', quantities: [{ qty: 100, price: 69 }, { qty: 250, price: 119 }, { qty: 500, price: 189 }, { qty: 1000, price: 299 }] },
+    ], addOns: [
+      { name: 'Glossy Finish', type: 'flat', value: 10 },
+      { name: 'Double-Sided', type: 'flat', value: 20 },
+    ]},
+    // 17: Postcards
+    { name: 'Postcards', items: [
+      { size: '4"×6" Postcard', quantities: [{ qty: 100, price: 45 }, { qty: 250, price: 79 }, { qty: 500, price: 129 }, { qty: 1000, price: 199 }] },
+      { size: '5"×7" Postcard', quantities: [{ qty: 100, price: 55 }, { qty: 250, price: 95 }, { qty: 500, price: 149 }, { qty: 1000, price: 239 }] },
+    ], addOns: [
+      { name: 'Soft-Touch', type: 'flat', value: 15 },
+      { name: 'Spot UV', type: 'flat', value: 25 },
+      { name: 'Glossy Finish', type: 'flat', value: 10 },
+    ]},
+    // 18: Vehicle Magnets
+    { name: 'Vehicle Magnets', items: [
+      { size: '12"×18"', quantities: [{ qty: 1, price: 35 }, { qty: 2, price: 30 }, { qty: 5, price: 25 }] },
+      { size: '18"×24"', quantities: [{ qty: 1, price: 49 }, { qty: 2, price: 42 }, { qty: 5, price: 35 }] },
+      { size: '24"×36"', quantities: [{ qty: 1, price: 69 }, { qty: 2, price: 59 }, { qty: 5, price: 49 }] },
+    ], addOns: [
+      { name: 'Rounded Corners', type: 'flat', value: 10 },
+      { name: 'UV Laminate', type: 'flat', value: 8 },
+    ]},
   ],
 }
 
@@ -254,7 +288,14 @@ export function getPricing(): PricingConfig {
       }))
       // Ensure new fields exist with defaults
       if (!parsed.stickerAddOns) parsed.stickerAddOns = defaultPricing.stickerAddOns
-      if (!parsed.products) parsed.products = defaultPricing.products
+      if (!parsed.products) {
+        parsed.products = defaultPricing.products
+      } else if (parsed.products.length < defaultPricing.products.length) {
+        // Append any new default categories that were added after the user last saved
+        for (let i = parsed.products.length; i < defaultPricing.products.length; i++) {
+          parsed.products.push(defaultPricing.products[i])
+        }
+      }
       return parsed
     }
   } catch { /* use defaults */ }
