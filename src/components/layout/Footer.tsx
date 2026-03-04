@@ -69,7 +69,7 @@ export default function Footer() {
         </div>
         <div className="mt-12 pt-8 border-t border-border">
           <div className="flex flex-col md:flex-row justify-between items-center gap-6">
-            <p className="text-muted-foreground text-sm">&copy; {new Date().getFullYear()} The Sticker Smith. All rights reserved.</p>
+            <p className="text-muted-foreground text-sm"><Link to="/admin" className="hover:text-muted-foreground">&copy;</Link> {new Date().getFullYear()} The Sticker Smith. All rights reserved.</p>
             <div className="flex items-center gap-2">
               <span className="text-xs text-muted-foreground mr-1">We accept</span>
               {['Visa', 'Mastercard', 'Amex', 'PayPal', 'Apple Pay'].map((m) => (<div key={m} className="px-2 py-1 rounded bg-white/5 border border-border text-[10px] text-muted-foreground font-medium">{m}</div>))}

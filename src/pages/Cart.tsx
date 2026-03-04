@@ -42,7 +42,7 @@ export default function Cart() {
         </div>
         <div className="bg-card border border-border rounded-2xl p-6 flex flex-col sm:flex-row items-center justify-between gap-4">
           <div className="text-2xl font-black">Total: <span className="text-primary">${total.toFixed(2)}</span></div>
-          <Link to="/contact" className="btn-primary">Proceed to Checkout</Link>
+          <Link to="/checkout" className="btn-primary">Proceed to Checkout</Link>
         </div>
       </div>
     </section>

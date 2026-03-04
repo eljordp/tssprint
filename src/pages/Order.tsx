@@ -1,7 +1,8 @@
-import { useState } from 'react'
+import { useState, useMemo } from 'react'
 import { motion } from 'framer-motion'
 import { Upload, ArrowRight } from 'lucide-react'
 import { useCart } from '@/context/CartContext'
+import { getPricing, getBasePrice, getMaterialMultiplier } from '@/lib/pricing'
 
 const shapes = ['Die-Cut', 'Kiss-Cut', 'Circle', 'Square', 'Rectangle']
 const materials = ['Matte Vinyl', 'Glossy Vinyl', 'Clear', 'Holographic', 'Paper']
@@ -15,8 +16,9 @@ export default function Order() {
   const [size, setSize] = useState('3"x3"')
   const [added, setAdded] = useState(false)
 
-  const basePrice = quantity <= 50 ? 0.45 : quantity <= 100 ? 0.35 : quantity <= 200 ? 0.28 : quantity <= 500 ? 0.22 : 0.18
-  const materialMultiplier = material === 'Holographic' ? 1.4 : material === 'Clear' ? 1.2 : 1
+  const pricingConfig = useMemo(() => getPricing(), [])
+  const basePrice = getBasePrice(quantity, pricingConfig)
+  const materialMultiplier = getMaterialMultiplier(material, pricingConfig)
   const price = +(basePrice * materialMultiplier * quantity).toFixed(2)
 
   const handleAddToCart = () => {
