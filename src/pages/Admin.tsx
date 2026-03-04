@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
 import { LogOut, Package, DollarSign, Users, ChevronDown, ChevronUp, Truck, Clock, CheckCircle, Settings, RotateCcw, Save } from 'lucide-react'
-import { getPricing, savePricing, defaultPricing, type PricingConfig, type AddOn } from '@/lib/pricing'
+import { getPricing, savePricing, defaultPricing, type PricingConfig } from '@/lib/pricing'
 
 const ADMIN_EMAIL = 'thestickersmith@gmail.com'
 const ADMIN_PASSWORD = 'Lolasdad22!'
