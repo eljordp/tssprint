@@ -99,61 +99,41 @@ const categoryTabs = [
   { id: 'backdrops', label: 'Backdrops', productIndex: 2 },
   { id: 'tablecovers', label: 'Table Covers', productIndex: 3 },
   { id: 'banners', label: 'Banners', productIndex: 4 },
-  { id: 'cards', label: 'Business Cards', productIndex: 5 },
+  { id: 'businessprint', label: 'Business Print', productIndex: 5 },
+  { id: 'addons', label: 'Add-Ons' },
 ]
 
-function AddOnEditor({ addOns, onChange }: { addOns: AddOn[]; onChange: (addOns: AddOn[]) => void }) {
-  const update = (index: number, value: string) => {
-    onChange(addOns.map((a, i) => i === index ? { ...a, value: parseFloat(value) || 0 } : a))
-  }
-  if (addOns.length === 0) return null
+function PriceInput({ value, onChange, label }: { value: number; onChange: (v: string) => void; label: string }) {
   return (
-    <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
-      {addOns.map((addon, i) => (
-        <div key={addon.name} className="bg-muted/30 rounded-xl p-3">
-          <label className="block text-xs font-medium text-foreground mb-1.5">{addon.name}</label>
-          <div className="relative">
-            {addon.type === 'flat' && <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground text-xs">$</span>}
-            <input
-              type="number" step={addon.type === 'flat' ? '0.01' : '0.05'} min="0" value={addon.value}
-              onChange={e => update(i, e.target.value)}
-              className={`w-full ${addon.type === 'flat' ? 'pl-7 pr-3' : 'px-3'} py-2 bg-background border border-border rounded-lg text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all`}
-            />
-            {addon.type === 'multiplier' && <span className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground text-xs">x</span>}
-          </div>
-          <span className="block text-[10px] text-muted-foreground mt-1">{addon.type === 'multiplier' ? 'Multiplier' : 'Flat fee per unit'}</span>
-        </div>
-      ))}
+    <div className="bg-muted/30 rounded-xl p-3">
+      <label className="block text-xs font-medium text-foreground mb-1.5">{label}</label>
+      <div className="relative">
+        <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground text-xs">$</span>
+        <input
+          type="number" step="0.01" min="0" value={value}
+          onChange={e => onChange(e.target.value)}
+          className="w-full pl-7 pr-3 py-2 bg-background border border-border rounded-lg text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all"
+        />
+      </div>
     </div>
   )
 }
 
-function ProductPriceTable({ cat, catIndex, onPriceChange }: {
-  cat: PricingConfig['products'][number]
-  catIndex: number
-  onPriceChange: (catIndex: number, itemIndex: number, qtyIndex: number, value: string) => void
-}) {
+function SubTabs({ active, tabs, onChange }: { active: string; tabs: { id: string; label: string }[]; onChange: (id: string) => void }) {
   return (
-    <div className="space-y-3">
-      {cat.items.map((item, itemIndex) => (
-        <div key={item.size} className="bg-muted/30 rounded-xl p-4">
-          <p className="text-sm font-bold mb-3">{item.size}</p>
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-            {item.quantities.map((q, qtyIndex) => (
-              <div key={q.qty}>
-                <label className="block text-[11px] text-muted-foreground mb-1">{q.qty === 1 ? 'Per unit' : `${q.qty}+ pcs`}</label>
-                <div className="relative">
-                  <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-muted-foreground text-xs">$</span>
-                  <input
-                    type="number" step="0.01" min="0" value={q.price}
-                    onChange={e => onPriceChange(catIndex, itemIndex, qtyIndex, e.target.value)}
-                    className="w-full pl-6 pr-2 py-2 bg-background border border-border rounded-lg text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all"
-                  />
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
+    <div className="flex gap-1 bg-muted/40 p-1 rounded-xl w-fit">
+      {tabs.map(tab => (
+        <button
+          key={tab.id}
+          onClick={() => onChange(tab.id)}
+          className={`px-4 py-1.5 rounded-lg text-sm font-medium transition-all ${
+            active === tab.id
+              ? 'bg-background text-foreground shadow-sm'
+              : 'text-muted-foreground hover:text-foreground'
+          }`}
+        >
+          {tab.label}
+        </button>
       ))}
     </div>
   )
@@ -163,6 +143,10 @@ function PricingEditor() {
   const [config, setConfig] = useState<PricingConfig>(() => getPricing())
   const [saved, setSaved] = useState(false)
   const [activeTab, setActiveTab] = useState('stickers')
+  const [subTab, setSubTab] = useState<Record<string, string>>({})
+
+  const getSubTab = (id: string) => subTab[id] || 'pricing'
+  const setSubTabFor = (id: string, val: string) => setSubTab(prev => ({ ...prev, [id]: val }))
 
   const updateTierPrice = (index: number, value: string) => {
     setConfig({ ...config, basePrices: config.basePrices.map((t, i) => i === index ? { ...t, price: parseFloat(value) || 0 } : t) })
@@ -170,6 +154,10 @@ function PricingEditor() {
 
   const updateMultiplier = (index: number, value: string) => {
     setConfig({ ...config, materialMultipliers: config.materialMultipliers.map((m, i) => i === index ? { ...m, multiplier: parseFloat(value) || 1 } : m) })
+  }
+
+  const updateStickerAddOn = (index: number, value: string) => {
+    setConfig({ ...config, stickerAddOns: config.stickerAddOns.map((a, i) => i === index ? { ...a, value: parseFloat(value) || 0 } : a) })
   }
 
   const updateProductPrice = (catIndex: number, itemIndex: number, qtyIndex: number, value: string) => {
@@ -183,8 +171,11 @@ function PricingEditor() {
     setConfig({ ...config, products })
   }
 
-  const updateProductAddOns = (catIndex: number, addOns: AddOn[]) => {
-    const products = config.products.map((cat, ci) => ci === catIndex ? { ...cat, addOns } : cat)
+  const updateProductAddOn = (catIndex: number, addonIndex: number, value: string) => {
+    const products = config.products.map((cat, ci) => {
+      if (ci !== catIndex) return cat
+      return { ...cat, addOns: cat.addOns.map((a, i) => i === addonIndex ? { ...a, value: parseFloat(value) || 0 } : a) }
+    })
     setConfig({ ...config, products })
   }
 
@@ -241,55 +232,46 @@ function PricingEditor() {
 
       {/* Stickers Tab */}
       {activeTab === 'stickers' && (
-        <div className="space-y-6">
-          {/* Base Prices */}
-          <div className="bg-card border border-border rounded-2xl p-6">
-            <h3 className="font-bold mb-1">Base Price Per Sticker</h3>
-            <p className="text-sm text-muted-foreground mb-4">Price per unit at each quantity tier</p>
-            <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
-              {config.basePrices.map((tier, i) => (
-                <div key={i} className="bg-muted/30 rounded-xl p-3">
-                  <label className="block text-xs font-medium text-foreground mb-1.5">{tierLabels[i]} pcs</label>
-                  <div className="relative">
-                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground text-sm">$</span>
-                    <input
-                      type="number" step="0.01" min="0" value={tier.price}
-                      onChange={e => updateTierPrice(i, e.target.value)}
-                      className="w-full pl-7 pr-3 py-2 bg-background border border-border rounded-lg text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all"
-                    />
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
+        <div className="space-y-5">
+          <SubTabs
+            active={getSubTab('stickers')}
+            tabs={[{ id: 'pricing', label: 'Quantity Pricing' }, { id: 'materials', label: 'Materials' }]}
+            onChange={v => setSubTabFor('stickers', v)}
+          />
 
-          {/* Materials */}
-          <div className="bg-card border border-border rounded-2xl p-6">
-            <h3 className="font-bold mb-1">Materials</h3>
-            <p className="text-sm text-muted-foreground mb-4">Price multiplier per material type (1.0x = base price)</p>
-            <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
-              {config.materialMultipliers.map((mat, i) => (
-                <div key={mat.name} className="bg-muted/30 rounded-xl p-3">
-                  <label className="block text-xs font-medium text-foreground mb-1.5">{mat.name}</label>
-                  <div className="relative">
-                    <input
-                      type="number" step="0.05" min="0.1" value={mat.multiplier}
-                      onChange={e => updateMultiplier(i, e.target.value)}
-                      className="w-full px-3 py-2 bg-background border border-border rounded-lg text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all"
-                    />
-                    <span className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground text-xs">x</span>
-                  </div>
-                </div>
-              ))}
+          {getSubTab('stickers') === 'pricing' && (
+            <div className="bg-card border border-border rounded-2xl p-6">
+              <h3 className="font-bold mb-1">Base Price Per Sticker</h3>
+              <p className="text-sm text-muted-foreground mb-4">Price per unit at each quantity tier</p>
+              <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
+                {config.basePrices.map((tier, i) => (
+                  <PriceInput key={i} label={`${tierLabels[i]} pcs`} value={tier.price} onChange={v => updateTierPrice(i, v)} />
+                ))}
+              </div>
             </div>
-          </div>
+          )}
 
-          {/* Finish Add-Ons */}
-          <div className="bg-card border border-border rounded-2xl p-6">
-            <h3 className="font-bold mb-1">Finish Add-Ons</h3>
-            <p className="text-sm text-muted-foreground mb-4">Special finishes applied on top of material pricing</p>
-            <AddOnEditor addOns={config.stickerAddOns} onChange={addOns => setConfig({ ...config, stickerAddOns: addOns })} />
-          </div>
+          {getSubTab('stickers') === 'materials' && (
+            <div className="bg-card border border-border rounded-2xl p-6">
+              <h3 className="font-bold mb-1">Material Multipliers</h3>
+              <p className="text-sm text-muted-foreground mb-4">Price multiplier per material type (1.0x = base price)</p>
+              <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
+                {config.materialMultipliers.map((mat, i) => (
+                  <div key={mat.name} className="bg-muted/30 rounded-xl p-3">
+                    <label className="block text-xs font-medium text-foreground mb-1.5">{mat.name}</label>
+                    <div className="relative">
+                      <input
+                        type="number" step="0.05" min="0.1" value={mat.multiplier}
+                        onChange={e => updateMultiplier(i, e.target.value)}
+                        className="w-full px-3 py-2 bg-background border border-border rounded-lg text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all"
+                      />
+                      <span className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground text-xs">x</span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
         </div>
       )}
 
@@ -297,26 +279,93 @@ function PricingEditor() {
       {activeProduct && activeProduct.productIndex !== undefined && config.products[activeProduct.productIndex] && (() => {
         const catIndex = activeProduct.productIndex!
         const cat = config.products[catIndex]
+        const hasAddOns = cat.addOns.length > 0
+        const currentSub = getSubTab(activeTab)
         return (
-          <div className="space-y-6">
-            {/* Product Sizes & Prices */}
-            <div className="bg-card border border-border rounded-2xl p-6">
-              <h3 className="font-bold mb-1">Sizes & Pricing</h3>
-              <p className="text-sm text-muted-foreground mb-4">{cat.items.length} products — edit price per quantity tier</p>
-              <ProductPriceTable cat={cat} catIndex={catIndex} onPriceChange={updateProductPrice} />
-            </div>
+          <div className="space-y-5">
+            {hasAddOns && (
+              <SubTabs
+                active={currentSub}
+                tabs={[{ id: 'pricing', label: 'Quantity Pricing' }, { id: 'addons', label: 'Add-Ons' }]}
+                onChange={v => setSubTabFor(activeTab, v)}
+              />
+            )}
 
-            {/* Product Add-Ons */}
-            {cat.addOns.length > 0 && (
+            {currentSub !== 'addons' && (
               <div className="bg-card border border-border rounded-2xl p-6">
-                <h3 className="font-bold mb-1">Add-Ons</h3>
-                <p className="text-sm text-muted-foreground mb-4">Optional upgrades for {cat.name.toLowerCase()}</p>
-                <AddOnEditor addOns={cat.addOns} onChange={addOns => updateProductAddOns(catIndex, addOns)} />
+                <h3 className="font-bold mb-1">Sizes & Pricing</h3>
+                <p className="text-sm text-muted-foreground mb-4">{cat.items.length} products — set price per quantity tier</p>
+                <div className="space-y-3">
+                  {cat.items.map((item, itemIndex) => (
+                    <div key={item.size} className="bg-muted/30 rounded-xl p-4">
+                      <p className="text-sm font-bold mb-3">{item.size}</p>
+                      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                        {item.quantities.map((q, qtyIndex) => (
+                          <div key={q.qty}>
+                            <label className="block text-[11px] text-muted-foreground mb-1">{q.qty === 1 ? 'Per unit' : `${q.qty}+ pcs`}</label>
+                            <div className="relative">
+                              <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-muted-foreground text-xs">$</span>
+                              <input
+                                type="number" step="0.01" min="0" value={q.price}
+                                onChange={e => updateProductPrice(catIndex, itemIndex, qtyIndex, e.target.value)}
+                                className="w-full pl-6 pr-2 py-2 bg-background border border-border rounded-lg text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all"
+                              />
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {currentSub === 'addons' && hasAddOns && (
+              <div className="bg-card border border-border rounded-2xl p-6">
+                <h3 className="font-bold mb-1">{cat.name} Add-Ons</h3>
+                <p className="text-sm text-muted-foreground mb-4">Base price per add-on</p>
+                <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
+                  {cat.addOns.map((addon, i) => (
+                    <PriceInput key={addon.name} label={addon.name} value={addon.value} onChange={v => updateProductAddOn(catIndex, i, v)} />
+                  ))}
+                </div>
               </div>
             )}
           </div>
         )
       })()}
+
+      {/* Dedicated Add-Ons Tab */}
+      {activeTab === 'addons' && (
+        <div className="space-y-6">
+          {/* Sticker Finish Add-Ons */}
+          <div className="bg-card border border-border rounded-2xl p-6">
+            <h3 className="font-bold mb-1">Sticker Finishes</h3>
+            <p className="text-sm text-muted-foreground mb-4">Base price added per sticker for each finish</p>
+            <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
+              {config.stickerAddOns.map((addon, i) => (
+                <PriceInput key={addon.name} label={addon.name} value={addon.value} onChange={v => updateStickerAddOn(i, v)} />
+              ))}
+            </div>
+          </div>
+
+          {/* All Product Add-Ons grouped by category */}
+          {config.products.map((cat, catIndex) => {
+            if (cat.addOns.length === 0) return null
+            return (
+              <div key={cat.name} className="bg-card border border-border rounded-2xl p-6">
+                <h3 className="font-bold mb-1">{cat.name}</h3>
+                <p className="text-sm text-muted-foreground mb-4">Base price per add-on</p>
+                <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
+                  {cat.addOns.map((addon, i) => (
+                    <PriceInput key={addon.name} label={addon.name} value={addon.value} onChange={v => updateProductAddOn(catIndex, i, v)} />
+                  ))}
+                </div>
+              </div>
+            )
+          })}
+        </div>
+      )}
     </div>
   )
 }

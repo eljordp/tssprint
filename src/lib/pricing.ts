@@ -40,11 +40,11 @@ export const defaultPricing: PricingConfig = {
     { name: 'Paper', multiplier: 1.0 },
   ],
   stickerAddOns: [
-    { name: 'Gloss', type: 'multiplier', value: 1.0 },
-    { name: 'Holo', type: 'multiplier', value: 1.25 },
-    { name: 'UV', type: 'multiplier', value: 2.0 },
-    { name: 'Paper', type: 'multiplier', value: 0.9 },
-    { name: 'Embossed', type: 'multiplier', value: 2.0 },
+    { name: 'Gloss', type: 'flat', value: 0.05 },
+    { name: 'Holo', type: 'flat', value: 0.15 },
+    { name: 'UV', type: 'flat', value: 0.25 },
+    { name: 'Paper', type: 'flat', value: 0.03 },
+    { name: 'Embossed', type: 'flat', value: 0.30 },
   ],
   products: [
     {
@@ -58,10 +58,10 @@ export const defaultPricing: PricingConfig = {
         { size: '2oz Jar Labels', quantities: [{ qty: 100, price: 2.00 }, { qty: 250, price: 1.90 }, { qty: 500, price: 1.85 }, { qty: 1000, price: 1.80 }] },
       ],
       addOns: [
-        { name: 'Holographic Upgrade', type: 'multiplier', value: 1.15 },
+        { name: 'Holographic Upgrade', type: 'flat', value: 0.15 },
         { name: 'Direct Print', type: 'flat', value: 0.25 },
         { name: 'Window Cutout', type: 'flat', value: 0.10 },
-        { name: 'Foil Finish', type: 'multiplier', value: 1.10 },
+        { name: 'Foil Finish', type: 'flat', value: 0.10 },
       ],
     },
     {
@@ -122,11 +122,19 @@ export const defaultPricing: PricingConfig = {
       ],
     },
     {
-      name: 'Business Cards',
+      name: 'Business Print Essentials',
       items: [
-        { size: 'Standard (3.5"×2")', quantities: [{ qty: 250, price: 49 }, { qty: 500, price: 79 }, { qty: 1000, price: 129 }] },
-        { size: 'Square (2.5"×2.5")', quantities: [{ qty: 250, price: 59 }, { qty: 500, price: 89 }, { qty: 1000, price: 149 }] },
-        { size: 'Mini (3"×1")', quantities: [{ qty: 250, price: 39 }, { qty: 500, price: 59 }, { qty: 1000, price: 99 }] },
+        { size: 'Business Cards – Standard (3.5"×2")', quantities: [{ qty: 250, price: 49 }, { qty: 500, price: 79 }, { qty: 1000, price: 129 }] },
+        { size: 'Business Cards – Square (2.5"×2.5")', quantities: [{ qty: 250, price: 59 }, { qty: 500, price: 89 }, { qty: 1000, price: 149 }] },
+        { size: 'Business Cards – Mini (3"×1")', quantities: [{ qty: 250, price: 39 }, { qty: 500, price: 59 }, { qty: 1000, price: 99 }] },
+        { size: 'Flyers – 8.5"×11"', quantities: [{ qty: 100, price: 55 }, { qty: 250, price: 99 }, { qty: 500, price: 159 }, { qty: 1000, price: 249 }] },
+        { size: 'Flyers – 5.5"×8.5"', quantities: [{ qty: 100, price: 39 }, { qty: 250, price: 69 }, { qty: 500, price: 109 }, { qty: 1000, price: 179 }] },
+        { size: 'Door Hangers', quantities: [{ qty: 100, price: 69 }, { qty: 250, price: 119 }, { qty: 500, price: 189 }, { qty: 1000, price: 299 }] },
+        { size: 'Postcards – 4"×6"', quantities: [{ qty: 100, price: 45 }, { qty: 250, price: 79 }, { qty: 500, price: 129 }, { qty: 1000, price: 199 }] },
+        { size: 'Postcards – 5"×7"', quantities: [{ qty: 100, price: 55 }, { qty: 250, price: 95 }, { qty: 500, price: 149 }, { qty: 1000, price: 239 }] },
+        { size: 'Vehicle Magnets – 12"×18"', quantities: [{ qty: 1, price: 35 }, { qty: 2, price: 30 }, { qty: 5, price: 25 }] },
+        { size: 'Vehicle Magnets – 18"×24"', quantities: [{ qty: 1, price: 49 }, { qty: 2, price: 42 }, { qty: 5, price: 35 }] },
+        { size: 'Vehicle Magnets – 24"×36"', quantities: [{ qty: 1, price: 69 }, { qty: 2, price: 59 }, { qty: 5, price: 49 }] },
       ],
       addOns: [
         { name: 'Soft-Touch', type: 'flat', value: 15 },
