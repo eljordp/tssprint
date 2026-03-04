@@ -1,91 +1,378 @@
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useRef } from 'react'
 import { motion } from 'framer-motion'
-import { Upload, ArrowRight } from 'lucide-react'
+import { ShoppingCart, Sparkles, FileUp, Check } from 'lucide-react'
 import { useCart } from '@/context/CartContext'
 import { getPricing, getBasePrice, getMaterialMultiplier } from '@/lib/pricing'
 
-const shapes = ['Die-Cut', 'Kiss-Cut', 'Circle', 'Square', 'Rectangle']
-const materials = ['Matte Vinyl', 'Glossy Vinyl', 'Clear', 'Holographic', 'Paper']
-const quantities = [50, 100, 200, 300, 500, 1000]
+const shapeData = [
+  { name: 'Square', value: 'Square' },
+  { name: 'Circle', value: 'Circle' },
+  { name: 'Rectangle', value: 'Rectangle' },
+  { name: 'Hand-held', value: 'Die-Cut' },
+  { name: 'Kiss Cut', value: 'Kiss-Cut' },
+]
+
+const materialData = [
+  { value: 'Matte Vinyl', label: 'Matte', bg: 'radial-gradient(circle at 35% 35%, #f0ece8, #ccc7c0)' },
+  { value: 'Glossy Vinyl', label: 'Gloss', bg: 'radial-gradient(circle at 35% 35%, #e0e0e4, #b0b0b6)' },
+  { value: 'Clear', label: 'Clear', bg: 'radial-gradient(circle at 35% 35%, #bbbbc0, #88888e)' },
+  { value: 'Holographic', label: 'Holographic', bg: 'linear-gradient(135deg, #e4c8f8, #c4b5fd, #93c5fd)' },
+  { value: 'Paper', label: 'Paper', bg: 'radial-gradient(circle at 35% 35%, #f5e8a0, #d4c060)' },
+  { value: 'Embossed/UV', label: 'Embossed/UV', bg: 'radial-gradient(circle at 35% 35%, #ffffff, #d8d8d8)' },
+]
+
+const sizeOptions = ['2" x 2"', '3" x 3"', '4" x 4"', '5" x 5"', '6" x 6"', '7" x 7"']
+const qtyOptions = [50, 100, 200, 300, 500]
+
+function ShapeIcon({ shape }: { shape: string }) {
+  return (
+    <svg className="w-5 h-5 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+      {shape === 'Square' && <rect x="5" y="5" width="14" height="14" rx="1" />}
+      {shape === 'Circle' && <circle cx="12" cy="12" r="7" />}
+      {shape === 'Rectangle' && <rect x="3" y="7" width="18" height="10" rx="1" />}
+      {shape === 'Die-Cut' && <path d="M12 3L21 12L12 21L3 12Z" />}
+      {shape === 'Kiss-Cut' && <path d="M12 3L21 12L12 21L3 12Z" strokeDasharray="3 2" />}
+    </svg>
+  )
+}
 
 export default function Order() {
   const { addItem } = useCart()
   const [shape, setShape] = useState('Die-Cut')
   const [material, setMaterial] = useState('Matte Vinyl')
-  const [quantity, setQuantity] = useState(100)
-  const [size, setSize] = useState('3"x3"')
+  const [quantity, setQuantity] = useState(50)
+  const [customQty, setCustomQty] = useState('')
+  const [size, setSize] = useState('2" x 2"')
+  const [mockupView, setMockupView] = useState<'handheld' | 'sheet' | 'roll'>('handheld')
+  const [artworkFile, setArtworkFile] = useState<File | null>(null)
+  const [artworkUrl, setArtworkUrl] = useState('')
   const [added, setAdded] = useState(false)
+  const fileRef = useRef<HTMLInputElement>(null)
 
   const pricingConfig = useMemo(() => getPricing(), [])
-  const basePrice = getBasePrice(quantity, pricingConfig)
-  const materialMultiplier = getMaterialMultiplier(material, pricingConfig)
-  const price = +(basePrice * materialMultiplier * quantity).toFixed(2)
+
+  const effectiveQty = customQty ? (parseInt(customQty) || 50) : quantity
+  const basePrice = getBasePrice(effectiveQty, pricingConfig)
+  const matMult = getMaterialMultiplier(material, pricingConfig)
+  const totalPrice = +(basePrice * matMult * effectiveQty).toFixed(2)
+  const perUnit = +(basePrice * matMult).toFixed(3)
+
+  const refPerUnit = getBasePrice(50, pricingConfig) * matMult
+  const getDiscount = (qty: number) => {
+    const pu = getBasePrice(qty, pricingConfig) * matMult
+    return Math.round((1 - pu / refPerUnit) * 100)
+  }
+  const getQtyTotal = (qty: number) => +(getBasePrice(qty, pricingConfig) * matMult * qty).toFixed(0)
+
+  const materialLabel = materialData.find(m => m.value === material)?.label || material
+  const shapeLabel = shapeData.find(s => s.value === shape)?.name || shape
+
+  const handleFile = (file: File) => {
+    setArtworkFile(file)
+    setArtworkUrl(URL.createObjectURL(file))
+  }
 
   const handleAddToCart = () => {
-    addItem({ id: `sticker-${Date.now()}`, name: `${shape} ${material} Stickers`, size, option: `${quantity} pcs`, price, quantity: 1, material, shape, dimensions: size })
+    addItem({
+      id: `sticker-${Date.now()}`,
+      name: `${shapeLabel} ${materialLabel} Stickers`,
+      size,
+      option: `${effectiveQty} pcs`,
+      price: totalPrice,
+      quantity: 1,
+      material,
+      shape,
+      dimensions: size,
+    })
     setAdded(true)
     setTimeout(() => setAdded(false), 2000)
   }
 
   return (
     <>
-      <div className="-mt-16 md:-mt-18 pt-24 md:pt-32 pb-10 md:pb-14" style={{ backgroundColor: 'hsl(199 89% 64%)' }}>
+      <div className="relative -mt-16 md:-mt-18 pt-24 md:pt-32 pb-10 md:pb-14" style={{ backgroundColor: 'hsl(199 89% 64%)' }}>
+        <div className="absolute inset-0 pointer-events-none" style={{ backgroundImage: `url("data:image/svg+xml,%3Csvg width='40' height='40' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M0 20h40M20 0v40' stroke='%23000' stroke-width='.5'/%3E%3C/svg%3E")`, backgroundSize: '40px 40px', opacity: 0.02 }} />
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="text-center section-container">
           <h1 className="text-4xl md:text-6xl font-black mb-4 text-white">Order Custom Stickers</h1>
           <p className="text-white/80 text-lg">Configure your stickers and add to cart</p>
         </motion.div>
       </div>
+
       <section className="py-8 md:py-16">
         <div className="section-container">
-        <div className="max-w-4xl mx-auto grid md:grid-cols-2 gap-8">
-          <div className="space-y-6">
+          {/* 4-column configurator */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.1 }}
+            className="max-w-6xl mx-auto grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 lg:gap-8 mb-10"
+          >
+            {/* Shape */}
             <div>
-              <label className="block text-sm font-bold mb-3 uppercase tracking-wider">Shape</label>
-              <div className="grid grid-cols-3 gap-2">
-                {shapes.map(s => (<button key={s} onClick={() => setShape(s)} className={`px-4 py-3 rounded-xl text-sm font-medium border transition-all ${shape === s ? 'border-primary bg-primary/10 text-primary' : 'border-border hover:border-primary/30'}`}>{s}</button>))}
+              <h3 className="text-sm font-black uppercase tracking-wider mb-3">Shape</h3>
+              <div className="space-y-2">
+                {shapeData.map(s => (
+                  <button
+                    key={s.value}
+                    onClick={() => setShape(s.value)}
+                    className={`w-full flex items-center gap-3 px-4 py-3.5 rounded-xl text-sm font-medium border transition-all text-left ${
+                      shape === s.value
+                        ? 'border-primary bg-primary/10 text-primary'
+                        : 'border-border hover:border-primary/30'
+                    }`}
+                  >
+                    <ShapeIcon shape={s.value} />
+                    <span>{s.name}</span>
+                  </button>
+                ))}
               </div>
             </div>
+
+            {/* Material */}
             <div>
-              <label className="block text-sm font-bold mb-3 uppercase tracking-wider">Material</label>
-              <div className="grid grid-cols-3 gap-2">
-                {materials.map(m => (<button key={m} onClick={() => setMaterial(m)} className={`px-4 py-3 rounded-xl text-sm font-medium border transition-all ${material === m ? 'border-primary bg-primary/10 text-primary' : 'border-border hover:border-primary/30'}`}>{m}</button>))}
+              <h3 className="text-sm font-black uppercase tracking-wider mb-3">Material</h3>
+              <div className="grid grid-cols-2 gap-3">
+                {materialData.map(m => (
+                  <button
+                    key={m.value}
+                    onClick={() => setMaterial(m.value)}
+                    className={`flex flex-col items-center gap-2 p-4 rounded-xl border transition-all ${
+                      material === m.value
+                        ? 'border-primary bg-primary/10'
+                        : 'border-border hover:border-primary/30'
+                    }`}
+                  >
+                    <div
+                      className="w-12 h-12 rounded-full shadow-inner"
+                      style={{ background: m.bg, boxShadow: 'inset 0 -3px 6px rgba(0,0,0,0.12), inset 0 2px 4px rgba(255,255,255,0.15)' }}
+                    />
+                    <span className={`text-xs font-medium ${material === m.value ? 'text-primary' : 'text-muted-foreground'}`}>
+                      {m.label}
+                    </span>
+                  </button>
+                ))}
               </div>
             </div>
+
+            {/* Size */}
             <div>
-              <label className="block text-sm font-bold mb-3 uppercase tracking-wider">Size</label>
-              <div className="grid grid-cols-4 gap-2">
-                {['2"x2"', '3"x3"', '4"x4"', '5"x5"'].map(s => (<button key={s} onClick={() => setSize(s)} className={`px-4 py-3 rounded-xl text-sm font-medium border transition-all ${size === s ? 'border-primary bg-primary/10 text-primary' : 'border-border hover:border-primary/30'}`}>{s}</button>))}
+              <h3 className="text-sm font-black uppercase tracking-wider mb-3">Size, inch (WxH)</h3>
+              <div className="space-y-2">
+                {sizeOptions.map(s => (
+                  <button
+                    key={s}
+                    onClick={() => setSize(s)}
+                    className={`w-full px-4 py-3.5 rounded-xl text-sm font-medium border transition-all text-left ${
+                      size === s
+                        ? 'border-primary bg-primary text-white'
+                        : 'border-border hover:border-primary/30'
+                    }`}
+                  >
+                    {s}
+                  </button>
+                ))}
               </div>
             </div>
+
+            {/* Quantity */}
             <div>
-              <label className="block text-sm font-bold mb-3 uppercase tracking-wider">Quantity</label>
-              <div className="grid grid-cols-3 gap-2">
-                {quantities.map(q => (<button key={q} onClick={() => setQuantity(q)} className={`px-4 py-3 rounded-xl text-sm font-medium border transition-all ${quantity === q ? 'border-primary bg-primary/10 text-primary' : 'border-border hover:border-primary/30'}`}>{q}</button>))}
+              <h3 className="text-sm font-black uppercase tracking-wider mb-3">Quantity</h3>
+              <div className="space-y-2">
+                {qtyOptions.map(q => {
+                  const total = getQtyTotal(q)
+                  const disc = getDiscount(q)
+                  const isActive = !customQty && quantity === q
+                  return (
+                    <button
+                      key={q}
+                      onClick={() => { setQuantity(q); setCustomQty('') }}
+                      className={`w-full flex items-center justify-between px-4 py-3.5 rounded-xl text-sm font-medium border transition-all ${
+                        isActive
+                          ? 'border-primary bg-primary text-white'
+                          : 'border-border hover:border-primary/30'
+                      }`}
+                    >
+                      <span>{q} pcs</span>
+                      <span className="flex items-center gap-2">
+                        <span className="font-bold">${total}</span>
+                        {disc > 0 && (
+                          <span className={`text-xs font-semibold ${isActive ? 'text-white/70' : 'text-green-400'}`}>
+                            -{disc}%
+                          </span>
+                        )}
+                      </span>
+                    </button>
+                  )
+                })}
+                {/* Custom quantity */}
+                <div className={`rounded-xl border transition-all ${customQty ? 'border-primary bg-primary/10' : 'border-border'}`}>
+                  <p className="text-xs text-muted-foreground text-center pt-3 pb-1.5">Custom quantity</p>
+                  <div className="flex items-center gap-2 px-3 pb-3">
+                    <input
+                      type="number"
+                      min={1}
+                      placeholder="Enter qty"
+                      value={customQty}
+                      onChange={e => setCustomQty(e.target.value)}
+                      className="flex-1 bg-muted rounded-lg px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/20"
+                    />
+                    <span className="text-sm font-bold">
+                      ${customQty ? getQtyTotal(parseInt(customQty) || 50) : getQtyTotal(quantity)}
+                    </span>
+                  </div>
+                </div>
               </div>
             </div>
-          </div>
-          <div className="space-y-6">
-            <div className="upload-zone text-center">
-              <Upload size={40} className="mx-auto text-muted-foreground mb-4" />
-              <p className="font-semibold mb-1">Upload Your Design</p>
-              <p className="text-sm text-muted-foreground">PNG, JPG, PDF, AI, SVG</p>
-            </div>
-            <div className="bg-card border border-border rounded-2xl p-6">
-              <h3 className="font-bold text-lg mb-4">Order Summary</h3>
-              <div className="space-y-2 text-sm mb-6">
-                <div className="flex justify-between"><span className="text-muted-foreground">Shape</span><span>{shape}</span></div>
-                <div className="flex justify-between"><span className="text-muted-foreground">Material</span><span>{material}</span></div>
-                <div className="flex justify-between"><span className="text-muted-foreground">Size</span><span>{size}</span></div>
-                <div className="flex justify-between"><span className="text-muted-foreground">Quantity</span><span>{quantity}</span></div>
-                <div className="flex justify-between"><span className="text-muted-foreground">Per sticker</span><span>${(price / quantity).toFixed(2)}</span></div>
-                <div className="border-t border-border pt-2 flex justify-between font-bold text-lg"><span>Total</span><span className="text-primary">${price.toFixed(2)}</span></div>
+          </motion.div>
+
+          {/* Bottom 3-column section */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.2 }}
+            className="max-w-6xl mx-auto grid grid-cols-1 md:grid-cols-3 gap-6"
+          >
+            {/* Artwork card */}
+            <div className="bg-card border border-border rounded-2xl p-8 flex flex-col items-center justify-center text-center">
+              <h3 className="font-bold text-lg mb-1">Do you have artwork ready?</h3>
+              <p className="text-sm text-muted-foreground mb-6">Let us know so we can help you best</p>
+              <div className="space-y-3 w-full max-w-xs">
+                <button className="w-full flex items-center justify-center gap-2.5 px-5 py-4 rounded-xl bg-muted border border-border text-sm font-medium hover:border-primary/30 transition-all">
+                  <Sparkles size={16} className="text-primary" /> I need a design
+                </button>
+                <button
+                  onClick={() => fileRef.current?.click()}
+                  className="w-full flex items-center justify-center gap-2.5 px-5 py-4 rounded-xl bg-muted border border-border text-sm font-medium hover:border-primary/30 transition-all"
+                >
+                  <FileUp size={16} className="text-primary" /> I have a design
+                </button>
+                <input
+                  ref={fileRef}
+                  type="file"
+                  accept="image/*,.pdf,.ai,.svg"
+                  className="hidden"
+                  onChange={e => { const f = e.target.files?.[0]; if (f) handleFile(f) }}
+                />
+                {artworkFile && (
+                  <p className="text-xs text-primary font-medium mt-2">
+                    &#10003; {artworkFile.name}
+                  </p>
+                )}
               </div>
-              <button onClick={handleAddToCart} className={`btn-primary w-full ${added ? 'bg-green-600' : ''}`}>
-                {added ? 'Added to Cart!' : 'Add to Cart'}<ArrowRight size={18} />
+            </div>
+
+            {/* Mockup preview */}
+            <div className="bg-card border border-border rounded-2xl p-6 flex flex-col items-center">
+              {/* View toggle */}
+              <div className="flex gap-1 bg-muted/60 p-1 rounded-full mb-6">
+                {(['handheld', 'sheet', 'roll'] as const).map(v => {
+                  const icons: Record<string, string> = { handheld: '\u270B', sheet: '\uD83D\uDCCB', roll: '\uD83D\uDCDC' }
+                  const labels: Record<string, string> = { handheld: 'Hand-held', sheet: 'Sheet', roll: 'Roll' }
+                  return (
+                    <button
+                      key={v}
+                      onClick={() => setMockupView(v)}
+                      className={`flex items-center gap-1.5 px-4 py-2 rounded-full text-xs font-medium transition-all ${
+                        mockupView === v
+                          ? 'bg-primary text-white shadow-sm'
+                          : 'text-muted-foreground hover:text-foreground'
+                      }`}
+                    >
+                      <span className="text-[11px]">{icons[v]}</span> {labels[v]}
+                    </button>
+                  )
+                })}
+              </div>
+
+              {/* Preview area */}
+              <div className="flex-1 flex items-center justify-center w-full min-h-[220px]">
+                {artworkUrl ? (
+                  <div className="relative">
+                    <img
+                      src={artworkUrl}
+                      alt="Preview"
+                      className={`max-w-[140px] max-h-[140px] object-cover shadow-xl ${
+                        shape === 'Circle' ? 'rounded-full' :
+                        shape === 'Rectangle' ? 'rounded-lg aspect-[1.6/1]' :
+                        (shape === 'Die-Cut' || shape === 'Kiss-Cut') ? 'rounded-2xl rotate-6' :
+                        'rounded-lg'
+                      }`}
+                    />
+                    {mockupView === 'handheld' && (
+                      <div className="text-4xl absolute -bottom-6 left-1/2 -translate-x-1/2 opacity-30 select-none">&#x1F91A;</div>
+                    )}
+                  </div>
+                ) : (
+                  <div className="relative flex flex-col items-center">
+                    <div
+                      className={`border-2 border-dashed border-muted-foreground/20 flex items-center justify-center ${
+                        shape === 'Circle' ? 'w-28 h-28 rounded-full' :
+                        (shape === 'Die-Cut' || shape === 'Kiss-Cut') ? 'w-28 h-28 rounded-xl rotate-45' :
+                        shape === 'Rectangle' ? 'w-36 h-24 rounded-lg' :
+                        'w-28 h-28 rounded-lg'
+                      }`}
+                      style={{ background: 'hsl(199 89% 64% / 0.06)' }}
+                    >
+                      <span className={`text-[10px] text-muted-foreground/40 font-semibold text-center leading-tight ${
+                        (shape === 'Die-Cut' || shape === 'Kiss-Cut') ? '-rotate-45' : ''
+                      }`}>
+                        Your<br/>Design
+                      </span>
+                    </div>
+                    {mockupView === 'handheld' && (
+                      <div className="text-5xl opacity-15 mt-1 select-none">&#x1F91A;</div>
+                    )}
+                    {mockupView === 'sheet' && (
+                      <div className="grid grid-cols-4 gap-1.5 mt-4 opacity-15">
+                        {[...Array(8)].map((_, i) => (
+                          <div key={i} className={`w-5 h-5 border border-muted-foreground/40 ${shape === 'Circle' ? 'rounded-full' : 'rounded-sm'}`} />
+                        ))}
+                      </div>
+                    )}
+                    {mockupView === 'roll' && (
+                      <div className="flex items-center gap-1 mt-4 opacity-15">
+                        {[...Array(6)].map((_, i) => (
+                          <div key={i} className={`w-5 h-5 border border-muted-foreground/40 ${shape === 'Circle' ? 'rounded-full' : 'rounded-sm'}`} />
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
+
+              <p className="text-xs text-muted-foreground mt-4">Upload artwork to preview</p>
+            </div>
+
+            {/* Order Summary */}
+            <div className="bg-card border border-border rounded-2xl p-6 flex flex-col">
+              <h3 className="text-xs font-black uppercase tracking-[0.2em] text-center text-muted-foreground mb-5">
+                Order Summary
+              </h3>
+              <div className="text-center space-y-1 mb-5">
+                <p className="text-xl font-black">{effectiveQty} stickers</p>
+                <p className="text-sm text-muted-foreground">{shapeLabel} &middot; {size}</p>
+                <p className="text-sm text-muted-foreground">{materialLabel}</p>
+              </div>
+              <div className="border-t border-border pt-5 text-center flex-1 flex flex-col justify-center">
+                <p className="text-xs font-bold text-primary uppercase tracking-wider mb-1">Total</p>
+                <p className="text-4xl font-black">${totalPrice.toFixed(2)}</p>
+                <p className="text-xs text-primary mt-1.5">&asymp; ${perUnit.toFixed(3)}/ea</p>
+              </div>
+              <button
+                onClick={handleAddToCart}
+                className={`btn-primary w-full mt-6 ${added ? 'bg-green-600' : ''}`}
+              >
+                {added ? (
+                  <><Check size={18} /> Added to Cart!</>
+                ) : (
+                  <><ShoppingCart size={18} /> Add to Cart</>
+                )}
               </button>
+              <p className="text-[11px] text-muted-foreground text-center mt-3 leading-relaxed">
+                Digital proof within 24 hours. Nothing prints until you approve.
+              </p>
             </div>
-          </div>
-        </div>
+          </motion.div>
         </div>
       </section>
     </>
