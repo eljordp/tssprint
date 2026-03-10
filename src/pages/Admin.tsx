@@ -45,6 +45,28 @@ interface Customer {
   referred_by: string | null; created_at: string
 }
 
+type CustomerTag = 'admin' | 'vip' | 'customer'
+
+function getCustomerTags(): Record<string, CustomerTag> {
+  return JSON.parse(localStorage.getItem('tss-customer-tags') || '{}')
+}
+
+function setCustomerTag(customerId: string, tag: CustomerTag) {
+  const tags = getCustomerTags()
+  if (tag === 'customer') {
+    delete tags[customerId]
+  } else {
+    tags[customerId] = tag
+  }
+  localStorage.setItem('tss-customer-tags', JSON.stringify(tags))
+}
+
+const tagConfig: Record<CustomerTag, { label: string; color: string; bg: string }> = {
+  admin: { label: 'Admin', color: 'text-red-400', bg: 'bg-red-400/10 border-red-400/20' },
+  vip: { label: 'VIP', color: 'text-yellow-400', bg: 'bg-yellow-400/10 border-yellow-400/20' },
+  customer: { label: 'Customer', color: 'text-muted-foreground', bg: 'bg-muted/50 border-border' },
+}
+
 interface AnalyticsSummary {
   totalViews: number; uniqueVisitors: number; todayViews: number
   topPages: { path: string; views: number }[]
@@ -977,6 +999,8 @@ function CRMTab() {
   const [loading, setLoading] = useState(true)
   const [view, setView] = useState<'customers' | 'referrals'>('customers')
   const [search, setSearch] = useState('')
+  const [tagFilter, setTagFilter] = useState<CustomerTag | 'all'>('all')
+  const [tags, setTags] = useState<Record<string, CustomerTag>>(getCustomerTags())
 
   useEffect(() => { fetchData() }, [])
 
@@ -993,15 +1017,25 @@ function CRMTab() {
     finally { setLoading(false) }
   }
 
+  const handleTagChange = (customerId: string, tag: CustomerTag) => {
+    setCustomerTag(customerId, tag)
+    setTags(getCustomerTags())
+    toast.success(`Customer tagged as ${tagConfig[tag].label}`)
+  }
+
+  const getTag = (customerId: string): CustomerTag => tags[customerId] || 'customer'
+
   const filtered = customers.filter(c => {
-    if (!search) return true
-    const q = search.toLowerCase()
-    return c.email.toLowerCase().includes(q) || (c.first_name || '').toLowerCase().includes(q) || (c.last_name || '').toLowerCase().includes(q)
+    const matchesSearch = !search || c.email.toLowerCase().includes(search.toLowerCase()) || (c.first_name || '').toLowerCase().includes(search.toLowerCase()) || (c.last_name || '').toLowerCase().includes(search.toLowerCase())
+    const matchesTag = tagFilter === 'all' || getTag(c.id) === tagFilter
+    return matchesSearch && matchesTag
   })
 
   const totalCustomers = customers.length
   const totalRevenue = customers.reduce((s, c) => s + (c.total_spent || 0), 0)
   const totalReferrals = referrals.length
+  const adminCount = customers.filter(c => getTag(c.id) === 'admin').length
+  const vipCount = customers.filter(c => getTag(c.id) === 'vip').length
 
   const copyLink = (code: string) => {
     navigator.clipboard.writeText(getReferralUrl(code))
@@ -1033,8 +1067,18 @@ function CRMTab() {
           ))}
         </div>
         {view === 'customers' && (
-          <input type="text" value={search} onChange={e => setSearch(e.target.value)} placeholder="Search customers..."
-            className="px-4 py-2 bg-background border border-border rounded-xl text-foreground text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/50 flex-1 max-w-xs" />
+          <>
+            <div className="flex gap-1">
+              {([['all', `All (${totalCustomers})`], ['admin', `Admins (${adminCount})`], ['vip', `VIP (${vipCount})`], ['customer', `Regular`]] as [CustomerTag | 'all', string][]).map(([key, label]) => (
+                <button key={key} onClick={() => setTagFilter(key)}
+                  className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${tagFilter === key ? 'bg-primary/20 text-primary border border-primary/30' : 'bg-muted/30 text-muted-foreground hover:text-foreground border border-transparent'}`}>
+                  {label}
+                </button>
+              ))}
+            </div>
+            <input type="text" value={search} onChange={e => setSearch(e.target.value)} placeholder="Search customers..."
+              className="px-4 py-2 bg-background border border-border rounded-xl text-foreground text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/50 flex-1 max-w-xs" />
+          </>
         )}
       </div>
 
@@ -1051,6 +1095,7 @@ function CRMTab() {
                 <thead>
                   <tr className="border-b border-border">
                     <th className="text-left px-4 py-3 text-xs font-bold uppercase text-muted-foreground">Customer</th>
+                    <th className="text-left px-4 py-3 text-xs font-bold uppercase text-muted-foreground">Role</th>
                     <th className="text-left px-4 py-3 text-xs font-bold uppercase text-muted-foreground">Email</th>
                     <th className="text-right px-4 py-3 text-xs font-bold uppercase text-muted-foreground">Orders</th>
                     <th className="text-right px-4 py-3 text-xs font-bold uppercase text-muted-foreground">Spent</th>
@@ -1059,9 +1104,23 @@ function CRMTab() {
                   </tr>
                 </thead>
                 <tbody>
-                  {filtered.map(c => (
+                  {filtered.map(c => {
+                    const tag = getTag(c.id)
+                    const cfg = tagConfig[tag]
+                    return (
                     <tr key={c.id} className="border-b border-border/50 hover:bg-muted/20 transition-colors">
                       <td className="px-4 py-3 font-medium">{[c.first_name, c.last_name].filter(Boolean).join(' ') || '—'}</td>
+                      <td className="px-4 py-3">
+                        <select
+                          value={tag}
+                          onChange={e => handleTagChange(c.id, e.target.value as CustomerTag)}
+                          className={`px-2 py-1 rounded-lg text-xs font-bold border cursor-pointer bg-transparent ${cfg.bg} ${cfg.color} focus:outline-none focus:ring-1 focus:ring-primary/50`}
+                        >
+                          <option value="customer">Customer</option>
+                          <option value="vip">VIP</option>
+                          <option value="admin">Admin</option>
+                        </select>
+                      </td>
                       <td className="px-4 py-3 text-muted-foreground">{c.email}</td>
                       <td className="px-4 py-3 text-right font-bold">{c.order_count}</td>
                       <td className="px-4 py-3 text-right font-bold text-green-400">${(c.total_spent || 0).toFixed(2)}</td>
@@ -1082,7 +1141,8 @@ function CRMTab() {
                         ) : '—'}
                       </td>
                     </tr>
-                  ))}
+                    )
+                  })}
                 </tbody>
               </table>
             </div>
