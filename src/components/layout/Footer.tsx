@@ -21,6 +21,7 @@ const footerLinks = {
     { label: 'About Us', href: '/about' },
     { label: 'Our Projects', href: '/projects' },
     { label: 'Contact', href: '/contact' },
+    { label: 'Referral Program', href: '/referral' },
   ],
 }
 

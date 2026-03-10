@@ -19,6 +19,7 @@ import OrderConfirmation from '@/pages/OrderConfirmation'
 import Contact from '@/pages/Contact'
 import About from '@/pages/About'
 import Projects from '@/pages/Projects'
+import Referral from '@/pages/Referral'
 import Admin from '@/pages/Admin'
 import NotFound from '@/pages/NotFound'
 
@@ -56,6 +57,7 @@ export default function App() {
             <Route path="/contact" element={<Contact />} />
             <Route path="/about" element={<About />} />
             <Route path="/projects" element={<Projects />} />
+            <Route path="/referral" element={<Referral />} />
             <Route path="/admin" element={<Admin />} />
             <Route path="*" element={<NotFound />} />
           </Route>

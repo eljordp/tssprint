@@ -4,13 +4,14 @@ import {
   LogOut, Package, DollarSign, Users, ChevronDown, ChevronUp,
   Truck, Clock, CheckCircle, Settings, RotateCcw, Save, Loader2,
   ShoppingCart, BarChart3, UserPlus, Eye, MousePointer, ArrowRight,
-  Copy, ExternalLink, Mail, Tag, Plus, Trash2, ToggleLeft, ToggleRight,
+  Copy, ExternalLink, Mail, Tag, Plus, Trash2, ToggleLeft, ToggleRight, Share2, Gift,
 } from 'lucide-react'
 import { getPricing, savePricing, defaultPricing, type PricingConfig } from '@/lib/pricing'
 import { supabase } from '@/lib/supabase'
 import { getReferralUrl } from '@/lib/referrals'
 import { toast } from 'sonner'
 import { getPromoCodes, savePromoCodes, categoryLabels, type PromoCode } from '@/lib/promoCodes'
+import { getReferrers, getReferralLog, getReferralShareUrl, type Referrer } from '@/lib/referralRewards'
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
@@ -1137,6 +1138,7 @@ const mainTabs = [
   { id: 'carts', label: 'Carts', icon: ShoppingCart },
   { id: 'analytics', label: 'Analytics', icon: BarChart3 },
   { id: 'crm', label: 'CRM', icon: Users },
+  { id: 'referrals', label: 'Referrals', icon: Share2 },
 ] as const
 
 type MainTab = (typeof mainTabs)[number]['id']
@@ -1181,8 +1183,137 @@ function Dashboard() {
         {activeTab === 'carts' && <CartsTab />}
         {activeTab === 'analytics' && <AnalyticsTab />}
         {activeTab === 'crm' && <CRMTab />}
+        {activeTab === 'referrals' && <ReferralsTab />}
       </div>
     </section>
+  )
+}
+
+// ─── Referrals Tab ──────────────────────────────────────────────────────────
+
+function ReferralsTab() {
+  const [referrers, setReferrers] = useState<Referrer[]>([])
+  const [logs, setLogs] = useState(getReferralLog())
+  const [view, setView] = useState<'referrers' | 'conversions'>('referrers')
+
+  useEffect(() => {
+    setReferrers(getReferrers())
+    setLogs(getReferralLog())
+  }, [])
+
+  const totalClicks = referrers.reduce((s, r) => s + r.clicks, 0)
+  const totalConversions = referrers.reduce((s, r) => s + r.conversions, 0)
+  const totalEarned = referrers.reduce((s, r) => s + r.totalEarned, 0)
+
+  const copyLink = (code: string) => {
+    navigator.clipboard.writeText(getReferralShareUrl(code))
+    toast.success('Referral link copied!')
+  }
+
+  return (
+    <div className="space-y-6">
+      {/* Stats */}
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+        {[
+          { label: 'Referrers', value: referrers.length, icon: Users },
+          { label: 'Total Clicks', value: totalClicks, icon: MousePointer },
+          { label: 'Conversions', value: totalConversions, icon: CheckCircle },
+          { label: 'Rewards Given', value: `$${totalEarned}`, icon: Gift },
+        ].map(s => (
+          <div key={s.label} className="bg-card border border-border rounded-2xl p-5">
+            <div className="flex items-center gap-2 text-muted-foreground mb-2"><s.icon size={16} /><span className="text-xs font-medium">{s.label}</span></div>
+            <p className="text-2xl font-black">{s.value}</p>
+          </div>
+        ))}
+      </div>
+
+      <div className="flex gap-1">
+        {(['referrers', 'conversions'] as const).map(v => (
+          <button key={v} onClick={() => setView(v)}
+            className={`px-4 py-2 rounded-xl text-sm font-medium transition-all ${view === v ? 'bg-primary text-primary-foreground' : 'bg-card border border-border text-muted-foreground hover:text-foreground'}`}>
+            {v === 'referrers' ? `Referrers (${referrers.length})` : `Conversions (${logs.length})`}
+          </button>
+        ))}
+      </div>
+
+      {view === 'referrers' && (
+        referrers.length === 0 ? (
+          <div className="bg-card border border-border rounded-2xl p-12 text-center">
+            <Share2 size={48} className="mx-auto text-muted-foreground mb-4" />
+            <p className="text-muted-foreground">No referrers yet. Share the <a href="/referral" className="text-primary underline">/referral</a> page.</p>
+          </div>
+        ) : (
+          <div className="bg-card border border-border rounded-2xl overflow-hidden">
+            <table className="w-full">
+              <thead>
+                <tr className="border-b border-border text-xs text-muted-foreground uppercase tracking-wider">
+                  <th className="text-left px-4 py-3">Name</th>
+                  <th className="text-left px-4 py-3">Code</th>
+                  <th className="text-center px-4 py-3">Clicks</th>
+                  <th className="text-center px-4 py-3">Sales</th>
+                  <th className="text-center px-4 py-3">Earned</th>
+                  <th className="text-left px-4 py-3">Joined</th>
+                </tr>
+              </thead>
+              <tbody>
+                {referrers.map((r, i) => (
+                  <motion.tr key={r.id} initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: i * 0.03 }}
+                    className="border-b border-border/50 hover:bg-white/[0.02] transition-colors">
+                    <td className="px-4 py-3">
+                      <p className="font-medium">{r.name}</p>
+                      <p className="text-xs text-muted-foreground">{r.email}</p>
+                    </td>
+                    <td className="px-4 py-3">
+                      <div className="flex items-center gap-1.5">
+                        <code className="text-xs bg-muted/50 px-2 py-0.5 rounded font-bold">{r.code}</code>
+                        <button onClick={() => copyLink(r.code)} className="text-muted-foreground hover:text-foreground transition-colors" title="Copy referral link">
+                          <Copy size={12} />
+                        </button>
+                      </div>
+                    </td>
+                    <td className="px-4 py-3 text-center">{r.clicks}</td>
+                    <td className="px-4 py-3 text-center font-bold text-green-400">{r.conversions}</td>
+                    <td className="px-4 py-3 text-center font-bold text-yellow-400">${r.totalEarned}</td>
+                    <td className="px-4 py-3 text-xs text-muted-foreground">{new Date(r.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}</td>
+                  </motion.tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )
+      )}
+
+      {view === 'conversions' && (
+        logs.length === 0 ? (
+          <div className="bg-card border border-border rounded-2xl p-12 text-center">
+            <Gift size={48} className="mx-auto text-muted-foreground mb-4" />
+            <p className="text-muted-foreground">No referral conversions yet.</p>
+          </div>
+        ) : (
+          <div className="space-y-3">
+            {logs.map((log, i) => (
+              <motion.div key={log.id} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: i * 0.03 }} className="bg-card border border-border rounded-2xl p-5">
+                <div className="flex items-center justify-between gap-4">
+                  <div>
+                    <p className="font-medium">
+                      <span className="text-primary">{log.referrerName}</span> referred <span className="font-bold">{log.buyerName}</span>
+                    </p>
+                    <p className="text-xs text-muted-foreground mt-1">
+                      Code: {log.referrerCode} · Order: ${log.orderTotal.toFixed(2)} · {new Date(log.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+                    </p>
+                  </div>
+                  <div className="text-right">
+                    <p className="text-xs text-muted-foreground">Reward generated</p>
+                    <code className="text-xs bg-green-400/10 text-green-400 px-2 py-0.5 rounded font-bold">{log.rewardCodeGenerated}</code>
+                  </div>
+                </div>
+              </motion.div>
+            ))}
+          </div>
+        )
+      )}
+    </div>
   )
 }
 

@@ -7,6 +7,7 @@ import { useCart } from '@/context/CartContext'
 import { checkoutSchema, type CheckoutFormErrors } from '@/lib/validation'
 import { supabase } from '@/lib/supabase'
 import { linkReferral } from '@/lib/referrals'
+import { isReferralCode, processReferralConversion } from '@/lib/referralRewards'
 import { sendOrderEmail } from '@/lib/email'
 import { toast } from 'sonner'
 
@@ -393,6 +394,20 @@ export default function Checkout() {
                             })
                           }
                         } catch { /* CRM is non-blocking */ }
+
+                        // Referral reward: if promo code used was a referral code, reward the referrer
+                        if (promoCode && isReferralCode(promoCode)) {
+                          try {
+                            processReferralConversion(
+                              promoCode,
+                              customerInfo.email.trim(),
+                              `${customerInfo.firstName} ${customerInfo.lastName}`,
+                              details.id!,
+                              parseFloat(finalTotal.toFixed(2))
+                            )
+                          } catch { /* non-blocking */ }
+                        }
+
                         clearCart()
                         // Send order confirmation emails
                         sendOrderEmail({

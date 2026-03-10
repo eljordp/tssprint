@@ -1,4 +1,5 @@
 import { supabase } from './supabase'
+import { trackReferralClick } from './referralRewards'
 
 const REF_KEY = 'tss-ref-code'
 
@@ -8,6 +9,7 @@ export function captureReferralCode() {
   const ref = params.get('ref')
   if (ref) {
     localStorage.setItem(REF_KEY, ref)
+    trackReferralClick(ref) // track the visit for the referrer
     // Clean the URL without reload
     const url = new URL(window.location.href)
     url.searchParams.delete('ref')
