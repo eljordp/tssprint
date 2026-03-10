@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { X, Tag, Copy, Check } from 'lucide-react'
 import { getPromoCodes } from '@/lib/promoCodes'
+import { isReferralCode } from '@/lib/referralRewards'
 
 export default function PromoBanner() {
   const [dismissed, setDismissed] = useState(() => sessionStorage.getItem('tss-promo-dismissed') === 'true')
@@ -8,9 +9,14 @@ export default function PromoBanner() {
 
   if (dismissed) return null
 
-  // Find the best active public-facing code to show
-  const codes = getPromoCodes().filter(c => c.active && (!c.expiresAt || new Date(c.expiresAt) > new Date()))
-  // Prioritize: first_time > event > friends_family > custom
+  // Only show general promos — no personal referral codes or reward codes
+  const codes = getPromoCodes().filter(c =>
+    c.active &&
+    (!c.expiresAt || new Date(c.expiresAt) > new Date()) &&
+    !isReferralCode(c.code) &&
+    !c.code.startsWith('THANKS')
+  )
+  // Prioritize: first_time > event > custom
   const priority = ['first_time', 'event', 'friends_family', 'custom'] as const
   const featured = priority.reduce<typeof codes[0] | null>((best, cat) => {
     if (best) return best

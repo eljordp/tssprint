@@ -1,12 +1,19 @@
 import { useState } from 'react'
 import { motion } from 'framer-motion'
-import { Tag, Copy, Check, Gift, Users, Sparkles } from 'lucide-react'
+import { Tag, Copy, Check, Gift, Sparkles } from 'lucide-react'
 import { getPromoCodes } from '@/lib/promoCodes'
+import { isReferralCode } from '@/lib/referralRewards'
 
 export default function PromoSection() {
   const [copiedCode, setCopiedCode] = useState<string | null>(null)
 
-  const codes = getPromoCodes().filter(c => c.active && (!c.expiresAt || new Date(c.expiresAt) > new Date()))
+  // Only show general promos — exclude personal referral codes and reward codes
+  const codes = getPromoCodes().filter(c =>
+    c.active &&
+    (!c.expiresAt || new Date(c.expiresAt) > new Date()) &&
+    !isReferralCode(c.code) &&
+    !c.code.startsWith('THANKS')
+  )
 
   if (codes.length === 0) return null
 
@@ -18,7 +25,6 @@ export default function PromoSection() {
 
   const categoryIcon = (cat: string) => {
     switch (cat) {
-      case 'friends_family': return Users
       case 'first_time': return Gift
       case 'event': return Sparkles
       default: return Tag

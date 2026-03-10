@@ -1,6 +1,6 @@
 import { Link } from 'react-router-dom'
 import { motion } from 'framer-motion'
-import { Users, Gift, DollarSign, ArrowRight } from 'lucide-react'
+import { ArrowRight } from 'lucide-react'
 
 export default function ReferralProgram() {
   return (
@@ -10,49 +10,35 @@ export default function ReferralProgram() {
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
-          className="bg-gradient-to-br from-primary/15 via-primary/5 to-transparent border border-primary/20 rounded-3xl overflow-hidden"
+          className="relative bg-gradient-to-br from-primary/15 via-primary/5 to-transparent border border-primary/20 rounded-3xl overflow-hidden p-8 md:p-12"
         >
-          <div className="grid md:grid-cols-2 gap-8 p-8 md:p-12 items-center">
-            <div>
-              <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-primary/10 border border-primary/20 text-primary text-xs font-bold mb-6">
-                <Users size={14} /> Referral Program
-              </div>
-              <h2 className="text-3xl md:text-4xl font-black mb-4">
-                Refer Friends.<br />
-                <span className="text-primary">Earn Rewards.</span>
-              </h2>
-              <p className="text-muted-foreground text-lg mb-6">
-                Get your own personal referral code. When someone uses it to place an order, they save <strong className="text-foreground">10%</strong> and you get <strong className="text-foreground">$10 off</strong> your next order. No limits.
-              </p>
-              <Link to="/referral" className="btn-primary inline-flex items-center gap-2 text-lg px-8 py-4">
-                Join the Program <ArrowRight size={18} />
+          <div className="max-w-2xl">
+            <p className="text-primary font-bold text-sm uppercase tracking-wider mb-3">Referral Program</p>
+            <h2 className="text-3xl md:text-5xl font-black mb-4 leading-tight">
+              Know Someone Who<br />
+              <span className="text-primary">Needs Stickers?</span>
+            </h2>
+            <p className="text-muted-foreground text-lg mb-3">
+              Send them your way. When they order with your code, <strong className="text-foreground">they get 10% off</strong> and <strong className="text-foreground">you get $10</strong> toward your next order.
+            </p>
+            <p className="text-muted-foreground mb-8">
+              No limits — the more people you send, the more you save. Create your account to get started.
+            </p>
+            <div className="flex flex-wrap gap-3">
+              <Link to="/account" className="btn-primary inline-flex items-center gap-2 px-8 py-4 text-lg">
+                Get Your Code <ArrowRight size={18} />
+              </Link>
+              <Link to="/referral" className="inline-flex items-center gap-2 px-8 py-4 text-lg font-bold text-muted-foreground hover:text-foreground transition-colors">
+                Learn More
               </Link>
             </div>
+          </div>
 
-            <div className="space-y-4">
-              {[
-                { icon: Users, title: 'Get Your Code', desc: 'Sign up in 30 seconds — free, instant, personal to you' },
-                { icon: Gift, title: 'They Save 10%', desc: 'Anyone who uses your code gets 10% off their order' },
-                { icon: DollarSign, title: 'You Earn $10', desc: 'Every time someone buys with your code, you get $10 off' },
-              ].map((step, i) => (
-                <motion.div
-                  key={step.title}
-                  initial={{ opacity: 0, x: 20 }}
-                  whileInView={{ opacity: 1, x: 0 }}
-                  viewport={{ once: true }}
-                  transition={{ delay: i * 0.1 }}
-                  className="flex items-start gap-4 bg-background/50 border border-border/50 rounded-2xl p-5"
-                >
-                  <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center shrink-0">
-                    <step.icon size={20} className="text-primary" />
-                  </div>
-                  <div>
-                    <h3 className="font-bold mb-1">{step.title}</h3>
-                    <p className="text-sm text-muted-foreground">{step.desc}</p>
-                  </div>
-                </motion.div>
-              ))}
-            </div>
+          {/* Decorative */}
+          <div className="absolute -right-8 -bottom-8 w-64 h-64 rounded-full bg-primary/5 blur-3xl pointer-events-none" />
+          <div className="absolute right-12 top-12 hidden lg:flex flex-col items-center gap-3 opacity-60">
+            <div className="text-6xl font-black text-primary/20">$10</div>
+            <div className="text-sm font-bold text-primary/30 uppercase tracking-wider">per referral</div>
           </div>
         </motion.div>
       </div>

@@ -17,24 +17,12 @@ const USED_CODES_KEY = 'tss-used-codes'
 
 const defaultCodes: PromoCode[] = [
   {
-    code: 'FAMILY20',
-    type: 'percent',
-    value: 20,
-    label: 'Friends & Family — 20% Off',
-    category: 'friends_family',
-    minOrder: 0,
-    maxUses: 0,
-    uses: 0,
-    active: true,
-    createdAt: new Date().toISOString(),
-  },
-  {
     code: 'WELCOME15',
     type: 'percent',
     value: 15,
-    label: 'First Time Customer — 15% Off',
+    label: 'New Customer — 15% Off Your First Order',
     category: 'first_time',
-    minOrder: 25,
+    minOrder: 50,
     maxUses: 0,
     uses: 0,
     active: true,
@@ -56,7 +44,17 @@ const defaultCodes: PromoCode[] = [
 
 export function getPromoCodes(): PromoCode[] {
   const saved = localStorage.getItem(STORAGE_KEY)
-  if (saved) return JSON.parse(saved)
+  if (saved) {
+    let codes: PromoCode[] = JSON.parse(saved)
+    // Clean up: remove deprecated FAMILY20, fix old $25 minimums
+    const hadFamily = codes.some(c => c.code === 'FAMILY20')
+    if (hadFamily) {
+      codes = codes.filter(c => c.code !== 'FAMILY20')
+      codes = codes.map(c => c.code === 'WELCOME15' && c.minOrder === 25 ? { ...c, minOrder: 50 } : c)
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(codes))
+    }
+    return codes
+  }
   localStorage.setItem(STORAGE_KEY, JSON.stringify(defaultCodes))
   return defaultCodes
 }
