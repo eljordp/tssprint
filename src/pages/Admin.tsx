@@ -1,10 +1,9 @@
 import { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
-import { LogOut, Package, DollarSign, Users, ChevronDown, ChevronUp, Truck, Clock, CheckCircle, Settings, RotateCcw, Save } from 'lucide-react'
+import { LogOut, Package, DollarSign, Users, ChevronDown, ChevronUp, Truck, Clock, CheckCircle, Settings, RotateCcw, Save, Loader2 } from 'lucide-react'
 import { getPricing, savePricing, defaultPricing, type PricingConfig } from '@/lib/pricing'
-
-const ADMIN_EMAIL = 'thestickersmith@gmail.com'
-const ADMIN_PASSWORD = 'Lolasdad22!'
+import { supabase } from '@/lib/supabase'
+import { toast } from 'sonner'
 
 interface OrderItem {
   id: string
@@ -40,14 +39,47 @@ function LoginForm({ onLogin }: { onLogin: () => void }) {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [error, setError] = useState('')
+  const [loading, setLoading] = useState(false)
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    if (email === ADMIN_EMAIL && password === ADMIN_PASSWORD) {
-      sessionStorage.setItem('tss-admin', 'true')
+    setError('')
+    setLoading(true)
+
+    try {
+      const { error: signInError } = await supabase.auth.signInWithPassword({ email, password })
+
+      if (signInError) {
+        setError(signInError.message)
+        setLoading(false)
+        return
+      }
+
+      const { data: { user } } = await supabase.auth.getUser()
+      if (!user) {
+        setError('Authentication failed')
+        setLoading(false)
+        return
+      }
+
+      const { data: isAdmin } = await supabase.rpc('has_role', {
+        _user_id: user.id,
+        _role: 'admin',
+      })
+
+      if (!isAdmin) {
+        await supabase.auth.signOut()
+        setError('Access denied. Admin privileges required.')
+        setLoading(false)
+        return
+      }
+
+      toast.success('Logged in successfully')
       onLogin()
-    } else {
-      setError('Invalid credentials')
+    } catch {
+      setError('Something went wrong. Please try again.')
+    } finally {
+      setLoading(false)
     }
   }
 
@@ -62,23 +94,31 @@ function LoginForm({ onLogin }: { onLogin: () => void }) {
           <h1 className="text-2xl font-black mb-6 text-center">Admin Login</h1>
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
-              <label className="block text-sm font-medium text-muted-foreground mb-1.5">Email</label>
+              <label htmlFor="admin-email" className="block text-sm font-medium text-muted-foreground mb-1.5">Email</label>
               <input
+                id="admin-email"
                 type="email" value={email} onChange={e => setEmail(e.target.value)}
                 className="w-full px-4 py-3 bg-background border border-border rounded-xl text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all"
                 placeholder="admin@email.com"
+                required
+                autoComplete="email"
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-muted-foreground mb-1.5">Password</label>
+              <label htmlFor="admin-password" className="block text-sm font-medium text-muted-foreground mb-1.5">Password</label>
               <input
+                id="admin-password"
                 type="password" value={password} onChange={e => setPassword(e.target.value)}
                 className="w-full px-4 py-3 bg-background border border-border rounded-xl text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all"
                 placeholder="••••••••"
+                required
+                autoComplete="current-password"
               />
             </div>
-            {error && <p className="text-sm text-destructive">{error}</p>}
-            <button type="submit" className="btn-primary w-full">Log In</button>
+            {error && <p className="text-sm text-destructive" role="alert">{error}</p>}
+            <button type="submit" className="btn-primary w-full" disabled={loading}>
+              {loading ? <><Loader2 size={18} className="animate-spin" /> Logging in...</> : 'Log In'}
+            </button>
           </form>
         </motion.div>
       </div>
@@ -134,11 +174,13 @@ function PriceInput({ value, onChange, label }: { value: number; onChange: (v: s
 
 function SubTabs({ active, tabs, onChange }: { active: string; tabs: { id: string; label: string }[]; onChange: (id: string) => void }) {
   return (
-    <div className="flex gap-1 bg-muted/40 p-1 rounded-xl w-fit">
+    <div className="flex gap-1 bg-muted/40 p-1 rounded-xl w-fit" role="tablist">
       {tabs.map(tab => (
         <button
           key={tab.id}
           onClick={() => onChange(tab.id)}
+          role="tab"
+          aria-selected={active === tab.id}
           className={`px-4 py-1.5 rounded-lg text-sm font-medium transition-all ${
             active === tab.id
               ? 'bg-background text-foreground shadow-sm'
@@ -195,6 +237,7 @@ function PricingEditor() {
   const handleSave = () => {
     savePricing(config)
     setSaved(true)
+    toast.success('Pricing saved')
     setTimeout(() => setSaved(false), 2000)
   }
 
@@ -202,6 +245,7 @@ function PricingEditor() {
     setConfig(defaultPricing)
     savePricing(defaultPricing)
     setSaved(true)
+    toast.success('Pricing reset to defaults')
     setTimeout(() => setSaved(false), 2000)
   }
 
@@ -210,7 +254,6 @@ function PricingEditor() {
 
   return (
     <div className="space-y-6">
-      {/* Header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
           <Settings size={20} className="text-primary" />
@@ -226,12 +269,13 @@ function PricingEditor() {
         </div>
       </div>
 
-      {/* Category Tabs */}
-      <div className="flex gap-1.5 overflow-x-auto pb-1 scrollbar-hide">
+      <div className="flex gap-1.5 overflow-x-auto pb-1 scrollbar-hide" role="tablist" aria-label="Pricing categories">
         {categoryTabs.map(tab => (
           <button
             key={tab.id}
             onClick={() => setActiveTab(tab.id)}
+            role="tab"
+            aria-selected={activeTab === tab.id}
             className={`px-4 py-2 rounded-xl text-sm font-medium whitespace-nowrap transition-all ${
               activeTab === tab.id
                 ? 'bg-primary text-primary-foreground shadow-sm'
@@ -243,7 +287,6 @@ function PricingEditor() {
         ))}
       </div>
 
-      {/* Stickers Tab */}
       {activeTab === 'stickers' && (
         <div className="space-y-5">
           <SubTabs
@@ -251,7 +294,6 @@ function PricingEditor() {
             tabs={[{ id: 'pricing', label: 'Quantity Pricing' }, { id: 'materials', label: 'Materials' }]}
             onChange={v => setSubTabFor('stickers', v)}
           />
-
           {getSubTab('stickers') === 'pricing' && (
             <div className="bg-card border border-border rounded-2xl p-6">
               <h3 className="font-bold mb-1">Base Price Per Sticker</h3>
@@ -263,7 +305,6 @@ function PricingEditor() {
               </div>
             </div>
           )}
-
           {getSubTab('stickers') === 'materials' && (
             <div className="bg-card border border-border rounded-2xl p-6">
               <h3 className="font-bold mb-1">Material Multipliers</h3>
@@ -288,7 +329,6 @@ function PricingEditor() {
         </div>
       )}
 
-      {/* Product Category Tabs */}
       {activeProduct && activeProduct.productIndex !== undefined && config.products[activeProduct.productIndex] && (() => {
         const catIndex = activeProduct.productIndex!
         const cat = config.products[catIndex]
@@ -303,7 +343,6 @@ function PricingEditor() {
                 onChange={v => setSubTabFor(activeTab, v)}
               />
             )}
-
             {currentSub !== 'addons' && (
               <div className="bg-card border border-border rounded-2xl p-6">
                 <h3 className="font-bold mb-1">Sizes & Pricing</h3>
@@ -332,7 +371,6 @@ function PricingEditor() {
                 </div>
               </div>
             )}
-
             {currentSub === 'addons' && hasAddOns && (
               <div className="bg-card border border-border rounded-2xl p-6">
                 <h3 className="font-bold mb-1">{cat.name} Add-Ons</h3>
@@ -348,10 +386,8 @@ function PricingEditor() {
         )
       })()}
 
-      {/* Dedicated Add-Ons Tab */}
       {activeTab === 'addons' && (
         <div className="space-y-6">
-          {/* Sticker Finish Add-Ons */}
           <div className="bg-card border border-border rounded-2xl p-6">
             <h3 className="font-bold mb-1">Sticker Finishes</h3>
             <p className="text-sm text-muted-foreground mb-4">Base price added per sticker for each finish</p>
@@ -361,8 +397,6 @@ function PricingEditor() {
               ))}
             </div>
           </div>
-
-          {/* All Product Add-Ons grouped by category */}
           {config.products.map((cat, catIndex) => {
             if (cat.addOns.length === 0) return null
             return (
@@ -386,22 +420,69 @@ function PricingEditor() {
 function Dashboard() {
   const [orders, setOrders] = useState<Order[]>([])
   const [expanded, setExpanded] = useState<string | null>(null)
+  const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    setOrders(JSON.parse(localStorage.getItem('tss-orders') || '[]'))
+    fetchOrders()
   }, [])
 
-  const updateStatus = (orderId: string, status: Order['status']) => {
+  const fetchOrders = async () => {
+    setLoading(true)
+    try {
+      // Try Supabase first
+      const { data, error } = await supabase
+        .from('orders')
+        .select('*')
+        .order('created_at', { ascending: false })
+
+      if (!error && data && data.length > 0) {
+        setOrders(data.map(o => ({
+          id: o.id,
+          date: o.created_at,
+          customer: {
+            firstName: o.customer_first_name,
+            lastName: o.customer_last_name,
+            email: o.customer_email,
+            phone: o.customer_phone || '',
+            address: o.customer_address || '',
+            city: o.customer_city || '',
+            state: o.customer_state || '',
+            zip: o.customer_zip || '',
+          },
+          items: o.items as OrderItem[],
+          total: String(o.total),
+          status: o.status as Order['status'],
+        })))
+      } else {
+        // Fallback to localStorage
+        setOrders(JSON.parse(localStorage.getItem('tss-orders') || '[]'))
+      }
+    } catch {
+      setOrders(JSON.parse(localStorage.getItem('tss-orders') || '[]'))
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const updateStatus = async (orderId: string, status: Order['status']) => {
     const updated = orders.map(o => o.id === orderId ? { ...o, status } : o)
     setOrders(updated)
-    localStorage.setItem('tss-orders', JSON.stringify(updated))
+
+    // Update in Supabase
+    try {
+      await supabase.from('orders').update({ status }).eq('id', orderId)
+    } catch {
+      // Fallback to localStorage
+      localStorage.setItem('tss-orders', JSON.stringify(updated))
+    }
+    toast.success(`Order status updated to ${status}`)
   }
 
   const totalRevenue = orders.reduce((sum, o) => sum + parseFloat(o.total), 0)
   const uniqueCustomers = new Set(orders.map(o => o.customer.email)).size
 
-  const logout = () => {
-    sessionStorage.removeItem('tss-admin')
+  const logout = async () => {
+    await supabase.auth.signOut()
     window.location.reload()
   }
 
@@ -416,7 +497,7 @@ function Dashboard() {
           >
             Admin Dashboard
           </motion.h1>
-          <button onClick={logout} className="flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors">
+          <button onClick={logout} className="flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors" aria-label="Sign out">
             <LogOut size={18} /> Sign Out
           </button>
         </div>
@@ -453,7 +534,12 @@ function Dashboard() {
 
         {/* Orders */}
         <h2 className="text-xl font-bold mb-4">Orders</h2>
-        {orders.length === 0 ? (
+        {loading ? (
+          <div className="bg-card border border-border rounded-2xl p-12 text-center">
+            <Loader2 size={32} className="mx-auto text-primary animate-spin mb-4" />
+            <p className="text-muted-foreground">Loading orders...</p>
+          </div>
+        ) : orders.length === 0 ? (
           <div className="bg-card border border-border rounded-2xl p-12 text-center">
             <Package size={48} className="mx-auto text-muted-foreground mb-4" />
             <p className="text-muted-foreground">No orders yet. They'll show up here when customers pay.</p>
@@ -475,6 +561,7 @@ function Dashboard() {
                   <button
                     onClick={() => setExpanded(isOpen ? null : order.id)}
                     className="w-full p-5 flex items-center justify-between gap-4 text-left hover:bg-muted/30 transition-colors"
+                    aria-expanded={isOpen}
                   >
                     <div className="flex items-center gap-4 min-w-0">
                       <div className={`px-2.5 py-1 rounded-lg text-xs font-bold flex items-center gap-1 shrink-0 ${cfg.color}`}>
@@ -494,7 +581,6 @@ function Dashboard() {
 
                   {isOpen && (
                     <div className="px-5 pb-5 border-t border-border pt-4 space-y-4">
-                      {/* Customer Info */}
                       <div className="grid sm:grid-cols-2 gap-4">
                         <div>
                           <h4 className="text-xs font-bold uppercase text-muted-foreground mb-2">Contact</h4>
@@ -507,8 +593,6 @@ function Dashboard() {
                           <p className="text-sm">{order.customer.city}, {order.customer.state} {order.customer.zip}</p>
                         </div>
                       </div>
-
-                      {/* Items */}
                       <div>
                         <h4 className="text-xs font-bold uppercase text-muted-foreground mb-2">Items</h4>
                         <div className="space-y-2">
@@ -527,13 +611,12 @@ function Dashboard() {
                           ))}
                         </div>
                       </div>
-
-                      {/* Order ID & Status Update */}
                       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 pt-2 border-t border-border">
                         <p className="text-xs text-muted-foreground break-all">PayPal ID: {order.id}</p>
                         <div className="flex items-center gap-2">
-                          <span className="text-xs text-muted-foreground">Status:</span>
+                          <label htmlFor={`status-${order.id}`} className="text-xs text-muted-foreground">Status:</label>
                           <select
+                            id={`status-${order.id}`}
                             value={order.status}
                             onChange={e => updateStatus(order.id, e.target.value as Order['status'])}
                             className="text-xs px-3 py-1.5 bg-background border border-border rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-primary/50"
@@ -557,7 +640,38 @@ function Dashboard() {
 }
 
 export default function Admin() {
-  const [authed, setAuthed] = useState(() => sessionStorage.getItem('tss-admin') === 'true')
+  const [authed, setAuthed] = useState(false)
+  const [checking, setChecking] = useState(true)
+
+  useEffect(() => {
+    checkSession()
+  }, [])
+
+  const checkSession = async () => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser()
+      if (user) {
+        const { data: isAdmin } = await supabase.rpc('has_role', {
+          _user_id: user.id,
+          _role: 'admin',
+        })
+        setAuthed(!!isAdmin)
+      }
+    } catch {
+      // Not authenticated
+    } finally {
+      setChecking(false)
+    }
+  }
+
+  if (checking) {
+    return (
+      <section className="py-16 md:py-24 text-center">
+        <Loader2 size={32} className="mx-auto text-primary animate-spin" />
+      </section>
+    )
+  }
+
   if (!authed) return <LoginForm onLogin={() => setAuthed(true)} />
   return <Dashboard />
 }

@@ -1,16 +1,56 @@
 import { useState, type FormEvent } from 'react'
 import { motion } from 'framer-motion'
-import { Send, Mail, Phone, MapPin } from 'lucide-react'
+import { Send, Mail, Phone, MapPin, Loader2 } from 'lucide-react'
+import { contactSchema, type ContactFormErrors } from '@/lib/validation'
+import { supabase } from '@/lib/supabase'
+import { toast } from 'sonner'
 
 export default function Contact() {
   const [submitted, setSubmitted] = useState(false)
+  const [loading, setLoading] = useState(false)
+  const [errors, setErrors] = useState<ContactFormErrors>({})
   const [formData, setFormData] = useState({ name: '', email: '', phone: '', service: '', message: '' })
-  const handleSubmit = (e: FormEvent) => {
+
+  const handleSubmit = async (e: FormEvent) => {
     e.preventDefault()
-    const body = [`Name: ${formData.name}`, `Email: ${formData.email}`, formData.phone ? `Phone: ${formData.phone}` : '', formData.service ? `Service: ${formData.service}` : '', '', formData.message].filter(Boolean).join('\n')
-    window.location.href = `mailto:thestickersmith@gmail.com?subject=${encodeURIComponent('Quote Request')}&body=${encodeURIComponent(body)}`
-    setSubmitted(true)
+    setErrors({})
+
+    const result = contactSchema.safeParse(formData)
+    if (!result.success) {
+      const fieldErrors: ContactFormErrors = {}
+      result.error.issues.forEach((issue) => {
+        const field = issue.path[0] as keyof ContactFormErrors
+        if (!fieldErrors[field]) fieldErrors[field] = issue.message
+      })
+      setErrors(fieldErrors)
+      toast.error('Please fix the form errors')
+      return
+    }
+
+    setLoading(true)
+    try {
+      const { error } = await supabase.from('contact_submissions').insert({
+        name: formData.name.trim(),
+        email: formData.email.trim(),
+        phone: formData.phone.trim() || null,
+        service: formData.service || null,
+        message: formData.message.trim(),
+        source: 'contact-page',
+      })
+
+      if (error) throw error
+      setSubmitted(true)
+      toast.success('Quote request sent!')
+    } catch {
+      // Fallback to mailto if Supabase fails
+      const body = [`Name: ${formData.name}`, `Email: ${formData.email}`, formData.phone ? `Phone: ${formData.phone}` : '', formData.service ? `Service: ${formData.service}` : '', '', formData.message].filter(Boolean).join('\n')
+      window.location.href = `mailto:thestickersmith@gmail.com?subject=${encodeURIComponent('Quote Request')}&body=${encodeURIComponent(body)}`
+      setSubmitted(true)
+    } finally {
+      setLoading(false)
+    }
   }
+
   return (
     <>
       <div className="-mt-16 md:-mt-18 pt-24 md:pt-32 pb-10 md:pb-14" style={{ backgroundColor: 'hsl(199 89% 64%)' }}>
@@ -30,30 +70,73 @@ export default function Contact() {
                   <p className="text-muted-foreground">We'll get back to you within 24 hours.</p>
                 </div>
               ) : (
-                <form onSubmit={handleSubmit} className="space-y-4">
+                <form onSubmit={handleSubmit} className="space-y-4" noValidate>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <input type="text" placeholder="Your Name" required value={formData.name} onChange={e => setFormData({...formData, name: e.target.value})} className="px-5 py-3.5 rounded-xl border border-border bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 transition-all" />
-                    <input type="email" placeholder="Your Email" required value={formData.email} onChange={e => setFormData({...formData, email: e.target.value})} className="px-5 py-3.5 rounded-xl border border-border bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 transition-all" />
+                    <div>
+                      <label htmlFor="contact-name" className="sr-only">Your Name</label>
+                      <input
+                        id="contact-name"
+                        type="text" placeholder="Your Name" value={formData.name}
+                        onChange={e => setFormData({...formData, name: e.target.value})}
+                        className={`w-full px-5 py-3.5 rounded-xl border bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 transition-all ${errors.name ? 'border-destructive' : 'border-border'}`}
+                        aria-invalid={!!errors.name}
+                        aria-describedby={errors.name ? 'name-error' : undefined}
+                      />
+                      {errors.name && <p id="name-error" className="text-sm text-destructive mt-1">{errors.name}</p>}
+                    </div>
+                    <div>
+                      <label htmlFor="contact-email" className="sr-only">Your Email</label>
+                      <input
+                        id="contact-email"
+                        type="email" placeholder="Your Email" value={formData.email}
+                        onChange={e => setFormData({...formData, email: e.target.value})}
+                        className={`w-full px-5 py-3.5 rounded-xl border bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 transition-all ${errors.email ? 'border-destructive' : 'border-border'}`}
+                        aria-invalid={!!errors.email}
+                        aria-describedby={errors.email ? 'email-error' : undefined}
+                      />
+                      {errors.email && <p id="email-error" className="text-sm text-destructive mt-1">{errors.email}</p>}
+                    </div>
                   </div>
-                  <input type="tel" placeholder="Phone" required value={formData.phone} onChange={e => setFormData({...formData, phone: e.target.value})} className="w-full px-5 py-3.5 rounded-xl border border-border bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 transition-all" />
-                  <textarea placeholder="Tell us about your project..." required rows={5} value={formData.message} onChange={e => setFormData({...formData, message: e.target.value})} className="w-full px-5 py-3.5 rounded-xl border border-border bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 transition-all resize-none" />
-                  <button type="submit" className="btn-primary w-full">Send Quote Request<Send size={18} /></button>
+                  <div>
+                    <label htmlFor="contact-phone" className="sr-only">Phone</label>
+                    <input
+                      id="contact-phone"
+                      type="tel" placeholder="Phone" value={formData.phone}
+                      onChange={e => setFormData({...formData, phone: e.target.value})}
+                      className="w-full px-5 py-3.5 rounded-xl border border-border bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 transition-all"
+                    />
+                  </div>
+                  <div>
+                    <label htmlFor="contact-message" className="sr-only">Project Details</label>
+                    <textarea
+                      id="contact-message"
+                      placeholder="Tell us about your project..." rows={5} value={formData.message}
+                      onChange={e => setFormData({...formData, message: e.target.value})}
+                      className={`w-full px-5 py-3.5 rounded-xl border bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 transition-all resize-none ${errors.message ? 'border-destructive' : 'border-border'}`}
+                      aria-invalid={!!errors.message}
+                      aria-describedby={errors.message ? 'message-error' : undefined}
+                    />
+                    {errors.message && <p id="message-error" className="text-sm text-destructive mt-1">{errors.message}</p>}
+                  </div>
+                  <button type="submit" className="btn-primary w-full" disabled={loading}>
+                    {loading ? <><Loader2 size={18} className="animate-spin" /> Sending...</> : <>Send Quote Request<Send size={18} /></>}
+                  </button>
                 </form>
               )}
             </div>
             <div className="space-y-6">
               <div className="bg-card border border-border rounded-2xl p-6">
-                <Mail className="text-primary mb-3" size={24} />
+                <Mail className="text-primary mb-3" size={24} aria-hidden="true" />
                 <h3 className="font-bold mb-1">Email</h3>
                 <p className="text-sm text-muted-foreground">thestickersmith@gmail.com</p>
               </div>
               <div className="bg-card border border-border rounded-2xl p-6">
-                <Phone className="text-primary mb-3" size={24} />
+                <Phone className="text-primary mb-3" size={24} aria-hidden="true" />
                 <h3 className="font-bold mb-1">Phone</h3>
                 <p className="text-sm text-muted-foreground">Bay Area, CA</p>
               </div>
               <div className="bg-card border border-border rounded-2xl p-6">
-                <MapPin className="text-primary mb-3" size={24} />
+                <MapPin className="text-primary mb-3" size={24} aria-hidden="true" />
                 <h3 className="font-bold mb-1">Location</h3>
                 <p className="text-sm text-muted-foreground">Hayward, California</p>
               </div>

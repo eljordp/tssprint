@@ -2,8 +2,11 @@ import { useState } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import { PayPalScriptProvider, PayPalButtons } from '@paypal/react-paypal-js'
-import { ArrowLeft, Lock, ShieldCheck } from 'lucide-react'
+import { ArrowLeft, Lock, ShieldCheck, Loader2 } from 'lucide-react'
 import { useCart } from '@/context/CartContext'
+import { checkoutSchema, type CheckoutFormErrors } from '@/lib/validation'
+import { supabase } from '@/lib/supabase'
+import { toast } from 'sonner'
 
 const PAYPAL_CLIENT_ID = import.meta.env.VITE_PAYPAL_CLIENT_ID || 'test'
 
@@ -26,7 +29,9 @@ export default function Checkout() {
     address: '', city: '', state: '', zip: '',
   })
   const [formValid, setFormValid] = useState(false)
+  const [errors, setErrors] = useState<CheckoutFormErrors>({})
   const [paymentError, setPaymentError] = useState('')
+  const [processing, setProcessing] = useState(false)
 
   if (items.length === 0) {
     return (
@@ -43,21 +48,69 @@ export default function Checkout() {
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const updated = { ...customerInfo, [e.target.name]: e.target.value }
     setCustomerInfo(updated)
-    setFormValid(
-      updated.firstName.trim() !== '' &&
-      updated.lastName.trim() !== '' &&
-      updated.email.trim() !== '' &&
-      updated.phone.trim() !== '' &&
-      updated.address.trim() !== '' &&
-      updated.city.trim() !== '' &&
-      updated.state.trim() !== '' &&
-      updated.zip.trim() !== ''
-    )
+
+    const result = checkoutSchema.safeParse(updated)
+    if (result.success) {
+      setErrors({})
+      setFormValid(true)
+    } else {
+      setFormValid(false)
+    }
+  }
+
+  const handleBlur = (field: keyof CustomerInfo) => {
+    const result = checkoutSchema.safeParse(customerInfo)
+    if (!result.success) {
+      const fieldError = result.error.issues.find(issue => issue.path[0] === field)
+      if (fieldError) {
+        setErrors(prev => ({ ...prev, [field]: fieldError.message }))
+      } else {
+        setErrors(prev => { const next = { ...prev }; delete next[field]; return next })
+      }
+    } else {
+      setErrors(prev => { const next = { ...prev }; delete next[field]; return next })
+    }
   }
 
   const orderDescription = items
     .map(i => `${i.name} (${i.option}, ${i.size}) x${i.quantity}`)
     .join(', ')
+
+  const saveOrder = async (orderId: string) => {
+    const order = {
+      id: orderId,
+      date: new Date().toISOString(),
+      customer: { ...customerInfo },
+      items: items.map(i => ({ ...i })),
+      total: total.toFixed(2),
+      status: 'completed' as const,
+    }
+
+    const prev = JSON.parse(localStorage.getItem('tss-orders') || '[]')
+    localStorage.setItem('tss-orders', JSON.stringify([order, ...prev]))
+
+    try {
+      await supabase.from('orders').insert({
+        id: orderId,
+        customer_first_name: customerInfo.firstName.trim(),
+        customer_last_name: customerInfo.lastName.trim(),
+        customer_email: customerInfo.email.trim(),
+        customer_phone: customerInfo.phone.trim(),
+        customer_address: customerInfo.address.trim(),
+        customer_city: customerInfo.city.trim(),
+        customer_state: customerInfo.state.trim(),
+        customer_zip: customerInfo.zip.trim(),
+        items: items.map(i => ({ ...i })),
+        total: parseFloat(total.toFixed(2)),
+        status: 'completed',
+      })
+    } catch {
+      // localStorage backup already saved
+    }
+  }
+
+  const inputClass = (field: keyof CustomerInfo) =>
+    `w-full px-4 py-3 bg-background border rounded-xl text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all ${errors[field] ? 'border-destructive' : 'border-border'}`
 
   return (
     <PayPalScriptProvider options={{ clientId: PAYPAL_CLIENT_ID, currency: 'USD' }}>
@@ -76,46 +129,53 @@ export default function Checkout() {
           </motion.h1>
 
           <div className="grid lg:grid-cols-5 gap-8">
-            {/* Customer Info Form */}
             <div className="lg:col-span-3 space-y-6">
               <div className="bg-card border border-border rounded-2xl p-6">
                 <h2 className="text-xl font-bold mb-6">Contact Information</h2>
                 <div className="grid sm:grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-sm font-medium text-muted-foreground mb-1.5">First Name *</label>
+                    <label htmlFor="checkout-firstName" className="block text-sm font-medium text-muted-foreground mb-1.5">First Name *</label>
                     <input
+                      id="checkout-firstName"
                       type="text" name="firstName" value={customerInfo.firstName}
-                      onChange={handleChange} required
-                      className="w-full px-4 py-3 bg-background border border-border rounded-xl text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all"
-                      placeholder="John"
+                      onChange={handleChange} onBlur={() => handleBlur('firstName')}
+                      className={inputClass('firstName')}
+                      placeholder="John" autoComplete="given-name"
                     />
+                    {errors.firstName && <p className="text-sm text-destructive mt-1">{errors.firstName}</p>}
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-muted-foreground mb-1.5">Last Name *</label>
+                    <label htmlFor="checkout-lastName" className="block text-sm font-medium text-muted-foreground mb-1.5">Last Name *</label>
                     <input
+                      id="checkout-lastName"
                       type="text" name="lastName" value={customerInfo.lastName}
-                      onChange={handleChange} required
-                      className="w-full px-4 py-3 bg-background border border-border rounded-xl text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all"
-                      placeholder="Doe"
+                      onChange={handleChange} onBlur={() => handleBlur('lastName')}
+                      className={inputClass('lastName')}
+                      placeholder="Doe" autoComplete="family-name"
                     />
+                    {errors.lastName && <p className="text-sm text-destructive mt-1">{errors.lastName}</p>}
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-muted-foreground mb-1.5">Email *</label>
+                    <label htmlFor="checkout-email" className="block text-sm font-medium text-muted-foreground mb-1.5">Email *</label>
                     <input
+                      id="checkout-email"
                       type="email" name="email" value={customerInfo.email}
-                      onChange={handleChange} required
-                      className="w-full px-4 py-3 bg-background border border-border rounded-xl text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all"
-                      placeholder="john@example.com"
+                      onChange={handleChange} onBlur={() => handleBlur('email')}
+                      className={inputClass('email')}
+                      placeholder="john@example.com" autoComplete="email"
                     />
+                    {errors.email && <p className="text-sm text-destructive mt-1">{errors.email}</p>}
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-muted-foreground mb-1.5">Phone *</label>
+                    <label htmlFor="checkout-phone" className="block text-sm font-medium text-muted-foreground mb-1.5">Phone *</label>
                     <input
+                      id="checkout-phone"
                       type="tel" name="phone" value={customerInfo.phone}
-                      onChange={handleChange} required
-                      className="w-full px-4 py-3 bg-background border border-border rounded-xl text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all"
-                      placeholder="(555) 123-4567"
+                      onChange={handleChange} onBlur={() => handleBlur('phone')}
+                      className={inputClass('phone')}
+                      placeholder="(555) 123-4567" autoComplete="tel"
                     />
+                    {errors.phone && <p className="text-sm text-destructive mt-1">{errors.phone}</p>}
                   </div>
                 </div>
               </div>
@@ -124,51 +184,58 @@ export default function Checkout() {
                 <h2 className="text-xl font-bold mb-6">Shipping Address</h2>
                 <div className="space-y-4">
                   <div>
-                    <label className="block text-sm font-medium text-muted-foreground mb-1.5">Street Address *</label>
+                    <label htmlFor="checkout-address" className="block text-sm font-medium text-muted-foreground mb-1.5">Street Address *</label>
                     <input
+                      id="checkout-address"
                       type="text" name="address" value={customerInfo.address}
-                      onChange={handleChange} required
-                      className="w-full px-4 py-3 bg-background border border-border rounded-xl text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all"
-                      placeholder="123 Main St"
+                      onChange={handleChange} onBlur={() => handleBlur('address')}
+                      className={inputClass('address')}
+                      placeholder="123 Main St" autoComplete="street-address"
                     />
+                    {errors.address && <p className="text-sm text-destructive mt-1">{errors.address}</p>}
                   </div>
                   <div className="grid sm:grid-cols-3 gap-4">
                     <div>
-                      <label className="block text-sm font-medium text-muted-foreground mb-1.5">City *</label>
+                      <label htmlFor="checkout-city" className="block text-sm font-medium text-muted-foreground mb-1.5">City *</label>
                       <input
+                        id="checkout-city"
                         type="text" name="city" value={customerInfo.city}
-                        onChange={handleChange} required
-                        className="w-full px-4 py-3 bg-background border border-border rounded-xl text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all"
-                        placeholder="Sacramento"
+                        onChange={handleChange} onBlur={() => handleBlur('city')}
+                        className={inputClass('city')}
+                        placeholder="Sacramento" autoComplete="address-level2"
                       />
+                      {errors.city && <p className="text-sm text-destructive mt-1">{errors.city}</p>}
                     </div>
                     <div>
-                      <label className="block text-sm font-medium text-muted-foreground mb-1.5">State *</label>
+                      <label htmlFor="checkout-state" className="block text-sm font-medium text-muted-foreground mb-1.5">State *</label>
                       <input
+                        id="checkout-state"
                         type="text" name="state" value={customerInfo.state}
-                        onChange={handleChange} required
-                        className="w-full px-4 py-3 bg-background border border-border rounded-xl text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all"
-                        placeholder="CA"
+                        onChange={handleChange} onBlur={() => handleBlur('state')}
+                        className={inputClass('state')}
+                        placeholder="CA" autoComplete="address-level1"
                       />
+                      {errors.state && <p className="text-sm text-destructive mt-1">{errors.state}</p>}
                     </div>
                     <div>
-                      <label className="block text-sm font-medium text-muted-foreground mb-1.5">ZIP Code *</label>
+                      <label htmlFor="checkout-zip" className="block text-sm font-medium text-muted-foreground mb-1.5">ZIP Code *</label>
                       <input
+                        id="checkout-zip"
                         type="text" name="zip" value={customerInfo.zip}
-                        onChange={handleChange} required
-                        className="w-full px-4 py-3 bg-background border border-border rounded-xl text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all"
-                        placeholder="95814"
+                        onChange={handleChange} onBlur={() => handleBlur('zip')}
+                        className={inputClass('zip')}
+                        placeholder="95814" autoComplete="postal-code"
                       />
+                      {errors.zip && <p className="text-sm text-destructive mt-1">{errors.zip}</p>}
                     </div>
                   </div>
                 </div>
               </div>
 
-              {/* PayPal Payment */}
               <div className="bg-card border border-border rounded-2xl p-6">
                 <h2 className="text-xl font-bold mb-2">Payment</h2>
                 <div className="flex items-center gap-2 text-sm text-muted-foreground mb-6">
-                  <Lock size={14} /> Secured by PayPal
+                  <Lock size={14} aria-hidden="true" /> Secured by PayPal
                 </div>
 
                 {!formValid && (
@@ -178,20 +245,21 @@ export default function Checkout() {
                 )}
 
                 {paymentError && (
-                  <div className="text-sm text-destructive mb-4 bg-destructive/10 rounded-xl p-4">
+                  <div className="text-sm text-destructive mb-4 bg-destructive/10 rounded-xl p-4" role="alert">
                     {paymentError}
                   </div>
                 )}
 
-                <div className={!formValid ? 'opacity-40 pointer-events-none' : ''}>
+                {processing && (
+                  <div className="flex items-center justify-center gap-3 py-6">
+                    <Loader2 size={24} className="animate-spin text-primary" />
+                    <span className="text-muted-foreground">Processing payment...</span>
+                  </div>
+                )}
+
+                <div className={!formValid || processing ? 'opacity-40 pointer-events-none' : ''}>
                   <PayPalButtons
-                    style={{
-                      layout: 'vertical',
-                      color: 'gold',
-                      shape: 'pill',
-                      label: 'pay',
-                      height: 50,
-                    }}
+                    style={{ layout: 'vertical', color: 'gold', shape: 'pill', label: 'pay', height: 50 }}
                     disabled={!formValid}
                     createOrder={(_data, actions) => {
                       return actions.order.create({
@@ -201,16 +269,11 @@ export default function Checkout() {
                           amount: {
                             currency_code: 'USD',
                             value: total.toFixed(2),
-                            breakdown: {
-                              item_total: { currency_code: 'USD', value: total.toFixed(2) },
-                            },
+                            breakdown: { item_total: { currency_code: 'USD', value: total.toFixed(2) } },
                           },
                           items: items.map(item => ({
                             name: item.name.substring(0, 127),
-                            unit_amount: {
-                              currency_code: 'USD',
-                              value: ((item.price + (item.addOns?.reduce((a, b) => a + b.price, 0) || 0))).toFixed(2),
-                            },
+                            unit_amount: { currency_code: 'USD', value: ((item.price + (item.addOns?.reduce((a, b) => a + b.price, 0) || 0))).toFixed(2) },
                             quantity: item.quantity.toString(),
                             description: `${item.option} · ${item.size}`.substring(0, 127),
                             category: 'PHYSICAL_GOODS' as const,
@@ -229,37 +292,39 @@ export default function Checkout() {
                       })
                     }}
                     onApprove={async (_data, actions) => {
-                      const details = await actions.order!.capture()
-                      const order = {
-                        id: details.id,
-                        date: new Date().toISOString(),
-                        customer: { ...customerInfo },
-                        items: items.map(i => ({ ...i })),
-                        total: total.toFixed(2),
-                        status: 'completed' as const,
+                      setProcessing(true)
+                      setPaymentError('')
+                      try {
+                        const details = await actions.order!.capture()
+                        await saveOrder(details.id!)
+                        clearCart()
+                        toast.success('Payment successful!')
+                        navigate('/order-confirmation', {
+                          state: {
+                            orderId: details.id!,
+                            payerName: `${customerInfo.firstName} ${customerInfo.lastName}`,
+                            email: customerInfo.email,
+                            total: total.toFixed(2),
+                          },
+                        })
+                      } catch (err) {
+                        console.error('Payment capture error:', err)
+                        setPaymentError('Payment capture failed. Please contact us if you were charged.')
+                        toast.error('Payment issue — please contact us')
+                      } finally {
+                        setProcessing(false)
                       }
-                      const prev = JSON.parse(localStorage.getItem('tss-orders') || '[]')
-                      localStorage.setItem('tss-orders', JSON.stringify([order, ...prev]))
-                      clearCart()
-                      navigate('/order-confirmation', {
-                        state: {
-                          orderId: details.id,
-                          payerName: `${customerInfo.firstName} ${customerInfo.lastName}`,
-                          email: customerInfo.email,
-                          total: total.toFixed(2),
-                        },
-                      })
                     }}
                     onError={(err) => {
                       console.error('PayPal error:', err)
                       setPaymentError('Payment failed. Please try again or contact us.')
+                      toast.error('Payment failed')
                     }}
                   />
                 </div>
               </div>
             </div>
 
-            {/* Order Summary Sidebar */}
             <div className="lg:col-span-2">
               <div className="bg-card border border-border rounded-2xl p-6 lg:sticky lg:top-24">
                 <h2 className="text-xl font-bold mb-6">Order Summary</h2>
@@ -274,9 +339,7 @@ export default function Checkout() {
                           <p className="text-sm text-muted-foreground">{item.option} · {item.size}</p>
                           <p className="text-sm text-muted-foreground">Qty: {item.quantity}</p>
                           {item.addOns && item.addOns.length > 0 && (
-                            <p className="text-xs text-muted-foreground mt-1">
-                              + {item.addOns.map(a => a.name).join(', ')}
-                            </p>
+                            <p className="text-xs text-muted-foreground mt-1">+ {item.addOns.map(a => a.name).join(', ')}</p>
                           )}
                         </div>
                         <span className="font-bold text-primary shrink-0">${itemTotal.toFixed(2)}</span>
@@ -285,21 +348,12 @@ export default function Checkout() {
                   })}
                 </div>
                 <div className="border-t border-border pt-4 space-y-2">
-                  <div className="flex justify-between text-muted-foreground">
-                    <span>Subtotal</span>
-                    <span>${total.toFixed(2)}</span>
-                  </div>
-                  <div className="flex justify-between text-muted-foreground">
-                    <span>Shipping</span>
-                    <span className="text-green-400">Free</span>
-                  </div>
-                  <div className="flex justify-between text-xl font-black pt-2 border-t border-border">
-                    <span>Total</span>
-                    <span className="text-primary">${total.toFixed(2)}</span>
-                  </div>
+                  <div className="flex justify-between text-muted-foreground"><span>Subtotal</span><span>${total.toFixed(2)}</span></div>
+                  <div className="flex justify-between text-muted-foreground"><span>Shipping</span><span className="text-green-400">Free</span></div>
+                  <div className="flex justify-between text-xl font-black pt-2 border-t border-border"><span>Total</span><span className="text-primary">${total.toFixed(2)}</span></div>
                 </div>
                 <div className="mt-6 flex items-center gap-2 text-xs text-muted-foreground">
-                  <ShieldCheck size={16} className="text-green-400 shrink-0" />
+                  <ShieldCheck size={16} className="text-green-400 shrink-0" aria-hidden="true" />
                   <span>Your payment is protected by PayPal Buyer Protection</span>
                 </div>
               </div>
