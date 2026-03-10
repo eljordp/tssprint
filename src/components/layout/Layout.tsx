@@ -3,12 +3,14 @@ import { useEffect } from 'react'
 import Header from './Header'
 import Footer from './Footer'
 import MobileBar from './MobileBar'
+import PromoBanner from './PromoBanner'
 
 export default function Layout() {
   const { pathname } = useLocation()
   useEffect(() => { window.scrollTo(0, 0) }, [pathname])
   return (
     <div className="min-h-screen flex flex-col relative border-x-[72px] border-b-[36px] border-t-0" style={{ borderColor: 'hsl(199 89% 64%)' }}>
+      <PromoBanner />
       <Header />
       <main className="flex-1 pt-16 md:pt-18 pb-16 md:pb-0">
         <Outlet />

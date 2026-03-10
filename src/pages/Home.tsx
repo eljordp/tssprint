@@ -8,6 +8,7 @@ import ServicesOverview from '@/components/home/ServicesOverview'
 import SamplePackCTA from '@/components/home/SamplePackCTA'
 import Reviews from '@/components/home/Reviews'
 import FAQ from '@/components/home/FAQ'
+import PromoSection from '@/components/home/PromoSection'
 import QuickContact from '@/components/home/QuickContact'
 
 export default function Home() {
@@ -21,6 +22,7 @@ export default function Home() {
       <ProjectGallery />
       <SamplePackCTA />
       <ServicesOverview />
+      <PromoSection />
       <FAQ />
       <Reviews />
       <QuickContact />
