@@ -3,6 +3,7 @@ import { motion } from 'framer-motion'
 import { Send, Mail, Phone, MapPin, Loader2 } from 'lucide-react'
 import { contactSchema, type ContactFormErrors } from '@/lib/validation'
 import { supabase } from '@/lib/supabase'
+import { sendContactEmail } from '@/lib/email'
 import { toast } from 'sonner'
 
 export default function Contact() {
@@ -39,6 +40,13 @@ export default function Contact() {
       })
 
       if (error) throw error
+      sendContactEmail({
+        name: formData.name.trim(),
+        email: formData.email.trim(),
+        phone: formData.phone.trim() || undefined,
+        service: formData.service || undefined,
+        message: formData.message.trim(),
+      })
       setSubmitted(true)
       toast.success('Quote request sent!')
     } catch {

@@ -6,6 +6,8 @@ import { ArrowLeft, Lock, ShieldCheck, Loader2 } from 'lucide-react'
 import { useCart } from '@/context/CartContext'
 import { checkoutSchema, type CheckoutFormErrors } from '@/lib/validation'
 import { supabase } from '@/lib/supabase'
+import { linkReferral } from '@/lib/referrals'
+import { sendOrderEmail } from '@/lib/email'
 import { toast } from 'sonner'
 
 const PAYPAL_CLIENT_ID = import.meta.env.VITE_PAYPAL_CLIENT_ID || 'test'
@@ -22,7 +24,7 @@ interface CustomerInfo {
 }
 
 export default function Checkout() {
-  const { items, total, clearCart } = useCart()
+  const { items, total, clearCart, markConverted } = useCart()
   const navigate = useNavigate()
   const [customerInfo, setCustomerInfo] = useState<CustomerInfo>({
     firstName: '', lastName: '', email: '', phone: '',
@@ -297,7 +299,37 @@ export default function Checkout() {
                       try {
                         const details = await actions.order!.capture()
                         await saveOrder(details.id!)
+                        await markConverted()
+
+                        // CRM: create/update customer + link referral
+                        try {
+                          const { data: customerId } = await supabase.rpc('get_or_create_customer', {
+                            _email: customerInfo.email.trim(),
+                            _first_name: customerInfo.firstName.trim(),
+                            _last_name: customerInfo.lastName.trim(),
+                            _phone: customerInfo.phone.trim(),
+                            _source: 'checkout',
+                          })
+                          if (customerId) {
+                            await linkReferral(customerId)
+                            await supabase.rpc('record_purchase', {
+                              _email: customerInfo.email.trim(),
+                              _order_id: details.id!,
+                              _total: parseFloat(total.toFixed(2)),
+                            })
+                          }
+                        } catch { /* CRM is non-blocking */ }
                         clearCart()
+                        // Send order confirmation emails
+                        sendOrderEmail({
+                          orderId: details.id!,
+                          customerName: `${customerInfo.firstName} ${customerInfo.lastName}`,
+                          email: customerInfo.email.trim(),
+                          items: items.map(i => ({ ...i })),
+                          total: total.toFixed(2),
+                          address: `${customerInfo.address}, ${customerInfo.city}, ${customerInfo.state} ${customerInfo.zip}`,
+                        })
+
                         toast.success('Payment successful!')
                         navigate('/order-confirmation', {
                           state: {

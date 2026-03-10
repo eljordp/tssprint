@@ -1,6 +1,9 @@
-import { BrowserRouter, Routes, Route } from 'react-router-dom'
+import { useEffect } from 'react'
+import { BrowserRouter, Routes, Route, useLocation } from 'react-router-dom'
 import { CartProvider } from '@/context/CartContext'
 import Layout from '@/components/layout/Layout'
+import { trackPageView, setupClickTracking } from '@/lib/analytics'
+import { captureReferralCode } from '@/lib/referrals'
 import Home from '@/pages/Home'
 import Order from '@/pages/Order'
 import Services from '@/pages/Services'
@@ -19,9 +22,22 @@ import Projects from '@/pages/Projects'
 import Admin from '@/pages/Admin'
 import NotFound from '@/pages/NotFound'
 
+function AnalyticsTracker() {
+  const location = useLocation()
+  useEffect(() => {
+    trackPageView(location.pathname)
+  }, [location.pathname])
+  useEffect(() => {
+    captureReferralCode()
+    setupClickTracking()
+  }, [])
+  return null
+}
+
 export default function App() {
   return (
     <BrowserRouter>
+      <AnalyticsTracker />
       <CartProvider>
         <Routes>
           <Route element={<Layout />}>

@@ -4,6 +4,7 @@ import { motion } from 'framer-motion'
 import { Link } from 'react-router-dom'
 import { contactSchema, type ContactFormErrors } from '@/lib/validation'
 import { supabase } from '@/lib/supabase'
+import { sendContactEmail } from '@/lib/email'
 import { toast } from 'sonner'
 
 const services = ['Stickers & Labels', 'Vehicle Graphics', 'Business Signage', 'Event Displays', 'Mylar Packaging', 'Business Print', 'Other']
@@ -42,6 +43,13 @@ export default function QuickContact() {
       })
 
       if (error) throw error
+      sendContactEmail({
+        name: formData.name.trim(),
+        email: formData.email.trim(),
+        phone: formData.phone.trim() || undefined,
+        service: formData.service || undefined,
+        message: formData.message.trim(),
+      })
       setSubmitted(true)
       toast.success('Message sent!')
     } catch {
