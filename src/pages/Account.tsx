@@ -380,47 +380,156 @@ function AccountDashboard() {
 
         {/* Profile Tab */}
         {tab === 'profile' && (
-          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
-            <div className="bg-card border border-border rounded-2xl p-6 space-y-6">
-              <div className="flex items-center gap-4">
-                <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center">
-                  <User size={32} className="text-primary" />
-                </div>
-                <div>
-                  <h3 className="text-xl font-bold">{userName}</h3>
-                  <p className="text-muted-foreground">{userEmail}</p>
-                </div>
-              </div>
-
-              <div className="grid sm:grid-cols-2 gap-4">
-                <div className="bg-background border border-border rounded-xl p-4">
-                  <p className="text-xs text-muted-foreground uppercase tracking-wider mb-1">Email</p>
-                  <p className="font-medium">{userEmail}</p>
-                </div>
-                <div className="bg-background border border-border rounded-xl p-4">
-                  <p className="text-xs text-muted-foreground uppercase tracking-wider mb-1">Phone</p>
-                  <p className="font-medium">{userPhone || 'Not set'}</p>
-                </div>
-                <div className="bg-background border border-border rounded-xl p-4">
-                  <p className="text-xs text-muted-foreground uppercase tracking-wider mb-1">Member Since</p>
-                  <p className="font-medium">{user?.created_at ? new Date(user.created_at).toLocaleDateString('en-US', { month: 'long', year: 'numeric' }) : '—'}</p>
-                </div>
-                <div className="bg-background border border-border rounded-xl p-4">
-                  <p className="text-xs text-muted-foreground uppercase tracking-wider mb-1">Total Orders</p>
-                  <p className="font-medium">{orders.length}</p>
-                </div>
-              </div>
-
-              <div className="pt-4 border-t border-border">
-                <button onClick={handleSignOut} className="text-sm text-destructive hover:text-destructive/80 transition-colors flex items-center gap-2">
-                  <LogOut size={14} /> Sign out of your account
-                </button>
-              </div>
-            </div>
-          </motion.div>
+          <ProfileTab
+            user={user!}
+            userName={userName}
+            userEmail={userEmail}
+            userPhone={userPhone}
+            orderCount={orders.length}
+            onSignOut={handleSignOut}
+          />
         )}
       </div>
     </section>
+  )
+}
+
+// ─── Profile Tab ────────────────────────────────────────────────────────────
+
+function ProfileTab({ user, userName, userEmail, userPhone, orderCount, onSignOut }: {
+  user: { created_at?: string }
+  userName: string
+  userEmail: string
+  userPhone: string
+  orderCount: number
+  onSignOut: () => void
+}) {
+  const [editName, setEditName] = useState(userName)
+  const [editPhone, setEditPhone] = useState(userPhone)
+  const [editEmail, setEditEmail] = useState(userEmail)
+  const [saving, setSaving] = useState(false)
+
+  const hasChanges = editName !== userName || editPhone !== userPhone || editEmail !== userEmail
+
+  const handleSave = async () => {
+    setSaving(true)
+    try {
+      // Update auth metadata (name + phone)
+      const updates: { data?: { full_name?: string; phone?: string }; email?: string } = {
+        data: {},
+      }
+      if (editName !== userName) updates.data!.full_name = editName.trim()
+      if (editPhone !== userPhone) updates.data!.phone = editPhone.trim()
+
+      if (updates.data && Object.keys(updates.data).length > 0) {
+        await supabase.auth.updateUser(updates)
+      }
+
+      // Email change requires confirmation — Supabase sends a verification email
+      if (editEmail !== userEmail) {
+        const { error } = await supabase.auth.updateUser({ email: editEmail.trim() })
+        if (error) {
+          toast.error(error.message)
+          setSaving(false)
+          return
+        }
+        toast.success('Confirmation email sent to ' + editEmail.trim())
+      } else {
+        toast.success('Profile updated')
+      }
+
+
+    } catch {
+      toast.error('Failed to update profile')
+    }
+    setSaving(false)
+  }
+
+  const inputClass = 'w-full px-4 py-3 bg-background border border-border rounded-xl text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all'
+
+  return (
+    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
+      <div className="bg-card border border-border rounded-2xl p-6 space-y-6">
+        {/* Avatar + name */}
+        <div className="flex items-center gap-4">
+          <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center">
+            <User size={32} className="text-primary" />
+          </div>
+          <div>
+            <h3 className="text-xl font-bold">{userName}</h3>
+            <p className="text-muted-foreground text-sm">{userEmail}</p>
+          </div>
+        </div>
+
+        {/* Editable fields */}
+        <div className="space-y-4">
+          <div>
+            <label className="block text-xs text-muted-foreground uppercase tracking-wider mb-1.5">Full Name</label>
+            <input
+              type="text"
+              value={editName}
+              onChange={e => { setEditName(e.target.value)}}
+              className={inputClass}
+              placeholder="Your name"
+            />
+          </div>
+          <div>
+            <label className="block text-xs text-muted-foreground uppercase tracking-wider mb-1.5">Email</label>
+            <input
+              type="email"
+              value={editEmail}
+              onChange={e => { setEditEmail(e.target.value)}}
+              className={inputClass}
+              placeholder="you@email.com"
+            />
+            {editEmail !== userEmail && (
+              <p className="text-xs text-yellow-400 mt-1">A confirmation email will be sent to verify the new address.</p>
+            )}
+          </div>
+          <div>
+            <label className="block text-xs text-muted-foreground uppercase tracking-wider mb-1.5">Phone</label>
+            <input
+              type="tel"
+              value={editPhone}
+              onChange={e => { setEditPhone(e.target.value)}}
+              className={inputClass}
+              placeholder="(555) 123-4567"
+            />
+          </div>
+        </div>
+
+        {/* Save button */}
+        {hasChanges && (
+          <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}>
+            <button
+              onClick={handleSave}
+              disabled={saving}
+              className="btn-primary w-full flex items-center justify-center gap-2"
+            >
+              {saving ? <><Loader2 size={16} className="animate-spin" /> Saving...</> : 'Save Changes'}
+            </button>
+          </motion.div>
+        )}
+
+        {/* Read-only info */}
+        <div className="grid sm:grid-cols-2 gap-4 pt-4 border-t border-border">
+          <div className="bg-background border border-border rounded-xl p-4">
+            <p className="text-xs text-muted-foreground uppercase tracking-wider mb-1">Member Since</p>
+            <p className="font-medium">{user?.created_at ? new Date(user.created_at).toLocaleDateString('en-US', { month: 'long', year: 'numeric' }) : '—'}</p>
+          </div>
+          <div className="bg-background border border-border rounded-xl p-4">
+            <p className="text-xs text-muted-foreground uppercase tracking-wider mb-1">Total Orders</p>
+            <p className="font-medium">{orderCount}</p>
+          </div>
+        </div>
+
+        <div className="pt-4 border-t border-border">
+          <button onClick={onSignOut} className="text-sm text-destructive hover:text-destructive/80 transition-colors flex items-center gap-2">
+            <LogOut size={14} /> Sign out of your account
+          </button>
+        </div>
+      </div>
+    </motion.div>
   )
 }
 
