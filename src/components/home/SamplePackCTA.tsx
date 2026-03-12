@@ -19,6 +19,7 @@ export default function SamplePackCTA() {
             <img
               src={weddingDisplay}
               alt="Custom event signage"
+              loading="lazy"
               className="w-full h-full object-cover"
             />
             <div className="absolute inset-0 bg-gradient-to-r from-background/95 via-background/80 to-background/40" />

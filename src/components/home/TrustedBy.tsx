@@ -33,10 +33,10 @@ export default function TrustedBy() {
         </motion.p>
       </div>
       <div className="relative">
-        <div className="flex gap-8 md:gap-12 animate-brand-scroll" style={{ width: 'fit-content' }}>
+        <div className="flex gap-4 md:gap-12 animate-brand-scroll" style={{ width: 'fit-content' }}>
           {duplicated.map((brand, i) => (
-            <div key={`${brand.id}-${i}`} className="flex items-center justify-center h-[110px] w-[260px] md:h-[130px] md:w-[300px] px-6 opacity-60 hover:opacity-100 transition-opacity duration-300 cursor-default">
-              <img src={brand.logo} alt={`${brand.name} logo`} className={brand.className || "max-h-[110px] md:max-h-[120px] max-w-[260px] object-contain"} />
+            <div key={`${brand.id}-${i}`} className="flex items-center justify-center h-[80px] w-[180px] md:h-[130px] md:w-[300px] px-4 md:px-6 opacity-60 hover:opacity-100 transition-opacity duration-300 cursor-default">
+              <img src={brand.logo} alt={`${brand.name} logo`} className={brand.className || "max-h-[70px] md:max-h-[120px] max-w-[170px] md:max-w-[260px] object-contain"} />
             </div>
           ))}
         </div>

@@ -44,6 +44,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         password,
         options: {
           data: { full_name: name, phone: phone || '' },
+          emailRedirectTo: `${window.location.origin}/account`,
         },
       })
       if (error) return { error: error.message }

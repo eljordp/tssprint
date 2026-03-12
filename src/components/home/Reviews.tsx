@@ -50,9 +50,14 @@ const reviews = [
 export default function Reviews() {
   const [current, setCurrent] = useState(0)
   const [autoplay, setAutoplay] = useState(true)
+  const [perPage, setPerPage] = useState(() => typeof window !== 'undefined' && window.innerWidth >= 768 ? 3 : 1)
 
-  // Show 1 on mobile, 3 on desktop
-  const perPage = typeof window !== 'undefined' && window.innerWidth >= 768 ? 3 : 1
+  useEffect(() => {
+    const onResize = () => setPerPage(window.innerWidth >= 768 ? 3 : 1)
+    window.addEventListener('resize', onResize)
+    return () => window.removeEventListener('resize', onResize)
+  }, [])
+
   const maxIndex = Math.max(0, reviews.length - perPage)
 
   useEffect(() => {
@@ -145,7 +150,7 @@ export default function Reviews() {
               <button
                 onClick={prev}
                 disabled={current === 0}
-                className="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-4 w-10 h-10 rounded-full bg-card border border-border flex items-center justify-center text-muted-foreground hover:text-foreground hover:border-primary/50 transition-all disabled:opacity-30 disabled:pointer-events-none shadow-lg"
+                className="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-1 md:-translate-x-4 w-8 h-8 md:w-10 md:h-10 rounded-full bg-card border border-border flex items-center justify-center text-muted-foreground hover:text-foreground hover:border-primary/50 transition-all disabled:opacity-30 disabled:pointer-events-none shadow-lg"
                 aria-label="Previous review"
               >
                 <ChevronLeft size={18} />
@@ -153,7 +158,7 @@ export default function Reviews() {
               <button
                 onClick={next}
                 disabled={current >= maxIndex}
-                className="absolute right-0 top-1/2 -translate-y-1/2 translate-x-4 w-10 h-10 rounded-full bg-card border border-border flex items-center justify-center text-muted-foreground hover:text-foreground hover:border-primary/50 transition-all disabled:opacity-30 disabled:pointer-events-none shadow-lg"
+                className="absolute right-0 top-1/2 -translate-y-1/2 translate-x-1 md:translate-x-4 w-8 h-8 md:w-10 md:h-10 rounded-full bg-card border border-border flex items-center justify-center text-muted-foreground hover:text-foreground hover:border-primary/50 transition-all disabled:opacity-30 disabled:pointer-events-none shadow-lg"
                 aria-label="Next review"
               >
                 <ChevronRight size={18} />

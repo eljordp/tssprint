@@ -7,7 +7,7 @@ import stickerGroup from '@/assets/stickers/sticker-group.png'
 
 export default function Hero() {
   return (
-    <section className="relative min-h-[90vh] flex items-center overflow-hidden">
+    <section className="relative min-h-[80vh] md:min-h-[90vh] flex items-center overflow-hidden">
       {/* Subtle background gradient */}
       <div className="absolute inset-0 bg-gradient-to-br from-background via-background to-primary/5" />
 
@@ -19,7 +19,7 @@ export default function Hero() {
         <div className="grid lg:grid-cols-[1.2fr_0.8fr] gap-12 items-center">
           {/* Left: Text */}
           <div>
-            <motion.h1 initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6, delay: 0.2 }} className="text-5xl md:text-6xl lg:text-7xl font-black mb-6 leading-[1.1] tracking-tight">
+            <motion.h1 initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6, delay: 0.2 }} className="text-3xl sm:text-5xl md:text-6xl lg:text-7xl font-black mb-4 md:mb-6 leading-[1.1] tracking-tight">
               The Sticker Smith
               <br />
               <span className="text-gradient">The Bay's Trusted</span>
@@ -27,23 +27,23 @@ export default function Hero() {
               Print & Branding
             </motion.h1>
 
-            <motion.p initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6, delay: 0.3 }} className="text-lg md:text-xl text-muted-foreground max-w-xl mb-8">
+            <motion.p initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6, delay: 0.3 }} className="text-base md:text-xl text-muted-foreground max-w-xl mb-6 md:mb-8">
               Serving Bay Area businesses with custom stickers, labels, packaging, signage, and vehicle graphics.
             </motion.p>
 
             <motion.div initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6, delay: 0.4 }} className="flex flex-col sm:flex-row gap-4 mb-10">
-              <Link to="/order" className="btn-primary text-lg px-10 py-4">Order Stickers<ArrowRight size={20} /></Link>
-              <Link to="/contact" className="btn-secondary text-lg px-10 py-4">Start My Project</Link>
+              <Link to="/order" className="btn-primary text-base md:text-lg px-8 md:px-10 py-3.5 md:py-4">Order Stickers<ArrowRight size={20} /></Link>
+              <Link to="/contact" className="btn-secondary text-base md:text-lg px-8 md:px-10 py-3.5 md:py-4">Start My Project</Link>
             </motion.div>
 
-            <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6, delay: 0.5 }} className="flex flex-wrap gap-4">
-              <div className="flex items-center gap-2 bg-white/5 border border-border rounded-full px-4 py-2 text-sm text-muted-foreground">
+            <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6, delay: 0.5 }} className="flex flex-wrap gap-2 md:gap-4">
+              <div className="flex items-center gap-2 bg-white/5 border border-border rounded-full px-3 py-1.5 md:px-4 md:py-2 text-xs md:text-sm text-muted-foreground">
                 <Clock size={16} className="text-primary" />24hr Proof Turnaround
               </div>
-              <div className="flex items-center gap-2 bg-white/5 border border-border rounded-full px-4 py-2 text-sm text-muted-foreground">
+              <div className="flex items-center gap-2 bg-white/5 border border-border rounded-full px-3 py-1.5 md:px-4 md:py-2 text-xs md:text-sm text-muted-foreground">
                 <MapPin size={16} className="text-primary" />Free Shipping Available
               </div>
-              <div className="flex items-center gap-2 bg-white/5 border border-border rounded-full px-4 py-2 text-sm text-muted-foreground">
+              <div className="flex items-center gap-2 bg-white/5 border border-border rounded-full px-3 py-1.5 md:px-4 md:py-2 text-xs md:text-sm text-muted-foreground">
                 <Shield size={16} className="text-primary" />Quality Guaranteed
               </div>
             </motion.div>

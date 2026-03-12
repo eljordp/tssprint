@@ -69,13 +69,13 @@ export default function Footer() {
           </div>
         </div>
         <div className="mt-12 pt-8 border-t border-border">
-          <div className="flex flex-col md:flex-row justify-between items-center gap-6">
-            <p className="text-muted-foreground text-sm"><Link to="/admin" className="hover:text-muted-foreground">&copy;</Link> {new Date().getFullYear()} The Sticker Smith. All rights reserved.</p>
-            <div className="flex items-center gap-2">
-              <span className="text-xs text-muted-foreground mr-1">We accept</span>
-              {['Visa', 'Mastercard', 'Amex', 'PayPal', 'Apple Pay'].map((m) => (<div key={m} className="px-2 py-1 rounded bg-white/5 border border-border text-[10px] text-muted-foreground font-medium">{m}</div>))}
+          <div className="flex flex-col items-center gap-4 md:flex-row md:justify-between md:gap-6">
+            <p className="text-muted-foreground text-xs md:text-sm text-center"><Link to="/admin" className="hover:text-muted-foreground">&copy;</Link> {new Date().getFullYear()} The Sticker Smith. All rights reserved.</p>
+            <div className="flex flex-wrap items-center justify-center gap-1.5 md:gap-2">
+              <span className="text-[10px] md:text-xs text-muted-foreground mr-1">We accept</span>
+              {['Visa', 'MC', 'Amex', 'PayPal', 'Apple Pay'].map((m) => (<div key={m} className="px-1.5 md:px-2 py-1 rounded bg-white/5 border border-border text-[9px] md:text-[10px] text-muted-foreground font-medium">{m}</div>))}
             </div>
-            <div className="flex items-center gap-2 text-sm">
+            <div className="flex items-center gap-2 text-xs md:text-sm">
               <span className="text-muted-foreground">Website by</span>
               <a href="https://www.jdlo.site" target="_blank" rel="noopener noreferrer" className="text-primary font-bold hover:brightness-110 transition-all">JDLO</a>
             </div>

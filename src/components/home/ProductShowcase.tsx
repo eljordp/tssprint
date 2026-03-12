@@ -42,10 +42,11 @@ export default function ProductShowcase() {
                 className="group block relative overflow-hidden rounded-2xl border border-border hover:border-primary/30 transition-all duration-300"
               >
                 {/* Image section */}
-                <div className="relative h-56 md:h-72 overflow-hidden">
+                <div className="relative h-44 sm:h-56 md:h-72 overflow-hidden">
                   <img
                     src={item.image}
                     alt={item.title}
+                    loading="lazy"
                     className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
                   />
                   <div className="absolute inset-0 bg-gradient-to-t from-card via-card/50 to-transparent" />

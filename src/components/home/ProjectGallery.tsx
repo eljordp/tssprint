@@ -54,10 +54,11 @@ export default function ProjectGallery() {
               transition={{ duration: 0.4, delay: index * 0.05 }}
               className="flex-shrink-0 snap-start"
             >
-              <div className="group relative w-72 md:w-80 aspect-square rounded-2xl overflow-hidden border border-border cursor-pointer">
+              <div className="group relative w-60 sm:w-72 md:w-80 aspect-square rounded-2xl overflow-hidden border border-border cursor-pointer">
                 <img
                   src={img.src}
                   alt={img.alt}
+                  loading="lazy"
                   className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
                 />
                 <div className="absolute inset-0 bg-black/0 group-hover:bg-black/40 transition-all duration-300 flex items-center justify-center">
