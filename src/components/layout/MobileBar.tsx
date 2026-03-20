@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom'
-import { Sticker, MessageSquare } from 'lucide-react'
+import { FileText, MessageSquare } from 'lucide-react'
 
 export default function MobileBar() {
   return (
@@ -7,14 +7,14 @@ export default function MobileBar() {
       <div className="flex">
         <Link
           to="/order"
-          className="flex-1 flex items-center justify-center gap-2 py-4 bg-primary text-primary-foreground font-bold text-sm"
+          className="flex-1 flex items-center justify-center gap-2 py-4 bg-primary text-primary-foreground font-semibold"
         >
-          <Sticker size={18} />
-          Make Stickers
+          <FileText size={18} />
+          Order Stickers
         </Link>
         <Link
           to="/contact"
-          className="flex-1 flex items-center justify-center gap-2 py-4 bg-secondary text-secondary-foreground font-bold text-sm border-l border-border"
+          className="flex-1 flex items-center justify-center gap-2 py-4 bg-secondary text-secondary-foreground font-semibold border-l border-border"
         >
           <MessageSquare size={18} />
           Get Quote
