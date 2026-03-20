@@ -29,8 +29,7 @@ export default function Hero() {
             >
               The Sticker Smith
               <br />
-              <span className="text-primary">The Bay's Trusted</span>
-              <br />
+              <span className="text-primary">The Bay's Trusted </span>
               Print & Branding
             </motion.h1>
 
