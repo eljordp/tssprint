@@ -81,7 +81,11 @@ const DEFAULT_PROMOS: PromoCode[] = [
   { code: 'WELCOME15', discountPercent: 15, minOrder: 50, active: true, expiry: '' },
 ]
 
-type Tab = 'pricing' | 'promos' | 'analytics' | 'settings'
+const ORDER_STATUSES = ['submitted', 'proof-sent', 'approved', 'printing', 'shipped', 'delivered'] as const
+const ORDER_FILTER_STATUSES = ['All', 'Submitted', 'Printing', 'Shipped', 'Delivered'] as const
+
+type Tab = 'orders' | 'customers' | 'analytics' | 'pricing' | 'promos' | 'settings'
+type DateRange = 'today' | '7days' | '30days' | 'all'
 
 function loadJSON<T>(key: string, fallback: T): T {
   try {
@@ -92,11 +96,53 @@ function loadJSON<T>(key: string, fallback: T): T {
   }
 }
 
+function formatDate(dateStr: string): string {
+  const d = new Date(dateStr)
+  return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
+}
+
+function formatDateTime(dateStr: string): string {
+  const d = new Date(dateStr)
+  return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric', hour: 'numeric', minute: '2-digit' })
+}
+
+function getDateRangeStart(range: DateRange): Date | null {
+  if (range === 'all') return null
+  const now = new Date()
+  if (range === 'today') {
+    const start = new Date(now.getFullYear(), now.getMonth(), now.getDate())
+    return start
+  }
+  if (range === '7days') {
+    const start = new Date(now)
+    start.setDate(start.getDate() - 7)
+    return start
+  }
+  if (range === '30days') {
+    const start = new Date(now)
+    start.setDate(start.getDate() - 30)
+    return start
+  }
+  return null
+}
+
+function statusBadgeClass(status: string): string {
+  switch (status) {
+    case 'submitted': return 'bg-yellow-500/20 text-yellow-400'
+    case 'proof-sent': return 'bg-orange-500/20 text-orange-400'
+    case 'approved': return 'bg-teal-500/20 text-teal-400'
+    case 'printing': return 'bg-purple-500/20 text-purple-400'
+    case 'shipped': return 'bg-blue-500/20 text-blue-400'
+    case 'delivered': return 'bg-green-500/20 text-green-400'
+    default: return 'bg-muted text-muted-foreground'
+  }
+}
+
 export default function Admin() {
   const [authed, setAuthed] = useState(() => sessionStorage.getItem(AUTH_KEY) === 'true')
   const [password, setPassword] = useState('')
   const [error, setError] = useState('')
-  const [tab, setTab] = useState<Tab>('pricing')
+  const [tab, setTab] = useState<Tab>('orders')
 
   // Pricing state
   const [basePrices, setBasePrices] = useState<Record<number, Record<number, number>>>(() => {
@@ -127,34 +173,100 @@ export default function Admin() {
   // Analytics data
   const [analytics, setAnalytics] = useState({ totalOrders: 0, totalRevenue: 0, avgOrder: 0, recentOrders: [] as any[], customers: [] as any[], pageViews: 0, contactSubmissions: [] as any[] })
   const [analyticsLoading, setAnalyticsLoading] = useState(false)
+  const [analyticsDateRange, setAnalyticsDateRange] = useState<DateRange>('all')
 
+  // Orders tab state
+  const [orders, setOrders] = useState<any[]>([])
+  const [ordersLoading, setOrdersLoading] = useState(false)
+  const [ordersStatusFilter, setOrdersStatusFilter] = useState('All')
+  const [ordersDateRange, setOrdersDateRange] = useState<DateRange>('all')
+  const [expandedOrderId, setExpandedOrderId] = useState<string | null>(null)
+  const [orderStatusUpdates, setOrderStatusUpdates] = useState<Record<string, string>>({})
+  const [orderUpdateSuccess, setOrderUpdateSuccess] = useState<string | null>(null)
+
+  // Customers tab state
+  const [customers, setCustomers] = useState<any[]>([])
+  const [customersLoading, setCustomersLoading] = useState(false)
+  const [customerSearch, setCustomerSearch] = useState('')
+  const [expandedCustomerId, setExpandedCustomerId] = useState<string | null>(null)
+  const [customerOrders, setCustomerOrders] = useState<Record<string, any[]>>({})
+  const [customerNotes, setCustomerNotes] = useState<Record<string, string>>({})
+  const [customerNoteSaved, setCustomerNoteSaved] = useState<string | null>(null)
+
+  // Fetch orders for Orders tab
+  useEffect(() => {
+    if (tab !== 'orders' || !authed) return
+    setOrdersLoading(true)
+    supabase
+      .from('orders')
+      .select('*')
+      .order('created_at', { ascending: false })
+      .then(({ data }) => {
+        setOrders(data || [])
+        setOrdersLoading(false)
+      })
+  }, [tab, authed])
+
+  // Fetch customers for Customers tab
+  useEffect(() => {
+    if (tab !== 'customers' || !authed) return
+    setCustomersLoading(true)
+    supabase
+      .from('customers')
+      .select('*')
+      .order('created_at', { ascending: false })
+      .then(({ data }) => {
+        setCustomers(data || [])
+        setCustomersLoading(false)
+      })
+  }, [tab, authed])
+
+  // Fetch analytics data
   useEffect(() => {
     if (tab !== 'analytics' || !authed) return
     setAnalyticsLoading(true)
 
     Promise.all([
-      supabase.from('orders').select('*').order('created_at', { ascending: false }).limit(20),
+      supabase.from('orders').select('*').order('created_at', { ascending: false }),
       supabase.from('customers').select('*').order('created_at', { ascending: false }).limit(10),
       supabase.from('page_views').select('id', { count: 'exact', head: true }),
       supabase.from('contact_submissions').select('*').order('created_at', { ascending: false }).limit(10),
     ]).then(([ordersRes, customersRes, viewsRes, contactsRes]) => {
-      const orders = ordersRes.data || []
-      const totalOrders = orders.length
-      const totalRevenue = orders.reduce((sum: number, o: any) => sum + (Number(o.total) || 0), 0)
+      const allOrders = ordersRes.data || []
+      const rangeStart = getDateRangeStart(analyticsDateRange)
+      const filteredOrders = rangeStart
+        ? allOrders.filter((o: any) => new Date(o.created_at) >= rangeStart)
+        : allOrders
+
+      const totalOrders = filteredOrders.length
+      const totalRevenue = filteredOrders.reduce((sum: number, o: any) => sum + (Number(o.total) || 0), 0)
       const avgOrder = totalOrders > 0 ? totalRevenue / totalOrders : 0
 
       setAnalytics({
         totalOrders,
         totalRevenue,
         avgOrder,
-        recentOrders: orders,
+        recentOrders: filteredOrders.slice(0, 20),
         customers: customersRes.data || [],
         pageViews: viewsRes.count || 0,
         contactSubmissions: contactsRes.data || [],
       })
       setAnalyticsLoading(false)
     })
-  }, [tab, authed])
+  }, [tab, authed, analyticsDateRange])
+
+  // Fetch customer orders when expanding a customer
+  function fetchCustomerOrders(email: string, customerId: string) {
+    if (customerOrders[customerId]) return
+    supabase
+      .from('orders')
+      .select('*')
+      .eq('customer_email', email)
+      .order('created_at', { ascending: false })
+      .then(({ data }) => {
+        setCustomerOrders(prev => ({ ...prev, [customerId]: data || [] }))
+      })
+  }
 
   function handleLogin(e: React.FormEvent) {
     e.preventDefault()
@@ -226,11 +338,76 @@ export default function Admin() {
     localStorage.setItem(GA_KEY, gaTrackingId)
   }
 
+  async function updateOrderStatus(orderId: string) {
+    const newStatus = orderStatusUpdates[orderId]
+    if (!newStatus) return
+    const { error } = await supabase.from('orders').update({ status: newStatus }).eq('id', orderId)
+    if (!error) {
+      setOrders(prev => prev.map(o => o.id === orderId ? { ...o, status: newStatus } : o))
+      setOrderUpdateSuccess(orderId)
+      setTimeout(() => setOrderUpdateSuccess(null), 2000)
+    }
+  }
+
+  async function saveCustomerNotes(customerId: string) {
+    const notes = customerNotes[customerId] ?? ''
+    const { error } = await supabase.from('customers').update({ notes }).eq('id', customerId)
+    if (!error) {
+      setCustomers(prev => prev.map(c => c.id === customerId ? { ...c, notes } : c))
+      setCustomerNoteSaved(customerId)
+      setTimeout(() => setCustomerNoteSaved(null), 2000)
+    }
+  }
+
+  // Filtered orders for Orders tab
+  const filteredOrders = orders.filter(order => {
+    // Status filter
+    if (ordersStatusFilter !== 'All' && order.status !== ordersStatusFilter.toLowerCase()) return false
+    // Date range filter
+    const rangeStart = getDateRangeStart(ordersDateRange)
+    if (rangeStart && new Date(order.created_at) < rangeStart) return false
+    return true
+  })
+
+  // Filtered customers for Customers tab
+  const filteredCustomers = customers.filter(c => {
+    if (!customerSearch) return true
+    const q = customerSearch.toLowerCase()
+    const name = `${c.first_name || ''} ${c.last_name || ''} ${c.name || ''}`.toLowerCase()
+    const email = (c.email || '').toLowerCase()
+    return name.includes(q) || email.includes(q)
+  })
+
+  // Revenue by day for analytics (last 7 days)
+  function getRevenueByDay(): { date: string; revenue: number }[] {
+    const days: { date: string; revenue: number }[] = []
+    const now = new Date()
+    for (let i = 6; i >= 0; i--) {
+      const d = new Date(now)
+      d.setDate(d.getDate() - i)
+      const dateStr = d.toISOString().split('T')[0]
+      const dayRevenue = (analytics.recentOrders || [])
+        .concat(orders) // use all available orders
+        .filter((o: any, idx: number, arr: any[]) => {
+          // dedupe by id
+          return arr.findIndex((x: any) => x.id === o.id) === idx
+        })
+        .filter((o: any) => o.created_at && o.created_at.startsWith(dateStr))
+        .reduce((sum: number, o: any) => sum + (Number(o.total) || 0), 0)
+      days.push({ date: formatDate(dateStr + 'T00:00:00'), revenue: dayRevenue })
+    }
+    return days
+  }
+
   const inputClass = 'w-full bg-secondary border border-border rounded-lg px-3 py-2 text-foreground text-sm focus:outline-none focus:border-primary'
   const smallInputClass = 'bg-secondary border border-border rounded px-2 py-1 text-foreground text-sm text-center w-20 focus:outline-none focus:border-primary'
   const tabClass = (t: Tab) =>
     `px-4 py-2 text-sm font-medium rounded-lg transition-colors ${
       tab === t ? 'bg-primary text-primary-foreground' : 'text-muted-foreground hover:text-foreground hover:bg-secondary'
+    }`
+  const dateRangeBtnClass = (active: boolean) =>
+    `px-3 py-1 text-xs font-medium rounded-lg transition-colors ${
+      active ? 'bg-primary text-primary-foreground' : 'bg-secondary text-muted-foreground hover:text-foreground'
     }`
 
   // --- Password Gate ---
@@ -273,12 +450,426 @@ export default function Admin() {
 
       {/* Tabs */}
       <div className="max-w-6xl mx-auto px-4 pt-6">
-        <div className="flex gap-2 mb-6">
+        <div className="flex gap-2 mb-6 flex-wrap">
+          <button className={tabClass('orders')} onClick={() => setTab('orders')}>Orders</button>
+          <button className={tabClass('customers')} onClick={() => setTab('customers')}>Customers</button>
+          <button className={tabClass('analytics')} onClick={() => setTab('analytics')}>Analytics</button>
           <button className={tabClass('pricing')} onClick={() => setTab('pricing')}>Pricing</button>
           <button className={tabClass('promos')} onClick={() => setTab('promos')}>Promo Codes</button>
-          <button className={tabClass('analytics')} onClick={() => setTab('analytics')}>Analytics</button>
           <button className={tabClass('settings')} onClick={() => setTab('settings')}>Settings</button>
         </div>
+
+        {/* Tab: Orders */}
+        {tab === 'orders' && (
+          <div className="space-y-6 pb-12">
+            {/* Filter Bar */}
+            <div className="flex flex-wrap items-center gap-4">
+              <div className="flex items-center gap-2">
+                <label className="text-xs text-muted-foreground">Status:</label>
+                <select
+                  value={ordersStatusFilter}
+                  onChange={e => setOrdersStatusFilter(e.target.value)}
+                  className="bg-secondary border border-border rounded-lg px-3 py-1.5 text-foreground text-sm focus:outline-none focus:border-primary"
+                >
+                  {ORDER_FILTER_STATUSES.map(s => (
+                    <option key={s} value={s}>{s}</option>
+                  ))}
+                </select>
+              </div>
+              <div className="flex items-center gap-2">
+                <label className="text-xs text-muted-foreground">Date:</label>
+                <button className={dateRangeBtnClass(ordersDateRange === 'today')} onClick={() => setOrdersDateRange('today')}>Today</button>
+                <button className={dateRangeBtnClass(ordersDateRange === '7days')} onClick={() => setOrdersDateRange('7days')}>7 days</button>
+                <button className={dateRangeBtnClass(ordersDateRange === '30days')} onClick={() => setOrdersDateRange('30days')}>30 days</button>
+                <button className={dateRangeBtnClass(ordersDateRange === 'all')} onClick={() => setOrdersDateRange('all')}>All</button>
+              </div>
+            </div>
+
+            {ordersLoading && <p className="text-sm text-muted-foreground">Loading orders...</p>}
+
+            {!ordersLoading && filteredOrders.length === 0 && (
+              <p className="text-sm text-muted-foreground">No orders found.</p>
+            )}
+
+            {/* Order List */}
+            <div className="space-y-3">
+              {filteredOrders.map((order: any) => {
+                const isExpanded = expandedOrderId === order.id
+                const items: any[] = Array.isArray(order.items) ? order.items : []
+                const firstItemName = items.length > 0 ? (items[0].name || items[0].product_name || 'Item') : 'No items'
+                const moreCount = items.length > 1 ? items.length - 1 : 0
+
+                return (
+                  <div key={order.id} className="bg-card border border-border rounded-xl overflow-hidden">
+                    {/* Order Row */}
+                    <div
+                      className="px-4 py-3 flex items-center justify-between cursor-pointer hover:bg-secondary/50 transition-colors"
+                      onClick={() => setExpandedOrderId(isExpanded ? null : order.id)}
+                    >
+                      <div className="flex items-center gap-4 flex-1 min-w-0">
+                        <span className="text-xs text-muted-foreground font-mono shrink-0">#{String(order.id).slice(-8)}</span>
+                        <div className="min-w-0">
+                          <span className="text-sm font-medium">{order.customer_first_name} {order.customer_last_name}</span>
+                          <span className="text-sm text-muted-foreground ml-2 hidden sm:inline">{order.customer_email}</span>
+                        </div>
+                        <span className="text-xs text-muted-foreground hidden md:inline truncate">
+                          {firstItemName}{moreCount > 0 ? ` and ${moreCount} more` : ''}
+                        </span>
+                      </div>
+                      <div className="flex items-center gap-3 shrink-0">
+                        <span className={`px-2 py-0.5 rounded text-xs font-medium ${statusBadgeClass(order.status)}`}>
+                          {order.status}
+                        </span>
+                        <span className="text-sm font-bold">${Number(order.total).toFixed(2)}</span>
+                        <span className="text-xs text-muted-foreground hidden sm:inline">{formatDate(order.created_at)}</span>
+                        <span className="text-muted-foreground text-xs">{isExpanded ? '▲' : '▼'}</span>
+                      </div>
+                    </div>
+
+                    {/* Expanded Details */}
+                    {isExpanded && (
+                      <div className="border-t border-border px-4 py-4 space-y-4 bg-secondary/30">
+                        {/* Customer Details */}
+                        <div>
+                          <h3 className="text-xs font-semibold text-muted-foreground uppercase mb-2">Customer Details</h3>
+                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-sm">
+                            <div><span className="text-muted-foreground">Name:</span> {order.customer_first_name} {order.customer_last_name}</div>
+                            <div><span className="text-muted-foreground">Email:</span> {order.customer_email}</div>
+                            {order.customer_phone && <div><span className="text-muted-foreground">Phone:</span> {order.customer_phone}</div>}
+                            {(order.shipping_address || order.address) && (
+                              <div className="sm:col-span-2"><span className="text-muted-foreground">Address:</span> {order.shipping_address || order.address}</div>
+                            )}
+                          </div>
+                        </div>
+
+                        {/* Items */}
+                        {items.length > 0 && (
+                          <div>
+                            <h3 className="text-xs font-semibold text-muted-foreground uppercase mb-2">Items</h3>
+                            <div className="space-y-2">
+                              {items.map((item: any, idx: number) => (
+                                <div key={idx} className="flex items-center justify-between bg-secondary rounded-lg px-3 py-2 text-sm">
+                                  <div>
+                                    <span className="font-medium">{item.name || item.product_name || 'Item'}</span>
+                                    {item.size && <span className="text-muted-foreground ml-2">Size: {item.size}</span>}
+                                    {item.option && <span className="text-muted-foreground ml-2">Option: {item.option}</span>}
+                                    {item.material && <span className="text-muted-foreground ml-2">Material: {item.material}</span>}
+                                  </div>
+                                  <div className="flex items-center gap-3 text-sm">
+                                    {item.quantity && <span className="text-muted-foreground">x{item.quantity}</span>}
+                                    {item.price && <span className="font-medium">${Number(item.price).toFixed(2)}</span>}
+                                  </div>
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        )}
+
+                        {/* Status Update */}
+                        <div className="flex items-center gap-3">
+                          <label className="text-xs text-muted-foreground">Update Status:</label>
+                          <select
+                            value={orderStatusUpdates[order.id] ?? order.status}
+                            onChange={e => setOrderStatusUpdates(prev => ({ ...prev, [order.id]: e.target.value }))}
+                            className="bg-secondary border border-border rounded-lg px-3 py-1.5 text-foreground text-sm focus:outline-none focus:border-primary"
+                          >
+                            {ORDER_STATUSES.map(s => (
+                              <option key={s} value={s}>{s}</option>
+                            ))}
+                          </select>
+                          <button
+                            onClick={() => updateOrderStatus(order.id)}
+                            className="btn-primary text-xs px-3 py-1.5"
+                          >
+                            Update Status
+                          </button>
+                          {orderUpdateSuccess === order.id && (
+                            <span className="text-xs text-primary">Status updated!</span>
+                          )}
+                        </div>
+
+                        <div className="text-xs text-muted-foreground">
+                          Order placed: {formatDateTime(order.created_at)}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                )
+              })}
+            </div>
+          </div>
+        )}
+
+        {/* Tab: Customers */}
+        {tab === 'customers' && (
+          <div className="space-y-6 pb-12">
+            {/* Search Bar */}
+            <div>
+              <input
+                type="text"
+                placeholder="Search by name or email..."
+                value={customerSearch}
+                onChange={e => setCustomerSearch(e.target.value)}
+                className={inputClass + ' max-w-md'}
+              />
+            </div>
+
+            {customersLoading && <p className="text-sm text-muted-foreground">Loading customers...</p>}
+
+            {!customersLoading && filteredCustomers.length === 0 && (
+              <p className="text-sm text-muted-foreground">No customers found.</p>
+            )}
+
+            {/* Customer List */}
+            <div className="space-y-3">
+              {filteredCustomers.map((customer: any) => {
+                const isExpanded = expandedCustomerId === customer.id
+                const customerName = customer.name || `${customer.first_name || ''} ${customer.last_name || ''}`.trim() || 'Unknown'
+
+                return (
+                  <div key={customer.id} className="bg-card border border-border rounded-xl overflow-hidden">
+                    {/* Customer Row */}
+                    <div
+                      className="px-4 py-3 flex items-center justify-between cursor-pointer hover:bg-secondary/50 transition-colors"
+                      onClick={() => {
+                        const newId = isExpanded ? null : customer.id
+                        setExpandedCustomerId(newId)
+                        if (newId && customer.email) {
+                          fetchCustomerOrders(customer.email, customer.id)
+                        }
+                        if (newId && !(customer.id in customerNotes)) {
+                          setCustomerNotes(prev => ({ ...prev, [customer.id]: customer.notes || '' }))
+                        }
+                      }}
+                    >
+                      <div className="flex items-center gap-4 flex-1 min-w-0">
+                        <div className="min-w-0">
+                          <span className="text-sm font-medium">{customerName}</span>
+                          <span className="text-sm text-muted-foreground ml-2">{customer.email}</span>
+                        </div>
+                        {customer.phone && (
+                          <span className="text-xs text-muted-foreground hidden md:inline">{customer.phone}</span>
+                        )}
+                      </div>
+                      <div className="flex items-center gap-4 shrink-0">
+                        {customer.total_spent != null && (
+                          <span className="text-sm font-bold">${Number(customer.total_spent).toFixed(2)}</span>
+                        )}
+                        {customer.order_count != null && (
+                          <span className="text-xs text-muted-foreground">{customer.order_count} orders</span>
+                        )}
+                        {customer.referral_code && (
+                          <span className="text-xs bg-primary/20 text-primary px-2 py-0.5 rounded">{customer.referral_code}</span>
+                        )}
+                        {customer.source && (
+                          <span className="text-xs text-muted-foreground hidden sm:inline">{customer.source}</span>
+                        )}
+                        <span className="text-xs text-muted-foreground hidden sm:inline">{formatDate(customer.created_at)}</span>
+                        <span className="text-muted-foreground text-xs">{isExpanded ? '▲' : '▼'}</span>
+                      </div>
+                    </div>
+
+                    {/* Expanded Details */}
+                    {isExpanded && (
+                      <div className="border-t border-border px-4 py-4 space-y-4 bg-secondary/30">
+                        {/* Full Customer Details */}
+                        <div>
+                          <h3 className="text-xs font-semibold text-muted-foreground uppercase mb-2">Customer Details</h3>
+                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-sm">
+                            <div><span className="text-muted-foreground">Name:</span> {customerName}</div>
+                            <div><span className="text-muted-foreground">Email:</span> {customer.email}</div>
+                            {customer.phone && <div><span className="text-muted-foreground">Phone:</span> {customer.phone}</div>}
+                            {customer.total_spent != null && <div><span className="text-muted-foreground">Total Spent:</span> ${Number(customer.total_spent).toFixed(2)}</div>}
+                            {customer.order_count != null && <div><span className="text-muted-foreground">Order Count:</span> {customer.order_count}</div>}
+                            {customer.referral_code && <div><span className="text-muted-foreground">Referral Code:</span> {customer.referral_code}</div>}
+                            {customer.source && <div><span className="text-muted-foreground">Source:</span> {customer.source}</div>}
+                            <div><span className="text-muted-foreground">Joined:</span> {formatDate(customer.created_at)}</div>
+                          </div>
+                        </div>
+
+                        {/* Customer Orders */}
+                        <div>
+                          <h3 className="text-xs font-semibold text-muted-foreground uppercase mb-2">Orders</h3>
+                          {!customerOrders[customer.id] ? (
+                            <p className="text-xs text-muted-foreground">Loading orders...</p>
+                          ) : customerOrders[customer.id].length === 0 ? (
+                            <p className="text-xs text-muted-foreground">No orders found for this customer.</p>
+                          ) : (
+                            <div className="space-y-2">
+                              {customerOrders[customer.id].map((order: any) => (
+                                <div key={order.id} className="flex items-center justify-between bg-secondary rounded-lg px-3 py-2 text-sm">
+                                  <div className="flex items-center gap-3">
+                                    <span className="text-xs text-muted-foreground font-mono">#{String(order.id).slice(-8)}</span>
+                                    <span className={`px-2 py-0.5 rounded text-xs font-medium ${statusBadgeClass(order.status)}`}>
+                                      {order.status}
+                                    </span>
+                                  </div>
+                                  <div className="flex items-center gap-3">
+                                    <span className="font-medium">${Number(order.total).toFixed(2)}</span>
+                                    <span className="text-xs text-muted-foreground">{formatDate(order.created_at)}</span>
+                                  </div>
+                                </div>
+                              ))}
+                            </div>
+                          )}
+                        </div>
+
+                        {/* Notes */}
+                        <div>
+                          <h3 className="text-xs font-semibold text-muted-foreground uppercase mb-2">Notes</h3>
+                          <textarea
+                            value={customerNotes[customer.id] ?? customer.notes ?? ''}
+                            onChange={e => setCustomerNotes(prev => ({ ...prev, [customer.id]: e.target.value }))}
+                            placeholder="Add notes about this customer..."
+                            className={inputClass + ' h-20 resize-none'}
+                          />
+                          <div className="flex items-center gap-3 mt-2">
+                            <button
+                              onClick={() => saveCustomerNotes(customer.id)}
+                              className="btn-primary text-xs px-3 py-1.5"
+                            >
+                              Save Notes
+                            </button>
+                            {customerNoteSaved === customer.id && (
+                              <span className="text-xs text-primary">Notes saved!</span>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                )
+              })}
+            </div>
+          </div>
+        )}
+
+        {/* Tab: Analytics */}
+        {tab === 'analytics' && (
+          <div className="space-y-6 pb-12">
+            {/* Date Range Buttons */}
+            <div className="flex items-center gap-2">
+              <label className="text-xs text-muted-foreground">Date Range:</label>
+              <button className={dateRangeBtnClass(analyticsDateRange === 'today')} onClick={() => setAnalyticsDateRange('today')}>Today</button>
+              <button className={dateRangeBtnClass(analyticsDateRange === '7days')} onClick={() => setAnalyticsDateRange('7days')}>7 days</button>
+              <button className={dateRangeBtnClass(analyticsDateRange === '30days')} onClick={() => setAnalyticsDateRange('30days')}>30 days</button>
+              <button className={dateRangeBtnClass(analyticsDateRange === 'all')} onClick={() => setAnalyticsDateRange('all')}>All time</button>
+            </div>
+
+            {analyticsLoading && (
+              <p className="text-sm text-muted-foreground">Loading analytics...</p>
+            )}
+
+            {/* Stat Cards */}
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
+              <div className="bg-card border border-border rounded-xl p-5">
+                <p className="text-xs text-muted-foreground mb-1">Total Orders</p>
+                <p className="text-2xl font-bold">{analytics.totalOrders}</p>
+              </div>
+              <div className="bg-card border border-border rounded-xl p-5">
+                <p className="text-xs text-muted-foreground mb-1">Total Revenue</p>
+                <p className="text-2xl font-bold">${analytics.totalRevenue.toFixed(2)}</p>
+              </div>
+              <div className="bg-card border border-border rounded-xl p-5">
+                <p className="text-xs text-muted-foreground mb-1">Avg Order Value</p>
+                <p className="text-2xl font-bold">${analytics.avgOrder.toFixed(2)}</p>
+              </div>
+              <div className="bg-card border border-border rounded-xl p-5">
+                <p className="text-xs text-muted-foreground mb-1">Page Views</p>
+                <p className="text-2xl font-bold">{analytics.pageViews}</p>
+              </div>
+              <div className="bg-card border border-border rounded-xl p-5">
+                <p className="text-xs text-muted-foreground mb-1">Contacts</p>
+                <p className="text-2xl font-bold">{analytics.contactSubmissions.length}</p>
+              </div>
+              <div className="bg-card border border-border rounded-xl p-5">
+                <p className="text-xs text-muted-foreground mb-1">Customers</p>
+                <p className="text-2xl font-bold">{analytics.customers.length}</p>
+              </div>
+            </div>
+
+            {/* Revenue by Day */}
+            <div className="bg-card border border-border rounded-xl p-6">
+              <h2 className="text-lg font-semibold mb-4">Revenue by Day (Last 7 Days)</h2>
+              <div className="space-y-2">
+                {getRevenueByDay().map((day, idx) => (
+                  <div key={idx} className="flex items-center justify-between bg-secondary rounded-lg px-4 py-2 text-sm">
+                    <span className="text-muted-foreground">{day.date}</span>
+                    <span className="font-semibold">${day.revenue.toFixed(2)}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Recent Orders */}
+            <div className="bg-card border border-border rounded-xl p-6">
+              <h2 className="text-lg font-semibold mb-4">Recent Orders</h2>
+              {analytics.recentOrders.length === 0 ? (
+                <p className="text-sm text-muted-foreground">No orders yet.</p>
+              ) : (
+                <div className="space-y-2 max-h-80 overflow-y-auto">
+                  {analytics.recentOrders.map((order: any) => (
+                    <div key={order.id} className="flex items-center justify-between bg-secondary rounded-lg px-4 py-3 text-sm">
+                      <div>
+                        <span className="font-medium">{order.customer_first_name} {order.customer_last_name}</span>
+                        <span className="text-muted-foreground ml-2">{order.customer_email}</span>
+                      </div>
+                      <div className="flex items-center gap-3">
+                        <span className={`px-2 py-0.5 rounded text-xs font-medium ${statusBadgeClass(order.status)}`}>{order.status}</span>
+                        <span className="font-semibold">${Number(order.total).toFixed(2)}</span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            {/* Recent Contact Submissions */}
+            <div className="bg-card border border-border rounded-xl p-6">
+              <h2 className="text-lg font-semibold mb-4">Recent Contact Submissions</h2>
+              {analytics.contactSubmissions.length === 0 ? (
+                <p className="text-sm text-muted-foreground">No contact submissions yet.</p>
+              ) : (
+                <div className="space-y-2 max-h-80 overflow-y-auto">
+                  {analytics.contactSubmissions.map((contact: any) => (
+                    <div key={contact.id} className="bg-secondary rounded-lg px-4 py-3 text-sm">
+                      <div className="flex items-center justify-between mb-1">
+                        <div>
+                          <span className="font-medium">{contact.name}</span>
+                          <span className="text-muted-foreground ml-2">{contact.email}</span>
+                        </div>
+                        <span className="text-xs text-muted-foreground">{new Date(contact.created_at).toLocaleDateString()}</span>
+                      </div>
+                      {contact.service && (
+                        <span className="text-xs bg-primary/20 text-primary px-2 py-0.5 rounded mr-2">{contact.service}</span>
+                      )}
+                      {contact.message && (
+                        <p className="text-xs text-muted-foreground mt-1 line-clamp-2">{contact.message}</p>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            {/* GA Card */}
+            <div className="bg-card border border-border rounded-xl p-6">
+              <h2 className="text-lg font-semibold mb-4">Google Analytics</h2>
+              <div className="flex items-center gap-3">
+                <input
+                  type="text"
+                  placeholder="GA Tracking ID (e.g. G-XXXXXXXXXX)"
+                  value={gaTrackingId}
+                  onChange={e => setGaTrackingId(e.target.value)}
+                  className={inputClass + ' max-w-sm'}
+                />
+                <button onClick={saveGA} className="btn-primary text-sm whitespace-nowrap">
+                  Save
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* Tab: Pricing */}
         {tab === 'pricing' && (
@@ -474,117 +1065,6 @@ export default function Admin() {
               <button onClick={addPromo} className="btn-primary text-sm">
                 Add Promo Code
               </button>
-            </div>
-          </div>
-        )}
-
-        {/* Tab: Analytics */}
-        {tab === 'analytics' && (
-          <div className="space-y-6 pb-12">
-            {analyticsLoading && (
-              <p className="text-sm text-muted-foreground">Loading analytics...</p>
-            )}
-
-            {/* Stat Cards */}
-            <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
-              <div className="bg-card border border-border rounded-xl p-5">
-                <p className="text-xs text-muted-foreground mb-1">Total Orders</p>
-                <p className="text-2xl font-bold">{analytics.totalOrders}</p>
-              </div>
-              <div className="bg-card border border-border rounded-xl p-5">
-                <p className="text-xs text-muted-foreground mb-1">Total Revenue</p>
-                <p className="text-2xl font-bold">${analytics.totalRevenue.toFixed(2)}</p>
-              </div>
-              <div className="bg-card border border-border rounded-xl p-5">
-                <p className="text-xs text-muted-foreground mb-1">Avg Order Value</p>
-                <p className="text-2xl font-bold">${analytics.avgOrder.toFixed(2)}</p>
-              </div>
-              <div className="bg-card border border-border rounded-xl p-5">
-                <p className="text-xs text-muted-foreground mb-1">Page Views</p>
-                <p className="text-2xl font-bold">{analytics.pageViews}</p>
-              </div>
-              <div className="bg-card border border-border rounded-xl p-5">
-                <p className="text-xs text-muted-foreground mb-1">Contacts</p>
-                <p className="text-2xl font-bold">{analytics.contactSubmissions.length}</p>
-              </div>
-              <div className="bg-card border border-border rounded-xl p-5">
-                <p className="text-xs text-muted-foreground mb-1">Customers</p>
-                <p className="text-2xl font-bold">{analytics.customers.length}</p>
-              </div>
-            </div>
-
-            {/* Recent Orders */}
-            <div className="bg-card border border-border rounded-xl p-6">
-              <h2 className="text-lg font-semibold mb-4">Recent Orders</h2>
-              {analytics.recentOrders.length === 0 ? (
-                <p className="text-sm text-muted-foreground">No orders yet.</p>
-              ) : (
-                <div className="space-y-2 max-h-80 overflow-y-auto">
-                  {analytics.recentOrders.map((order: any) => (
-                    <div key={order.id} className="flex items-center justify-between bg-secondary rounded-lg px-4 py-3 text-sm">
-                      <div>
-                        <span className="font-medium">{order.customer_first_name} {order.customer_last_name}</span>
-                        <span className="text-muted-foreground ml-2">{order.customer_email}</span>
-                      </div>
-                      <div className="flex items-center gap-3">
-                        <span className={`px-2 py-0.5 rounded text-xs font-medium ${
-                          order.status === 'submitted' ? 'bg-yellow-500/20 text-yellow-400' :
-                          order.status === 'printing' ? 'bg-purple-500/20 text-purple-400' :
-                          order.status === 'shipped' ? 'bg-blue-500/20 text-blue-400' :
-                          order.status === 'delivered' ? 'bg-green-500/20 text-green-400' :
-                          'bg-muted text-muted-foreground'
-                        }`}>{order.status}</span>
-                        <span className="font-semibold">${Number(order.total).toFixed(2)}</span>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
-
-            {/* Recent Contact Submissions */}
-            <div className="bg-card border border-border rounded-xl p-6">
-              <h2 className="text-lg font-semibold mb-4">Recent Contact Submissions</h2>
-              {analytics.contactSubmissions.length === 0 ? (
-                <p className="text-sm text-muted-foreground">No contact submissions yet.</p>
-              ) : (
-                <div className="space-y-2 max-h-80 overflow-y-auto">
-                  {analytics.contactSubmissions.map((contact: any) => (
-                    <div key={contact.id} className="bg-secondary rounded-lg px-4 py-3 text-sm">
-                      <div className="flex items-center justify-between mb-1">
-                        <div>
-                          <span className="font-medium">{contact.name}</span>
-                          <span className="text-muted-foreground ml-2">{contact.email}</span>
-                        </div>
-                        <span className="text-xs text-muted-foreground">{new Date(contact.created_at).toLocaleDateString()}</span>
-                      </div>
-                      {contact.service && (
-                        <span className="text-xs bg-primary/20 text-primary px-2 py-0.5 rounded mr-2">{contact.service}</span>
-                      )}
-                      {contact.message && (
-                        <p className="text-xs text-muted-foreground mt-1 line-clamp-2">{contact.message}</p>
-                      )}
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
-
-            {/* GA Card */}
-            <div className="bg-card border border-border rounded-xl p-6">
-              <h2 className="text-lg font-semibold mb-4">Google Analytics</h2>
-              <div className="flex items-center gap-3">
-                <input
-                  type="text"
-                  placeholder="GA Tracking ID (e.g. G-XXXXXXXXXX)"
-                  value={gaTrackingId}
-                  onChange={e => setGaTrackingId(e.target.value)}
-                  className={inputClass + ' max-w-sm'}
-                />
-                <button onClick={saveGA} className="btn-primary text-sm whitespace-nowrap">
-                  Save
-                </button>
-              </div>
             </div>
           </div>
         )}
