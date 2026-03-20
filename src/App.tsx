@@ -1,5 +1,6 @@
 import { BrowserRouter, Routes, Route } from 'react-router-dom'
 import { CartProvider } from '@/context/CartContext'
+import { ProfileProvider } from '@/context/ProfileContext'
 import Layout from '@/components/layout/Layout'
 import Home from '@/pages/Home'
 import Services from '@/pages/Services'
@@ -15,6 +16,7 @@ import Checkout from '@/pages/Checkout'
 import Projects from '@/pages/Projects'
 import Contact from '@/pages/Contact'
 import About from '@/pages/About'
+import Profile from '@/pages/Profile'
 import NotFound from '@/pages/NotFound'
 
 // Service sub-pages
@@ -24,10 +26,11 @@ import FeatherFlags from '@/pages/services/FeatherFlags'
 import Backdrops from '@/pages/services/Backdrops'
 import RetractableBanners from '@/pages/services/RetractableBanners'
 import AFrameSigns from '@/pages/services/AFrameSigns'
+import StorefrontSigns from '@/pages/services/StorefrontSigns'
+import WallGraphics from '@/pages/services/WallGraphics'
 import BusinessCards from '@/pages/services/BusinessCards'
-import MarketingCollateral from '@/pages/services/MarketingCollateral'
+import PrintMarketing from '@/pages/services/MarketingCollateral'
 import OfficePrinting from '@/pages/services/OfficePrinting'
-import PromotionalMaterials from '@/pages/services/PromotionalMaterials'
 import DoorSpotGraphics from '@/pages/services/DoorSpotGraphics'
 import PartialWraps from '@/pages/services/PartialWraps'
 import FullWraps from '@/pages/services/FullWraps'
@@ -36,6 +39,7 @@ import FleetBranding from '@/pages/services/FleetBranding'
 export default function App() {
   return (
     <BrowserRouter>
+      <ProfileProvider>
       <CartProvider>
         <Routes>
           <Route element={<Layout />}>
@@ -50,6 +54,7 @@ export default function App() {
             <Route path="/order" element={<Order />} />
             <Route path="/cart" element={<Cart />} />
             <Route path="/checkout" element={<Checkout />} />
+            <Route path="/profile" element={<Profile />} />
             <Route path="/projects" element={<Projects />} />
             <Route path="/contact" element={<Contact />} />
             <Route path="/about" element={<About />} />
@@ -63,12 +68,14 @@ export default function App() {
             {/* Business signage sub-pages */}
             <Route path="/business-signage/retractable-banners" element={<RetractableBanners />} />
             <Route path="/business-signage/a-frames" element={<AFrameSigns />} />
+            <Route path="/business-signage/storefront-signs" element={<StorefrontSigns />} />
+            <Route path="/business-signage/wall-graphics" element={<WallGraphics />} />
 
             {/* Business print sub-pages */}
             <Route path="/business-print/business-cards" element={<BusinessCards />} />
-            <Route path="/business-print/marketing-collateral" element={<MarketingCollateral />} />
+            <Route path="/business-print/print-marketing" element={<PrintMarketing />} />
+            <Route path="/business-print/marketing-collateral" element={<PrintMarketing />} />
             <Route path="/business-print/office-printing" element={<OfficePrinting />} />
-            <Route path="/business-print/promotional-materials" element={<PromotionalMaterials />} />
 
             {/* Vehicle graphics sub-pages */}
             <Route path="/vehicle-graphics/door-spot" element={<DoorSpotGraphics />} />
@@ -80,6 +87,7 @@ export default function App() {
           </Route>
         </Routes>
       </CartProvider>
+      </ProfileProvider>
     </BrowserRouter>
   )
 }

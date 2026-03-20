@@ -1,23 +1,40 @@
-import { useState, type FormEvent } from 'react'
+import { useState, useEffect, type FormEvent } from 'react'
 import { Link } from 'react-router-dom'
 import { Mail, ArrowLeft, Loader2 } from 'lucide-react'
 import { useCart } from '@/context/CartContext'
+import { useProfile } from '@/context/ProfileContext'
 import Button from '@/components/ui/Button'
 import FadeIn from '@/components/ui/FadeIn'
 
 export default function Checkout() {
-  const { items, total } = useCart()
+  const { items, total, clearCart } = useCart()
+  const { profile, login, addOrder, updateProfile } = useProfile()
   const [loading, setLoading] = useState(false)
   const [form, setForm] = useState({
-    firstName: '',
-    lastName: '',
-    email: '',
-    phone: '',
-    address: '',
-    city: '',
-    state: 'CA',
-    zip: '',
+    firstName: profile?.firstName ?? '',
+    lastName: profile?.lastName ?? '',
+    email: profile?.email ?? '',
+    phone: profile?.phone ?? '',
+    address: profile?.address ?? '',
+    city: profile?.city ?? '',
+    state: profile?.state || 'CA',
+    zip: profile?.zip ?? '',
   })
+
+  useEffect(() => {
+    if (profile) {
+      setForm((prev) => ({
+        firstName: prev.firstName || profile.firstName,
+        lastName: prev.lastName || profile.lastName,
+        email: prev.email || profile.email,
+        phone: prev.phone || profile.phone,
+        address: prev.address || profile.address,
+        city: prev.city || profile.city,
+        state: prev.state === 'CA' && profile.state ? profile.state : prev.state,
+        zip: prev.zip || profile.zip,
+      }))
+    }
+  }, [profile])
 
   const handleChange = (field: string, value: string) => {
     setForm((prev) => ({ ...prev, [field]: value }))
@@ -28,6 +45,33 @@ export default function Checkout() {
     setLoading(true)
 
     try {
+      // Save/update profile
+      const email = form.email.trim().toLowerCase()
+      login(email)
+      updateProfile({
+        firstName: form.firstName,
+        lastName: form.lastName,
+        phone: form.phone,
+        address: form.address,
+        city: form.city,
+        state: form.state,
+        zip: form.zip,
+      })
+
+      // Save order to profile history
+      addOrder({
+        items: items.map((i) => ({
+          name: i.name,
+          size: i.size,
+          option: i.option,
+          price: i.price,
+          quantity: i.quantity,
+          material: i.material,
+          shape: i.shape,
+        })),
+        total,
+      })
+
       // Build mailto body with order details
       const orderLines = items.map(
         (i) => `${i.name} (${i.option}) x${i.quantity} — $${(i.price * i.quantity).toFixed(2)}`
@@ -49,6 +93,7 @@ export default function Checkout() {
         `New Order — $${total.toFixed(2)}`
       )}&body=${encodeURIComponent(body)}`
 
+      clearCart()
       window.location.href = mailtoUrl
     } catch {
       alert('Something went wrong. Please email us directly at thestickersmith@gmail.com')

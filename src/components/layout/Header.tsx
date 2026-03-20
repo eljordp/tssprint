@@ -1,8 +1,9 @@
 import { useState, useEffect } from 'react'
 import { Link, useLocation } from 'react-router-dom'
-import { Menu, X } from 'lucide-react'
+import { Menu, X, User } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useCart } from '@/context/CartContext'
+import { useProfile } from '@/context/ProfileContext'
 import tssLogo from '@/assets/tss-logo-new.png'
 
 const navLinks = [
@@ -18,6 +19,7 @@ export default function Header() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
   const location = useLocation()
   const { items } = useCart()
+  const { profile } = useProfile()
   const cartCount = items.reduce((sum, i) => sum + i.quantity, 0)
 
   useEffect(() => {
@@ -64,6 +66,12 @@ export default function Header() {
             </div>
 
             <div className="hidden md:flex items-center gap-4">
+              <Link to="/profile" className={`relative p-2 transition-colors ${profile ? 'text-primary hover:text-primary-glow' : 'text-muted-foreground hover:text-foreground'}`} aria-label="Profile">
+                <User size={20} />
+                {profile && (
+                  <span className="absolute -top-0.5 -right-0.5 w-2.5 h-2.5 rounded-full bg-primary" />
+                )}
+              </Link>
               <Link to="/cart" className="relative p-2 text-muted-foreground hover:text-foreground transition-colors" aria-label={`Shopping cart${cartCount > 0 ? `, ${cartCount} items` : ''}`}>
                 <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><circle cx="8" cy="21" r="1"/><circle cx="19" cy="21" r="1"/><path d="M2.05 2.05h2l2.66 12.42a2 2 0 0 0 2 1.58h9.78a2 2 0 0 0 1.95-1.57l1.65-7.43H5.12"/></svg>
                 {cartCount > 0 && (

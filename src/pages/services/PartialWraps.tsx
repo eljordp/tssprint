@@ -1,3 +1,4 @@
+import React from "react";
 import { motion } from "framer-motion";
 import { Link } from "react-router-dom";
 import { ArrowRight, Palette, CheckCircle } from "lucide-react";
@@ -104,6 +105,37 @@ export default function PartialWraps() {
               </motion.div>
             ))}
           </div>
+
+          {/* Quick Quote Request */}
+          <motion.div initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} className="card-elevated mt-8">
+            <h3 className="font-semibold text-lg mb-2">Quick Quote Request</h3>
+            <p className="text-sm text-muted-foreground mb-4">Tell us about your project and we'll send you a custom quote with a free digital mockup within 24 hours.</p>
+            <form onSubmit={(e: React.FormEvent) => { e.preventDefault(); const form = e.target as HTMLFormElement; const data = new FormData(form); const body = [...data.entries()].map(([k,v]) => `${k}: ${v}`).join('\n'); window.location.href = `mailto:thestickersmith@gmail.com?subject=${encodeURIComponent(`Quote Request — Partial Wraps`)}&body=${encodeURIComponent(body)}`; }} className="grid sm:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm text-muted-foreground mb-1.5">Name</label>
+                <input name="Name" required className="w-full bg-background border border-border rounded-lg px-4 py-2.5 text-sm text-foreground focus:outline-none focus:border-primary transition-colors" />
+              </div>
+              <div>
+                <label className="block text-sm text-muted-foreground mb-1.5">Email</label>
+                <input name="Email" type="email" required className="w-full bg-background border border-border rounded-lg px-4 py-2.5 text-sm text-foreground focus:outline-none focus:border-primary transition-colors" />
+              </div>
+              <div>
+                <label className="block text-sm text-muted-foreground mb-1.5">Vehicle Type</label>
+                <input name="Vehicle" placeholder="e.g. 2024 Ford Transit" className="w-full bg-background border border-border rounded-lg px-4 py-2.5 text-sm text-foreground focus:outline-none focus:border-primary transition-colors" />
+              </div>
+              <div>
+                <label className="block text-sm text-muted-foreground mb-1.5">Coverage Area</label>
+                <input name="Coverage Area" placeholder="e.g. Both sides, rear only" className="w-full bg-background border border-border rounded-lg px-4 py-2.5 text-sm text-foreground focus:outline-none focus:border-primary transition-colors" />
+              </div>
+              <div className="sm:col-span-2">
+                <label className="block text-sm text-muted-foreground mb-1.5">Details</label>
+                <textarea name="Details" rows={3} placeholder="Describe what you need..." className="w-full bg-background border border-border rounded-lg px-4 py-2.5 text-sm text-foreground focus:outline-none focus:border-primary transition-colors resize-none" />
+              </div>
+              <div className="sm:col-span-2">
+                <button type="submit" className="btn-primary w-full sm:w-auto cursor-pointer">Send Quote Request <ArrowRight size={18} /></button>
+              </div>
+            </form>
+          </motion.div>
 
           <motion.div initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} className="card-elevated">
             <h3 className="font-semibold mb-4">What's Included</h3>

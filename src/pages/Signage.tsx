@@ -8,14 +8,14 @@ const sections = [
     title: "Storefront & Building Signs",
     description: "Make your business visible from the street with professional exterior signage. Channel letters, cabinet signs, and dimensional logos.",
     features: ["Channel letters", "Cabinet signs", "Dimensional logos", "Monument signs"],
-    link: "/contact",
+    link: "/business-signage/storefront-signs",
   },
   {
     icon: Lightbulb,
     title: "Wall Graphics",
-    description: "Stand out day and night with vinyl wall graphics that bring vision to your store. Keep your brand visible 24/7.",
-    features: ["LED channel letters", "Backlit signs", "Neon alternatives", "Light box displays"],
-    link: "/contact",
+    description: "Transform your walls with vinyl graphics, murals, acrylic signs, and foam board displays. Indoor and outdoor solutions.",
+    features: ["Vinyl wall graphics", "Full-color murals", "Acrylic signs", "Foam board displays"],
+    link: "/business-signage/wall-graphics",
   },
   {
     icon: MapPin,
