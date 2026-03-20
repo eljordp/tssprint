@@ -1,4 +1,5 @@
-import { useState, useMemo } from 'react'
+import { useState, useEffect } from 'react'
+import { supabase } from '@/lib/supabase'
 
 const ADMIN_PASSWORD = 'tss2026admin'
 const AUTH_KEY = 'tss-admin-auth'
@@ -124,18 +125,36 @@ export default function Admin() {
   const [settingsSaved, setSettingsSaved] = useState(false)
 
   // Analytics data
-  const analytics = useMemo(() => {
-    try {
-      const profiles = loadJSON<any[]>('tss-profiles', [])
-      const orders = Array.isArray(profiles) ? profiles : []
+  const [analytics, setAnalytics] = useState({ totalOrders: 0, totalRevenue: 0, avgOrder: 0, recentOrders: [] as any[], customers: [] as any[], pageViews: 0, contactSubmissions: [] as any[] })
+  const [analyticsLoading, setAnalyticsLoading] = useState(false)
+
+  useEffect(() => {
+    if (tab !== 'analytics' || !authed) return
+    setAnalyticsLoading(true)
+
+    Promise.all([
+      supabase.from('orders').select('*').order('created_at', { ascending: false }).limit(20),
+      supabase.from('customers').select('*').order('created_at', { ascending: false }).limit(10),
+      supabase.from('page_views').select('id', { count: 'exact', head: true }),
+      supabase.from('contact_submissions').select('*').order('created_at', { ascending: false }).limit(10),
+    ]).then(([ordersRes, customersRes, viewsRes, contactsRes]) => {
+      const orders = ordersRes.data || []
       const totalOrders = orders.length
-      const totalRevenue = orders.reduce((sum: number, o: any) => sum + (Number(o?.total) || 0), 0)
+      const totalRevenue = orders.reduce((sum: number, o: any) => sum + (Number(o.total) || 0), 0)
       const avgOrder = totalOrders > 0 ? totalRevenue / totalOrders : 0
-      return { totalOrders, totalRevenue, avgOrder, orders }
-    } catch {
-      return { totalOrders: 0, totalRevenue: 0, avgOrder: 0, orders: [] as any[] }
-    }
-  }, [tab])
+
+      setAnalytics({
+        totalOrders,
+        totalRevenue,
+        avgOrder,
+        recentOrders: orders,
+        customers: customersRes.data || [],
+        pageViews: viewsRes.count || 0,
+        contactSubmissions: contactsRes.data || [],
+      })
+      setAnalyticsLoading(false)
+    })
+  }, [tab, authed])
 
   function handleLogin(e: React.FormEvent) {
     e.preventDefault()
@@ -462,8 +481,12 @@ export default function Admin() {
         {/* Tab: Analytics */}
         {tab === 'analytics' && (
           <div className="space-y-6 pb-12">
+            {analyticsLoading && (
+              <p className="text-sm text-muted-foreground">Loading analytics...</p>
+            )}
+
             {/* Stat Cards */}
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
               <div className="bg-card border border-border rounded-xl p-5">
                 <p className="text-xs text-muted-foreground mb-1">Total Orders</p>
                 <p className="text-2xl font-bold">{analytics.totalOrders}</p>
@@ -477,31 +500,75 @@ export default function Admin() {
                 <p className="text-2xl font-bold">${analytics.avgOrder.toFixed(2)}</p>
               </div>
               <div className="bg-card border border-border rounded-xl p-5">
-                <p className="text-xs text-muted-foreground mb-1">Top Material</p>
-                <p className="text-2xl font-bold text-muted-foreground">--</p>
+                <p className="text-xs text-muted-foreground mb-1">Page Views</p>
+                <p className="text-2xl font-bold">{analytics.pageViews}</p>
+              </div>
+              <div className="bg-card border border-border rounded-xl p-5">
+                <p className="text-xs text-muted-foreground mb-1">Contacts</p>
+                <p className="text-2xl font-bold">{analytics.contactSubmissions.length}</p>
+              </div>
+              <div className="bg-card border border-border rounded-xl p-5">
+                <p className="text-xs text-muted-foreground mb-1">Customers</p>
+                <p className="text-2xl font-bold">{analytics.customers.length}</p>
               </div>
             </div>
 
             {/* Recent Orders */}
             <div className="bg-card border border-border rounded-xl p-6">
               <h2 className="text-lg font-semibold mb-4">Recent Orders</h2>
-              {analytics.orders.length === 0 ? (
-                <p className="text-sm text-muted-foreground">No orders found in local storage.</p>
+              {analytics.recentOrders.length === 0 ? (
+                <p className="text-sm text-muted-foreground">No orders yet.</p>
               ) : (
-                <div className="space-y-2 max-h-64 overflow-y-auto">
-                  {analytics.orders.slice(-10).reverse().map((o: any, i: number) => (
-                    <div key={i} className="flex items-center justify-between bg-secondary rounded-lg px-4 py-2 text-sm">
-                      <span>{o?.name || o?.email || `Order #${i + 1}`}</span>
-                      <span className="text-muted-foreground">${Number(o?.total || 0).toFixed(2)}</span>
+                <div className="space-y-2 max-h-80 overflow-y-auto">
+                  {analytics.recentOrders.map((order: any) => (
+                    <div key={order.id} className="flex items-center justify-between bg-secondary rounded-lg px-4 py-3 text-sm">
+                      <div>
+                        <span className="font-medium">{order.customer_first_name} {order.customer_last_name}</span>
+                        <span className="text-muted-foreground ml-2">{order.customer_email}</span>
+                      </div>
+                      <div className="flex items-center gap-3">
+                        <span className={`px-2 py-0.5 rounded text-xs font-medium ${
+                          order.status === 'submitted' ? 'bg-yellow-500/20 text-yellow-400' :
+                          order.status === 'printing' ? 'bg-purple-500/20 text-purple-400' :
+                          order.status === 'shipped' ? 'bg-blue-500/20 text-blue-400' :
+                          order.status === 'delivered' ? 'bg-green-500/20 text-green-400' :
+                          'bg-muted text-muted-foreground'
+                        }`}>{order.status}</span>
+                        <span className="font-semibold">${Number(order.total).toFixed(2)}</span>
+                      </div>
                     </div>
                   ))}
                 </div>
               )}
             </div>
 
-            <p className="text-xs text-muted-foreground">
-              Analytics are based on local browser data. For full analytics, connect Google Analytics.
-            </p>
+            {/* Recent Contact Submissions */}
+            <div className="bg-card border border-border rounded-xl p-6">
+              <h2 className="text-lg font-semibold mb-4">Recent Contact Submissions</h2>
+              {analytics.contactSubmissions.length === 0 ? (
+                <p className="text-sm text-muted-foreground">No contact submissions yet.</p>
+              ) : (
+                <div className="space-y-2 max-h-80 overflow-y-auto">
+                  {analytics.contactSubmissions.map((contact: any) => (
+                    <div key={contact.id} className="bg-secondary rounded-lg px-4 py-3 text-sm">
+                      <div className="flex items-center justify-between mb-1">
+                        <div>
+                          <span className="font-medium">{contact.name}</span>
+                          <span className="text-muted-foreground ml-2">{contact.email}</span>
+                        </div>
+                        <span className="text-xs text-muted-foreground">{new Date(contact.created_at).toLocaleDateString()}</span>
+                      </div>
+                      {contact.service && (
+                        <span className="text-xs bg-primary/20 text-primary px-2 py-0.5 rounded mr-2">{contact.service}</span>
+                      )}
+                      {contact.message && (
+                        <p className="text-xs text-muted-foreground mt-1 line-clamp-2">{contact.message}</p>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
 
             {/* GA Card */}
             <div className="bg-card border border-border rounded-xl p-6">

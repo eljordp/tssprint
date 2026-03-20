@@ -2,6 +2,7 @@ import { useState, type FormEvent } from 'react'
 import { Link } from 'react-router-dom'
 import { Mail, ArrowLeft, Loader2 } from 'lucide-react'
 import { useCart } from '@/context/CartContext'
+import { supabase } from '@/lib/supabase'
 import Button from '@/components/ui/Button'
 import FadeIn from '@/components/ui/FadeIn'
 
@@ -28,12 +29,39 @@ export default function Checkout() {
     setLoading(true)
 
     try {
+      // Save order to Supabase
+      const orderId = `TSS-${Date.now()}`
+      await supabase.from('orders').insert({
+        id: orderId,
+        customer_first_name: form.firstName,
+        customer_last_name: form.lastName,
+        customer_email: form.email,
+        customer_phone: form.phone,
+        customer_address: form.address,
+        customer_city: form.city,
+        customer_state: form.state,
+        customer_zip: form.zip,
+        items: items.map(i => ({ name: i.name, size: i.size, option: i.option, price: i.price, quantity: i.quantity, material: i.material, shape: i.shape })),
+        total,
+        status: 'submitted',
+      })
+
+      // Upsert customer
+      await supabase.from('customers').upsert({
+        email: form.email.toLowerCase().trim(),
+        first_name: form.firstName,
+        last_name: form.lastName,
+        phone: form.phone,
+        source: 'checkout',
+      }, { onConflict: 'email' })
+
       // Build mailto body with order details
       const orderLines = items.map(
         (i) => `${i.name} (${i.option}) x${i.quantity} — $${(i.price * i.quantity).toFixed(2)}`
       ).join('\n')
 
       const body = [
+        `Order ID: ${orderId}`,
         `Name: ${form.firstName} ${form.lastName}`,
         `Email: ${form.email}`,
         `Phone: ${form.phone}`,
@@ -46,7 +74,7 @@ export default function Checkout() {
       ].join('\n')
 
       const mailtoUrl = `mailto:thestickersmith@gmail.com?subject=${encodeURIComponent(
-        `New Order — $${total.toFixed(2)}`
+        `New Order ${orderId} — $${total.toFixed(2)}`
       )}&body=${encodeURIComponent(body)}`
 
       window.location.href = mailtoUrl

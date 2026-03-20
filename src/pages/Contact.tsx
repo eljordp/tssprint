@@ -2,6 +2,7 @@ import { useState, type FormEvent } from 'react'
 import { Phone, Mail, MapPin, Clock, Send, CheckCircle, Zap } from 'lucide-react'
 import Button from '@/components/ui/Button'
 import FadeIn from '@/components/ui/FadeIn'
+import { supabase } from '@/lib/supabase'
 
 const serviceOptions = [
   'Custom Stickers',
@@ -30,6 +31,16 @@ export default function Contact() {
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault()
+
+    // Save to Supabase
+    await supabase.from('contact_submissions').insert({
+      name: form.name,
+      email: form.email,
+      phone: form.phone || null,
+      service: form.service || null,
+      message: form.message,
+      source: 'contact-page',
+    })
 
     const body = [
       `Name: ${form.name}`,

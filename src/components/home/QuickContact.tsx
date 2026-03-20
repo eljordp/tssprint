@@ -1,6 +1,7 @@
 import { useState, type FormEvent } from 'react'
 import { Send } from 'lucide-react'
 import { motion } from 'framer-motion'
+import { supabase } from '@/lib/supabase'
 
 const services = [
   'Stickers & Labels',
@@ -25,6 +26,16 @@ export default function QuickContact() {
 
   const handleSubmit = (e: FormEvent) => {
     e.preventDefault()
+
+    // Save to Supabase (fire-and-forget)
+    supabase.from('contact_submissions').insert({
+      name: formData.name,
+      email: formData.email,
+      phone: formData.phone || null,
+      service: formData.service || null,
+      message: formData.message,
+      source: 'homepage-quick-contact',
+    }).then(() => {})
 
     const body = [
       `Name: ${formData.name}`,
