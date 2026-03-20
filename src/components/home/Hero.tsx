@@ -1,7 +1,7 @@
 import { Link } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import { Star, ArrowRight } from 'lucide-react'
-import heroImg from '@/assets/placeholders/custom-stickers.png'
+import heroImg from '@/assets/placeholders/stickerapp-hero.png'
 
 const trustStrip = [
   'Free Shipping on Orders $50+',
