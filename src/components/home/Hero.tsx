@@ -1,6 +1,7 @@
 import { Link } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import { ArrowRight, Clock, Package, Shield } from 'lucide-react'
+import stickerHero from '@/assets/sticker-hero.png'
 
 const trustItems = [
   { icon: Clock, label: '24hr Proof Turnaround' },
@@ -79,6 +80,16 @@ export default function Hero() {
           </motion.div>
         </div>
       </div>
+
+      {/* Sticker collage */}
+      <motion.div
+        initial={{ opacity: 0, x: 60 }}
+        animate={{ opacity: 1, x: 0 }}
+        transition={{ duration: 0.8, delay: 0.3 }}
+        className="hidden lg:block absolute right-[5%] top-1/2 -translate-y-1/2 z-10"
+      >
+        <img src={stickerHero} alt="Custom sticker designs" className="w-[420px] xl:w-[500px] drop-shadow-2xl" />
+      </motion.div>
 
       {/* Decorative elements */}
       <div className="absolute top-1/4 right-0 w-[500px] h-[500px] bg-primary/5 rounded-full blur-3xl" />
