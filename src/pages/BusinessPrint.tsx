@@ -1,6 +1,6 @@
 import { motion } from "framer-motion";
 import { Link } from "react-router-dom";
-import { ArrowRight, CreditCard, FileText, Briefcase, CheckCircle } from "lucide-react";
+import { ArrowRight, CreditCard, FileText, Briefcase, Gift, CheckCircle } from "lucide-react";
 
 const sections = [
   {
@@ -12,10 +12,10 @@ const sections = [
   },
   {
     icon: FileText,
-    title: "Print Marketing",
-    description: "Flyers, brochures, postcards, door hangers, magnets, and more. Everything you need to promote your business offline.",
-    features: ["Flyers & brochures", "Postcards & mailers", "Magnets & vehicle signage", "Door hangers & rack cards"],
-    link: "/business-print/print-marketing",
+    title: "Flyers, Brochures & Marketing Collateral",
+    description: "Eye-catching promotional materials to showcase your products, services, and events. From single-page flyers to multi-fold brochures.",
+    features: ["Single, bi-fold, tri-fold options", "Various paper weights", "Full-color or spot color printing", "Custom die-cut shapes"],
+    link: "/business-print/marketing-collateral",
   },
   {
     icon: Briefcase,
@@ -23,6 +23,13 @@ const sections = [
     description: "Professional stationery and operational documents that reinforce your brand across all business communications.",
     features: ["Letterheads & envelopes", "Notepads & memo pads", "Invoice & receipt books", "Presentation folders"],
     link: "/business-print/office-printing",
+  },
+  {
+    icon: Gift,
+    title: "Promotional & Branded Materials",
+    description: "Stand out at trade shows, events, and retail spaces with custom promotional items that keep your brand top of mind.",
+    features: ["Postcards & mailers", "Door hangers & rack cards", "Magnets & vehicle magnets", "Gift certificates & coupons"],
+    link: "/business-print/promotional-materials",
   },
 ];
 

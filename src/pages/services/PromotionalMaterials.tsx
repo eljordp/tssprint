@@ -1,23 +1,29 @@
 import { motion } from "framer-motion"
 import { Link } from "react-router-dom"
-import { ArrowRight, Briefcase, CheckCircle } from "lucide-react"
+import { ArrowRight, Gift, CheckCircle, Car } from "lucide-react"
 import AddToCartButton from "@/components/cart/AddToCartButton"
 
 const pricingOptions = [
-  { size: "Letterhead", description: '8.5" x 11" branded stationery', price: 99, qtyPricing: [{ qty: "250", price: 99 }, { qty: "500", price: 149 }, { qty: "1000", price: 229 }] },
-  { size: "#10 Envelopes", description: "Standard business envelopes", price: 129, qtyPricing: [{ qty: "250", price: 129 }, { qty: "500", price: 189 }, { qty: "1000", price: 299 }] },
-  { size: "Notepads", description: "50 sheets per pad, branded", price: 79, qtyPricing: [{ qty: "10 pads", price: 79 }, { qty: "25 pads", price: 159 }, { qty: "50 pads", price: 279 }] },
-  { size: "Presentation Folders", description: '9" x 12" with pockets', price: 199, qtyPricing: [{ qty: "100", price: 199 }, { qty: "250", price: 349 }, { qty: "500", price: 549 }] },
+  { size: 'Postcards (4" x 6")', description: "Direct mail or handouts", price: 59, qtyPricing: [{ qty: "250", price: 59 }, { qty: "500", price: 89 }, { qty: "1000", price: 139 }] },
+  { size: "Door Hangers", description: '3.5" x 8.5" with die-cut', price: 99, qtyPricing: [{ qty: "250", price: 99 }, { qty: "500", price: 149 }, { qty: "1000", price: 229 }] },
+  { size: "Rack Cards", description: '4" x 9" display cards', price: 79, qtyPricing: [{ qty: "250", price: 79 }, { qty: "500", price: 119 }, { qty: "1000", price: 179 }] },
+  { size: "Table Tents", description: '4" x 6" tri-fold stand', price: 89, qtyPricing: [{ qty: "50", price: 89 }, { qty: "100", price: 149 }, { qty: "250", price: 299 }] },
+]
+const magnetOptions = [
+  { size: "Business Card Magnets", description: '3.5" x 2" magnetic cards', price: 129, qtyPricing: [{ qty: "100", price: 129 }, { qty: "250", price: 249 }, { qty: "500", price: 399 }] },
+  { size: 'Vehicle Magnets (12" x 18")', description: "Removable car door signs", price: 49, qtyPricing: [{ qty: "1 pair", price: 49 }, { qty: "2 pairs", price: 89 }, { qty: "5 pairs", price: 199 }] },
+  { size: 'Vehicle Magnets (12" x 24")', description: "Large car door magnets", price: 69, qtyPricing: [{ qty: "1 pair", price: 69 }, { qty: "2 pairs", price: 119 }, { qty: "5 pairs", price: 259 }] },
+  { size: "Custom Shape Magnets", description: "Die-cut to your design", price: 159, qtyPricing: [{ qty: "100", price: 159 }, { qty: "250", price: 299 }, { qty: "500", price: 479 }] },
 ]
 const additionalItems = [
-  { name: "Invoice Books", description: "NCR carbonless copies", price: "From $89", priceValue: 89 },
-  { name: "Receipt Books", description: "Numbered with duplicates", price: "From $69", priceValue: 69 },
-  { name: "Memo Pads", description: "Custom sizes available", price: "From $49", priceValue: 49 },
-  { name: "Appointment Cards", description: "Match your business cards", price: "From $39", priceValue: 39 },
+  { name: "Counter Cards", description: "Tabletop displays", price: "From $79", priceValue: 79 },
+  { name: "Gift Certificates", description: "With serial numbers", price: "From $69", priceValue: 69 },
+  { name: "Coupons", description: "Perforated sheets", price: "From $49", priceValue: 49 },
+  { name: "Event Tickets", description: "Numbered & perforated", price: "From $89", priceValue: 89 },
 ]
-const features = ["Consistent brand identity", "Premium paper stocks", "Full-color or 1-color printing", "Matching sets available", "Free design assistance", "Bulk order discounts"]
+const features = ["Full-color printing", "UV coating available", "Weather-resistant options", "Custom die-cuts", "Free design assistance", "Fast turnaround"]
 
-export default function OfficePrinting() {
+export default function PromotionalMaterials() {
   return (
     <>
       {/* Hero */}
@@ -26,21 +32,21 @@ export default function OfficePrinting() {
           <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="text-center max-w-3xl mx-auto">
             <div className="flex items-center justify-center gap-2 text-sm text-muted-foreground mb-4">
               <Link to="/business-print" className="hover:text-primary transition-colors">Business Print</Link>
-              <span>/</span><span>Office Printing</span>
+              <span>/</span><span>Promotional Materials</span>
             </div>
             <div className="flex items-center justify-center gap-3 mb-4">
-              <Briefcase size={32} className="text-primary" />
-              <h1>Office Printing</h1>
+              <Gift size={32} className="text-primary" />
+              <h1>Promotional Materials</h1>
             </div>
-            <p className="text-lg text-muted-foreground">Letterheads, envelopes, notepads, and presentation folders. Keep your brand consistent across all office materials.</p>
+            <p className="text-lg text-muted-foreground">Postcards, door hangers, rack cards, magnets, and more. Everything you need to promote your business offline.</p>
           </motion.div>
         </div>
       </section>
 
-      {/* Pricing Grid */}
+      {/* Promotional Print Pricing Grid */}
       <section className="section-padding pt-0">
         <div className="section-container">
-          <h2 className="text-center mb-8">Pricing</h2>
+          <h2 className="text-center mb-8">Promotional Print Pricing</h2>
           <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
             {pricingOptions.map((option, i) => (
               <motion.div key={option.size} initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ delay: i * 0.1 }} className="card-elevated">
@@ -53,7 +59,36 @@ export default function OfficePrinting() {
                         <span className="font-medium">{tier.qty}</span>
                         <span className="text-primary font-semibold">${tier.price}</span>
                       </div>
-                      <AddToCartButton name="Office Printing" size={option.size} option={`${tier.qty}`} price={tier.price} />
+                      <AddToCartButton name="Promotional Materials" size={option.size} option={`${tier.qty}`} price={tier.price} />
+                    </div>
+                  ))}
+                </div>
+              </motion.div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Magnets Section */}
+      <section className="section-padding">
+        <div className="section-container">
+          <div className="flex items-center justify-center gap-3 mb-8">
+            <Car size={28} className="text-primary" />
+            <h2>Magnets & Vehicle Signage</h2>
+          </div>
+          <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
+            {magnetOptions.map((option, i) => (
+              <motion.div key={option.size} initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ delay: i * 0.1 }} className="card-elevated">
+                <h3 className="font-semibold text-lg mb-1">{option.size}</h3>
+                <p className="text-sm text-muted-foreground mb-4">{option.description}</p>
+                <div className="space-y-3">
+                  {option.qtyPricing.map((tier) => (
+                    <div key={tier.qty} className="flex flex-col gap-2 p-3 rounded-lg bg-muted/30 border border-border">
+                      <div className="flex items-center justify-between">
+                        <span className="font-medium">{tier.qty}</span>
+                        <span className="text-primary font-semibold">${tier.price}</span>
+                      </div>
+                      <AddToCartButton name="Magnets" size={option.size} option={`${tier.qty}`} price={tier.price} />
                     </div>
                   ))}
                 </div>
