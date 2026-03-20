@@ -4,11 +4,12 @@ import { motion } from 'framer-motion'
 
 const services = [
   'Stickers & Labels',
-  'Vehicle Graphics',
-  'Business Signage',
-  'Event Displays',
   'Mylar Packaging',
   'Business Print',
+  'Event Displays',
+  'Vehicle Graphics',
+  'Business Signage',
+  'Window Film',
   'Other',
 ]
 

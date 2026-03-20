@@ -1,13 +1,23 @@
 import { useState, useEffect } from 'react'
 import { Link, useLocation } from 'react-router-dom'
-import { Menu, X } from 'lucide-react'
+import { Menu, X, ChevronDown } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useCart } from '@/context/CartContext'
 import tssLogo from '@/assets/tss-logo-new.png'
 
+const serviceDropdown = [
+  { label: 'Custom Stickers', href: '/order' },
+  { label: 'Mylar Packaging', href: '/mylar-packaging' },
+  { label: 'Business Print', href: '/business-print' },
+  { label: 'Event Branding', href: '/canopies' },
+  { label: 'Vehicle Graphics', href: '/vehicle-graphics' },
+  { label: 'Business Signage', href: '/signage' },
+  { label: 'Window Film', href: '/window-film' },
+]
+
 const navLinks = [
   { href: '/order', label: 'Order Stickers', primary: true },
-  { href: '/services', label: 'Services' },
+  { href: '/services', label: 'Services', dropdown: serviceDropdown },
   { href: '/projects', label: 'Projects' },
   { href: '/about', label: 'About' },
   { href: '/contact', label: 'Contact' },
@@ -16,6 +26,7 @@ const navLinks = [
 export default function Header() {
   const [isScrolled, setIsScrolled] = useState(false)
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
+  const [openDropdown, setOpenDropdown] = useState<string | null>(null)
   const location = useLocation()
   const { items } = useCart()
   const cartCount = items.reduce((sum, i) => sum + i.quantity, 0)
@@ -28,6 +39,7 @@ export default function Header() {
 
   useEffect(() => {
     setIsMobileMenuOpen(false)
+    setOpenDropdown(null)
   }, [location])
 
   return (
@@ -51,15 +63,54 @@ export default function Header() {
 
             <div className="hidden md:flex items-center gap-8">
               {navLinks.map((link) => (
-                <Link
+                <div
                   key={link.href}
-                  to={link.href}
-                  className={`nav-link ${
-                    location.pathname === link.href ? 'active' : ''
-                  } ${link.primary ? 'text-primary hover:text-primary-glow' : ''}`}
+                  className="relative"
+                  onMouseEnter={() => link.dropdown && setOpenDropdown(link.label)}
+                  onMouseLeave={() => setOpenDropdown(null)}
                 >
-                  {link.label}
-                </Link>
+                  <Link
+                    to={link.href}
+                    className={`nav-link flex items-center gap-1 ${
+                      location.pathname === link.href ? 'active' : ''
+                    } ${link.primary ? 'text-primary hover:text-primary-glow' : ''}`}
+                  >
+                    {link.label}
+                    {link.dropdown && <ChevronDown size={14} className="opacity-50" />}
+                  </Link>
+
+                  {link.dropdown && (
+                    <AnimatePresence>
+                      {openDropdown === link.label && (
+                        <motion.div
+                          initial={{ opacity: 0, y: 8 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          exit={{ opacity: 0, y: 8 }}
+                          transition={{ duration: 0.15 }}
+                          className="absolute top-full left-1/2 -translate-x-1/2 mt-2 w-52 bg-card border border-border rounded-xl overflow-hidden shadow-lg"
+                        >
+                          {link.dropdown.map((sub) => (
+                            <Link
+                              key={sub.href}
+                              to={sub.href}
+                              className="block px-4 py-2.5 text-sm text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-colors"
+                            >
+                              {sub.label}
+                            </Link>
+                          ))}
+                          <div className="border-t border-border">
+                            <Link
+                              to="/services"
+                              className="block px-4 py-2.5 text-sm text-primary font-medium hover:bg-muted/50 transition-colors"
+                            >
+                              View All Services →
+                            </Link>
+                          </div>
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
+                  )}
+                </div>
               ))}
             </div>
 
@@ -104,14 +155,14 @@ export default function Header() {
               initial={{ opacity: 0, y: -20 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -20 }}
-              className="relative pt-24 px-6 flex flex-col gap-4"
+              className="relative pt-24 px-6 flex flex-col gap-1"
             >
               {navLinks.map((link, index) => (
                 <motion.div
                   key={link.href}
                   initial={{ opacity: 0, x: -20 }}
                   animate={{ opacity: 1, x: 0 }}
-                  transition={{ delay: index * 0.1 }}
+                  transition={{ delay: index * 0.05 }}
                 >
                   <Link
                     to={link.href}
@@ -123,12 +174,25 @@ export default function Header() {
                   >
                     {link.label}
                   </Link>
+                  {link.dropdown && (
+                    <div className="pl-4 pb-2">
+                      {link.dropdown.map((sub) => (
+                        <Link
+                          key={sub.href}
+                          to={sub.href}
+                          className="block py-2 text-sm text-muted-foreground hover:text-primary transition-colors"
+                        >
+                          {sub.label}
+                        </Link>
+                      ))}
+                    </div>
+                  )}
                 </motion.div>
               ))}
               <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.4 }}
+                transition={{ delay: 0.3 }}
                 className="mt-6"
               >
                 <Link to="/contact" className="btn-primary w-full text-center">

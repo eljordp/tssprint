@@ -64,11 +64,11 @@ export default function ProofProcess() {
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
-          className="mt-12 text-center"
+          className="mt-10 text-center"
         >
-          <Link to="/contact" className="btn-primary">
-            Start My Project
-          </Link>
+          <p className="text-sm text-muted-foreground">
+            Every order includes a free digital proof. <Link to="/contact" className="text-primary hover:underline">Start your project →</Link>
+          </p>
         </motion.div>
       </div>
     </section>
