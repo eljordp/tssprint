@@ -1,6 +1,6 @@
 import { motion } from 'framer-motion'
 import { Link } from 'react-router-dom'
-import { Tag, Truck, Tent, Printer, Store, Film, Package, Clock, CheckCircle, ArrowRight } from 'lucide-react'
+import { Tag, Truck, Tent, Printer, Store, Film, Package, Clock, ArrowRight, Star } from 'lucide-react'
 import type { LucideIcon } from 'lucide-react'
 
 interface ServiceSection {
@@ -8,11 +8,12 @@ interface ServiceSection {
   icon: LucideIcon
   title: string
   description: string
-  bestFor: string[]
-  commonRequests: string[]
+  features: string[]
   turnaround: string
+  startingPrice: string
   ctaLabel: string
   ctaLink: string
+  popular?: boolean
 }
 
 const services: ServiceSection[] = [
@@ -21,31 +22,33 @@ const services: ServiceSection[] = [
     icon: Tag,
     title: 'Custom Stickers & Labels',
     description: 'High quality custom stickers and labels built for real-world use — durable, vibrant, and made to elevate your brand.',
-    bestFor: ['Product Labeling & Retail', 'Business Branding', 'Promotional Giveaways', 'Event Marketing', 'Laptop & Device Stickers'],
-    commonRequests: ['Die-cut Stickers', 'Kiss-cut Stickers', 'Roll Labels', 'Clear Stickers'],
-    turnaround: '3-5 business days',
+    features: ['Die-cut & kiss-cut', 'Roll labels', 'Clear & holographic', 'Matte, gloss, embossed'],
+    turnaround: '3-5 days',
+    startingPrice: '$51',
     ctaLabel: 'Order Stickers',
     ctaLink: '/order',
+    popular: true,
   },
   {
-    id: 'vehicles',
-    icon: Truck,
-    title: 'Vehicle & Fleet Graphics',
-    description: 'Turn your vehicles into mobile billboards with partial wraps, full wraps, and magnetic signs.',
-    bestFor: ['Service Vehicles', 'Delivery Fleets', 'Food Trucks', 'Personal Branding'],
-    commonRequests: ['Partial Wraps', 'Full Vehicle Wraps', 'Magnetic Signs', 'Window Perf'],
-    turnaround: '7-14 business days',
-    ctaLabel: 'Preview Vehicle',
-    ctaLink: '/vehicle-graphics',
+    id: 'packaging',
+    icon: Package,
+    title: 'Mylar & Custom Packaging',
+    description: 'Custom-printed mylar bags and packaging with vibrant full-color printing and premium barrier protection.',
+    features: ['Stand-up pouches', 'Child-resistant options', 'Foil & holographic', 'Direct print available'],
+    turnaround: '5-7 days',
+    startingPrice: '$89',
+    ctaLabel: 'Order Packaging',
+    ctaLink: '/mylar-packaging',
+    popular: true,
   },
   {
     id: 'canopies',
     icon: Tent,
     title: 'Event Branding & Displays',
     description: 'Custom canopies, banners, table covers, and event signage to make your brand stand out at any event.',
-    bestFor: ["Farmer's Markets", 'Trade Shows', 'Outdoor Events', 'Pop-Up Shops'],
-    commonRequests: ['10x10 Canopies', 'Table Covers', 'Retractable Banners', 'Backdrops'],
-    turnaround: '7-10 business days',
+    features: ['10x10 canopies', 'Table covers & throws', 'Feather flags', 'Backdrops & displays'],
+    turnaround: '7-10 days',
+    startingPrice: '$89',
     ctaLabel: 'Explore Events',
     ctaLink: '/canopies',
   },
@@ -54,20 +57,31 @@ const services: ServiceSection[] = [
     icon: Printer,
     title: 'Business Print Essentials',
     description: 'Professional business cards, marketing collateral, office printing, and promotional materials.',
-    bestFor: ['Local Businesses', 'Offices', 'Retail & Services', 'Startups'],
-    commonRequests: ['Business Cards', 'Flyers & Brochures', 'Letterheads', 'Promotional Materials'],
-    turnaround: '3-7 business days',
+    features: ['Business cards', 'Flyers & brochures', 'Letterheads & envelopes', 'Postcards & magnets'],
+    turnaround: '3-7 days',
+    startingPrice: '$39',
     ctaLabel: 'Order Print',
     ctaLink: '/business-print',
+  },
+  {
+    id: 'vehicles',
+    icon: Truck,
+    title: 'Vehicle & Fleet Graphics',
+    description: 'Turn your vehicles into mobile billboards with partial wraps, full wraps, and magnetic signs.',
+    features: ['Door & spot graphics', 'Partial & full wraps', 'Fleet branding programs', 'Professional installation'],
+    turnaround: '7-14 days',
+    startingPrice: '$75',
+    ctaLabel: 'Get a Quote',
+    ctaLink: '/vehicle-graphics',
   },
   {
     id: 'signage',
     icon: Store,
     title: 'Business Signage',
     description: 'Professional signage solutions for storefronts, offices, and commercial spaces.',
-    bestFor: ['Retail Storefronts', 'Office Branding', 'Trade Shows', 'Directional Signage'],
-    commonRequests: ['Window Graphics', 'Wall Murals', 'A-Frame Signs', 'Outdoor Banners'],
-    turnaround: '5-10 business days',
+    features: ['Storefront signs', 'Wall graphics & murals', 'A-frame signs', 'Retractable banners'],
+    turnaround: '5-10 days',
+    startingPrice: '$45',
     ctaLabel: 'Explore Signage',
     ctaLink: '/signage',
   },
@@ -76,22 +90,11 @@ const services: ServiceSection[] = [
     icon: Film,
     title: 'Window Film Solutions',
     description: 'Professional window film for privacy, solar protection, security, and decorative applications.',
-    bestFor: ['Medical Offices & Clinics', 'Office Spaces', 'Retail Storefronts', 'Conference Rooms'],
-    commonRequests: ['Window Decals', 'Perforated Film', 'Frosted Vinyl', 'Privacy Film'],
-    turnaround: '5-10 business days',
-    ctaLabel: 'Explore Film',
+    features: ['Frosted privacy film', 'Solar & UV protection', 'Security film', 'Custom designs & logos'],
+    turnaround: '5-10 days',
+    startingPrice: '$8/sqft',
+    ctaLabel: 'Configure Film',
     ctaLink: '/window-film',
-  },
-  {
-    id: 'packaging',
-    icon: Package,
-    title: 'Mylar & Custom Packaging',
-    description: 'Custom-printed mylar bags and packaging with vibrant full-color printing and premium barrier protection.',
-    bestFor: ['Wellness Brands', 'Retail Packaging', 'Promotional Kits', 'Food & Beverage'],
-    commonRequests: ['Custom Mylar Bags', 'Stand-Up Pouches', 'Child Resistant Packaging', 'Custom Boxes'],
-    turnaround: '5-7 business days',
-    ctaLabel: 'Order Packaging',
-    ctaLink: '/mylar-packaging',
   },
 ]
 
@@ -99,7 +102,7 @@ export default function Services() {
   return (
     <div>
       {/* Hero */}
-      <section className="section-padding pb-12">
+      <section className="section-padding pb-8">
         <div className="section-container">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -114,75 +117,77 @@ export default function Services() {
         </div>
       </section>
 
-      {/* Service Sections */}
-      {services.map((service) => (
-        <motion.section
-          key={service.id}
-          id={`${service.id}-section`}
-          initial={{ opacity: 0, y: 20 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          className="pb-8"
-        >
-          <div className="section-container">
-            <div className="card-elevated">
-              <div className="grid md:grid-cols-3 gap-6">
-                {/* Left - Title & Description */}
-                <div className="md:col-span-2">
-                  <div className="flex items-start gap-4 mb-4">
-                    <div className="w-12 h-12 bg-primary/10 rounded-lg flex items-center justify-center flex-shrink-0">
-                      <service.icon size={24} className="text-primary" />
-                    </div>
-                    <div>
-                      <h2 className="text-xl md:text-2xl font-semibold mb-2">{service.title}</h2>
-                      <p className="text-muted-foreground">{service.description}</p>
-                    </div>
+      {/* Service Cards */}
+      <section className="section-padding pt-0">
+        <div className="section-container space-y-6">
+          {services.map((service, index) => (
+            <motion.div
+              key={service.id}
+              id={`${service.id}-section`}
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ delay: index * 0.05 }}
+            >
+              <div className={`card-elevated overflow-hidden ${service.popular ? 'border-primary/30' : ''}`}>
+                <div className="flex flex-col md:flex-row gap-0">
+                  {/* Image placeholder */}
+                  <div className="w-full md:w-72 lg:w-80 h-48 md:h-auto bg-muted/50 flex items-center justify-center flex-shrink-0 border-b md:border-b-0 md:border-r border-border">
+                    <service.icon size={48} className="text-muted-foreground/30" />
                   </div>
 
-                  <div className="grid sm:grid-cols-2 gap-4 mt-6">
-                    <div>
-                      <h4 className="text-sm font-medium text-primary mb-2">Best For</h4>
-                      <ul className="text-sm text-muted-foreground space-y-1">
-                        {service.bestFor.map((item) => (
-                          <li key={item} className="flex items-center gap-2">
-                            <CheckCircle size={12} className="text-primary" />
-                            {item}
-                          </li>
+                  {/* Content */}
+                  <div className="flex-1 p-5 md:p-6 flex flex-col">
+                    <div className="flex items-start justify-between gap-4 mb-3">
+                      <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 bg-primary/10 rounded-lg flex items-center justify-center flex-shrink-0">
+                          <service.icon size={20} className="text-primary" />
+                        </div>
+                        <div>
+                          <div className="flex items-center gap-2">
+                            <h2 className="text-lg md:text-xl font-bold">{service.title}</h2>
+                            {service.popular && (
+                              <span className="flex items-center gap-1 bg-primary/10 text-primary text-[10px] font-semibold px-2 py-0.5 rounded-full">
+                                <Star size={10} className="fill-primary" /> Popular
+                              </span>
+                            )}
+                          </div>
+                          <p className="text-sm text-muted-foreground mt-0.5">{service.description}</p>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Features + Meta */}
+                    <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 mt-auto">
+                      <div className="flex flex-wrap gap-x-4 gap-y-1">
+                        {service.features.map((f) => (
+                          <span key={f} className="text-xs text-muted-foreground">• {f}</span>
                         ))}
-                      </ul>
-                    </div>
-                    <div>
-                      <h4 className="text-sm font-medium text-primary mb-2">Common Requests</h4>
-                      <ul className="text-sm text-muted-foreground space-y-1">
-                        {service.commonRequests.map((item) => (
-                          <li key={item} className="flex items-center gap-2">
-                            <CheckCircle size={12} className="text-primary" />
-                            {item}
-                          </li>
-                        ))}
-                      </ul>
+                      </div>
+
+                      <div className="flex items-center gap-4 flex-shrink-0">
+                        <div className="text-right">
+                          <p className="text-lg font-bold text-foreground leading-none">
+                            From {service.startingPrice}
+                          </p>
+                          <div className="flex items-center gap-1.5 mt-1">
+                            <Clock size={11} className="text-muted-foreground" />
+                            <span className="text-[10px] text-muted-foreground">{service.turnaround}</span>
+                          </div>
+                        </div>
+                        <Link to={service.ctaLink} className="btn-primary text-sm px-5 py-2.5 whitespace-nowrap">
+                          {service.ctaLabel}
+                          <ArrowRight size={16} />
+                        </Link>
+                      </div>
                     </div>
                   </div>
-                </div>
-
-                {/* Right - Turnaround & CTA */}
-                <div className="flex flex-col justify-between">
-                  <div className="flex items-center gap-2 text-sm mb-4 md:mb-0">
-                    <Clock size={16} className="text-primary" />
-                    <span className="text-muted-foreground">Typical turnaround:</span>
-                    <span className="font-medium">{service.turnaround}</span>
-                  </div>
-
-                  <Link to={service.ctaLink} className="btn-primary mt-auto">
-                    {service.ctaLabel}
-                    <ArrowRight size={18} />
-                  </Link>
                 </div>
               </div>
-            </div>
-          </div>
-        </motion.section>
-      ))}
+            </motion.div>
+          ))}
+        </div>
+      </section>
 
       {/* CTA Section */}
       <section className="section-padding bg-surface-overlay">
