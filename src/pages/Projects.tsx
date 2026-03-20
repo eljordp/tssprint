@@ -282,6 +282,31 @@ export default function Projects() {
         </div>
       </section>
 
+      {/* CTA */}
+      <section className="section-padding bg-surface-overlay">
+        <div className="section-container text-center">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            className="max-w-2xl mx-auto"
+          >
+            <h2 className="mb-4">Ready to Start Your Project?</h2>
+            <p className="text-lg text-muted-foreground mb-8">
+              Every project starts with a free digital proof. Tell us what you need and we'll make it happen.
+            </p>
+            <div className="flex flex-col sm:flex-row gap-4 justify-center">
+              <a href="/order" className="btn-primary text-lg px-8 py-4">
+                Order Stickers
+              </a>
+              <a href="/contact" className="btn-secondary text-lg px-8 py-4">
+                Get a Custom Quote
+              </a>
+            </div>
+          </motion.div>
+        </div>
+      </section>
+
       {/* Lightbox */}
       <AnimatePresence>
         {selectedProject && (
@@ -335,8 +360,14 @@ export default function Projects() {
                   {categories.find((c) => c.value === selectedProject.category)?.label}
                 </span>
                 <h2 className="text-2xl font-bold mt-1 mb-2">{selectedProject.title}</h2>
-                <p className="text-muted-foreground mb-2">{selectedProject.description}</p>
-                <p className="text-sm text-muted-foreground">{selectedProject.details}</p>
+                <p className="text-muted-foreground mb-4">{selectedProject.description}</p>
+                <div className="flex flex-wrap justify-center gap-2">
+                  {selectedProject.details.split(' | ').map((detail) => (
+                    <span key={detail} className="text-xs bg-secondary text-muted-foreground px-3 py-1.5 rounded-full">
+                      {detail.trim()}
+                    </span>
+                  ))}
+                </div>
               </div>
             </motion.div>
           </motion.div>
