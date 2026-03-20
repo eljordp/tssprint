@@ -1,12 +1,12 @@
 import { useState, useMemo, useCallback } from 'react'
-import { Upload, X, Hand, Layers, ScrollText, Paintbrush, FileCheck, ArrowLeft, ShoppingCart } from 'lucide-react'
+import { Upload, X, Hand, Layers, ScrollText, ShoppingCart, Laptop, GlassWater } from 'lucide-react'
 import { useCart } from '@/context/CartContext'
 
 const QUANTITY_TIERS = [50, 100, 200, 300, 500, 1000] as const
 type QuantityTier = (typeof QUANTITY_TIERS)[number]
 type Shape = 'circle' | 'square' | 'rectangle' | 'die-cut' | 'kiss-cut'
 type Material = 'matte' | 'gloss' | 'clear' | 'holographic' | 'paper' | 'embossed/UV'
-type MockupType = 'hand-held' | 'sheet' | 'roll'
+type MockupType = 'hand-held' | 'sheet' | 'roll' | 'laptop' | 'bottle'
 
 const baseCirclePrices: Record<number, Record<QuantityTier, number>> = {
   1: { 50: 51, 100: 60, 200: 70, 300: 75, 500: 90, 1000: 125 },
@@ -27,6 +27,18 @@ const materialMultipliers: Record<Material, number> = {
   matte: 1, gloss: 1, clear: 1.15, holographic: 1.25, paper: 0.9, 'embossed/UV': 2,
 }
 
+const CIRCLE_SIZE_OPTIONS = [
+  { label: '1" diameter', diameter: 1, width: 1, height: 1 },
+  { label: '2" diameter', diameter: 2, width: 2, height: 2 },
+  { label: '3" diameter', diameter: 3, width: 3, height: 3 },
+  { label: '4" diameter', diameter: 4, width: 4, height: 4 },
+  { label: '5" diameter', diameter: 5, width: 5, height: 5 },
+  { label: '6" diameter', diameter: 6, width: 6, height: 6 },
+  { label: '7" diameter', diameter: 7, width: 7, height: 7 },
+  { label: '8" diameter', diameter: 8, width: 8, height: 8 },
+  { label: '9" diameter', diameter: 9, width: 9, height: 9 },
+]
+
 const SQUARE_SIZE_OPTIONS = [
   { label: '2" x 2"', diameter: 2, width: 2, height: 2 },
   { label: '3" x 3"', diameter: 3, width: 3, height: 3 },
@@ -39,14 +51,14 @@ const SQUARE_SIZE_OPTIONS = [
 ]
 
 const RECT_SIZE_OPTIONS = [
-  { label: '3" x 2"', diameter: 3, width: 3, height: 2 },
+  { label: '3" x 1"', diameter: 3, width: 3, height: 1 },
   { label: '4" x 2"', diameter: 4, width: 4, height: 2 },
-  { label: '4" x 3"', diameter: 4, width: 4, height: 3 },
+  { label: '5" x 2"', diameter: 5, width: 5, height: 2 },
   { label: '5" x 3"', diameter: 5, width: 5, height: 3 },
-  { label: '6" x 4"', diameter: 6, width: 6, height: 4 },
-  { label: '7" x 5"', diameter: 7, width: 7, height: 5 },
-  { label: '8" x 5"', diameter: 8, width: 8, height: 5 },
-  { label: '9" x 6"', diameter: 9, width: 9, height: 6 },
+  { label: '6" x 3"', diameter: 6, width: 6, height: 3 },
+  { label: '7" x 4"', diameter: 7, width: 7, height: 4 },
+  { label: '8" x 3"', diameter: 8, width: 8, height: 3 },
+  { label: '9" x 4"', diameter: 9, width: 9, height: 4 },
 ]
 
 function getArea(shape: Shape, diameter: number, width: number, height: number): number {
@@ -125,42 +137,150 @@ function getStickerBorderRadius(shape: Shape): string {
   return '4px'
 }
 
-interface MockupProps { previewUrl: string | null; shape: Shape; diameter: number; width: number; height: number }
+// Material overlay component
+function MaterialOverlay({ material }: { material: Material }) {
+  if (material === 'paper') return null
 
-const HandHeldMockup = ({ previewUrl, shape, diameter, width, height }: MockupProps) => {
-  const size = getStickerStyle(shape, diameter, width, height, 90)
+  if (material === 'gloss') {
+    return (
+      <div
+        className="absolute inset-0 pointer-events-none z-10"
+        style={{
+          background: 'linear-gradient(135deg, rgba(255,255,255,0.4) 0%, rgba(255,255,255,0.1) 30%, transparent 60%)',
+          borderRadius: 'inherit',
+        }}
+      />
+    )
+  }
+
+  if (material === 'holographic') {
+    return (
+      <div
+        className="absolute inset-0 pointer-events-none z-10"
+        style={{
+          background: 'linear-gradient(135deg, rgba(255,100,200,0.2), rgba(100,200,255,0.2), rgba(100,255,150,0.2), rgba(255,200,100,0.2))',
+          backgroundSize: '200% 200%',
+          animation: 'holoShift 3s ease-in-out infinite',
+          borderRadius: 'inherit',
+        }}
+      />
+    )
+  }
+
+  if (material === 'clear') {
+    return (
+      <div
+        className="absolute inset-0 pointer-events-none z-0"
+        style={{
+          backgroundImage: 'repeating-conic-gradient(rgba(200,200,200,0.15) 0% 25%, transparent 0% 50%)',
+          backgroundSize: '12px 12px',
+          borderRadius: 'inherit',
+        }}
+      />
+    )
+  }
+
+  if (material === 'matte') {
+    return (
+      <div
+        className="absolute inset-0 pointer-events-none z-10"
+        style={{
+          background: 'rgba(0,0,0,0.12)',
+          borderRadius: 'inherit',
+        }}
+      />
+    )
+  }
+
+  if (material === 'embossed/UV') {
+    return (
+      <div
+        className="absolute inset-0 pointer-events-none z-10"
+        style={{
+          boxShadow: 'inset 0 0 8px rgba(255,255,255,0.4)',
+          background: 'linear-gradient(135deg, rgba(255,255,255,0.15) 0%, transparent 50%, rgba(255,255,255,0.08) 100%)',
+          borderRadius: 'inherit',
+        }}
+      />
+    )
+  }
+
+  return null
+}
+
+interface MockupProps {
+  previewUrl: string | null
+  shape: Shape
+  diameter: number
+  width: number
+  height: number
+  material: Material
+}
+
+const StickerWithOverlay = ({
+  previewUrl,
+  shape,
+  material,
+  style,
+  className = '',
+  placeholderText = 'Your Design',
+}: {
+  previewUrl: string | null
+  shape: Shape
+  material: Material
+  style: React.CSSProperties
+  className?: string
+  placeholderText?: string
+}) => {
   const borderRadius = getStickerBorderRadius(shape)
   return (
-    <div className="relative flex items-center justify-center h-44">
-      <div className="absolute bottom-0 left-1/2 -translate-x-1/2">
-        <svg width="110" height="90" viewBox="0 0 120 100" className="text-zinc-700">
-          <path d="M60 95 C30 95 15 75 15 55 C15 40 25 30 35 25 L35 15 C35 8 40 5 45 5 L50 5 L50 20 L55 20 L55 5 L60 5 L60 20 L65 20 L65 5 L70 5 L70 20 L75 20 L75 8 C80 8 85 12 85 20 L85 30 C95 35 105 45 105 60 C105 80 90 95 60 95Z" fill="currentColor" />
-        </svg>
-      </div>
-      <div
-        className="relative z-10 border-2 border-primary/30 bg-zinc-800 overflow-hidden shadow-lg transform -rotate-6 transition-all duration-300"
-        style={{ width: size.width, height: size.height, borderRadius }}
-      >
-        {previewUrl ? (
-          <img src={previewUrl} alt="Sticker" className="w-full h-full object-cover" />
-        ) : (
-          <div className="w-full h-full flex items-center justify-center text-[10px] text-zinc-500">Your Design</div>
-        )}
-      </div>
+    <div
+      className={`relative overflow-hidden ${className}`}
+      style={{ ...style, borderRadius }}
+    >
+      <MaterialOverlay material={material} />
+      {previewUrl ? (
+        <img src={previewUrl} alt="Sticker" className="w-full h-full object-cover relative z-[1]" />
+      ) : (
+        <div className="w-full h-full flex items-center justify-center text-[10px] text-zinc-500 bg-zinc-800 relative z-[1]">
+          {placeholderText}
+        </div>
+      )}
     </div>
   )
 }
 
-const SheetMockup = ({ previewUrl, shape, diameter, width, height }: MockupProps) => {
-  const size = getStickerStyle(shape, diameter, width, height, 38)
+const HandHeldMockup = ({ previewUrl, shape, diameter, width, height, material }: MockupProps) => {
+  const size = getStickerStyle(shape, diameter, width, height, 140)
+  return (
+    <div className="relative flex items-center justify-center min-h-[350px]">
+      <div className="absolute bottom-4 left-1/2 -translate-x-1/2">
+        <svg width="170" height="140" viewBox="0 0 120 100" className="text-zinc-700">
+          <path d="M60 95 C30 95 15 75 15 55 C15 40 25 30 35 25 L35 15 C35 8 40 5 45 5 L50 5 L50 20 L55 20 L55 5 L60 5 L60 20 L65 20 L65 5 L70 5 L70 20 L75 20 L75 8 C80 8 85 12 85 20 L85 30 C95 35 105 45 105 60 C105 80 90 95 60 95Z" fill="currentColor" />
+        </svg>
+      </div>
+      <StickerWithOverlay
+        previewUrl={previewUrl}
+        shape={shape}
+        material={material}
+        className="border-2 border-primary/30 shadow-lg transform -rotate-6 transition-all duration-300 z-10"
+        style={{ width: size.width, height: size.height }}
+      />
+    </div>
+  )
+}
+
+const SheetMockup = ({ previewUrl, shape, diameter, width, height, material }: MockupProps) => {
+  const size = getStickerStyle(shape, diameter, width, height, 52)
   const borderRadius = getStickerBorderRadius(shape)
   return (
-    <div className="relative flex items-center justify-center h-44">
-      <div className="relative w-40 h-32 bg-white rounded-lg shadow-lg p-2">
-        <div className="flex flex-wrap gap-1.5 h-full items-center justify-center">
+    <div className="relative flex items-center justify-center min-h-[350px]">
+      <div className="relative w-64 h-52 bg-white rounded-lg shadow-lg p-3">
+        <div className="flex flex-wrap gap-2 h-full items-center justify-center">
           {Array.from({ length: 9 }).map((_, i) => (
-            <div key={i} className="bg-zinc-100 border border-zinc-200 overflow-hidden flex-shrink-0" style={{ width: size.width, height: size.height, borderRadius }}>
-              {previewUrl ? <img src={previewUrl} alt="Sticker" className="w-full h-full object-cover" /> : <div className="w-full h-full bg-zinc-200" />}
+            <div key={i} className="relative overflow-hidden flex-shrink-0 bg-zinc-100 border border-zinc-200" style={{ width: size.width, height: size.height, borderRadius }}>
+              <MaterialOverlay material={material} />
+              {previewUrl ? <img src={previewUrl} alt="Sticker" className="w-full h-full object-cover relative z-[1]" /> : <div className="w-full h-full bg-zinc-200 relative z-[1]" />}
             </div>
           ))}
         </div>
@@ -169,20 +289,68 @@ const SheetMockup = ({ previewUrl, shape, diameter, width, height }: MockupProps
   )
 }
 
-const RollMockup = ({ previewUrl, shape, diameter, width, height }: MockupProps) => {
-  const size = getStickerStyle(shape, diameter, width, height, 22)
+const RollMockup = ({ previewUrl, shape, diameter, width, height, material }: MockupProps) => {
+  const size = getStickerStyle(shape, diameter, width, height, 30)
   const borderRadius = getStickerBorderRadius(shape)
   return (
-    <div className="relative flex items-center justify-center h-44">
-      <div className="relative">
+    <div className="relative flex items-center justify-center min-h-[350px]">
+      <div className="relative scale-125">
         <div className="w-14 h-28 bg-gradient-to-r from-zinc-600 via-zinc-500 to-zinc-600 rounded-full shadow-lg" />
         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-5 h-5 bg-zinc-800 rounded-full border-2 border-zinc-700" />
-        <div className="absolute top-6 left-12 w-28 h-5 bg-white rounded-r-sm shadow-md flex items-center gap-1 px-1">
+        <div className="absolute top-6 left-12 w-36 h-6 bg-white rounded-r-sm shadow-md flex items-center gap-1.5 px-1.5">
           {Array.from({ length: 4 }).map((_, i) => (
-            <div key={i} className="bg-zinc-100 border border-zinc-200 flex-shrink-0 overflow-hidden" style={{ width: size.width, height: size.height, borderRadius }}>
-              {previewUrl ? <img src={previewUrl} alt="Sticker" className="w-full h-full object-cover" /> : <div className="w-full h-full bg-zinc-200" />}
+            <div key={i} className="relative overflow-hidden flex-shrink-0 bg-zinc-100 border border-zinc-200" style={{ width: size.width, height: size.height, borderRadius }}>
+              <MaterialOverlay material={material} />
+              {previewUrl ? <img src={previewUrl} alt="Sticker" className="w-full h-full object-cover relative z-[1]" /> : <div className="w-full h-full bg-zinc-200 relative z-[1]" />}
             </div>
           ))}
+        </div>
+      </div>
+    </div>
+  )
+}
+
+const LaptopMockup = ({ previewUrl, shape, diameter, width, height, material }: MockupProps) => {
+  const size = getStickerStyle(shape, diameter, width, height, 80)
+  return (
+    <div className="relative flex items-center justify-center min-h-[350px]">
+      <div className="relative">
+        {/* Laptop lid */}
+        <div className="w-56 h-40 bg-gradient-to-b from-zinc-600 to-zinc-700 rounded-t-xl border border-zinc-500 flex items-center justify-center">
+          <StickerWithOverlay
+            previewUrl={previewUrl}
+            shape={shape}
+            material={material}
+            className="shadow-md"
+            style={{ width: size.width, height: size.height }}
+          />
+        </div>
+        {/* Laptop base */}
+        <div className="w-64 h-3 bg-gradient-to-b from-zinc-500 to-zinc-600 rounded-b-lg -ml-4 border-t border-zinc-400" />
+        <div className="w-20 h-1 bg-zinc-500 rounded-full mx-auto mt-0.5" />
+      </div>
+    </div>
+  )
+}
+
+const BottleMockup = ({ previewUrl, shape, diameter, width, height, material }: MockupProps) => {
+  const size = getStickerStyle(shape, diameter, width, height, 70)
+  return (
+    <div className="relative flex items-center justify-center min-h-[350px]">
+      <div className="relative flex flex-col items-center">
+        {/* Cap */}
+        <div className="w-10 h-5 bg-gradient-to-b from-zinc-400 to-zinc-500 rounded-t-lg border border-zinc-400" />
+        {/* Neck */}
+        <div className="w-12 h-4 bg-gradient-to-b from-zinc-500 to-zinc-600 border-x border-zinc-400" />
+        {/* Body */}
+        <div className="w-20 h-48 bg-gradient-to-b from-zinc-600 via-zinc-500 to-zinc-600 rounded-b-2xl border border-zinc-400 flex items-center justify-center relative">
+          <StickerWithOverlay
+            previewUrl={previewUrl}
+            shape={shape}
+            material={material}
+            className="shadow-md"
+            style={{ width: Math.min(size.width, 64), height: Math.min(size.height, 64) }}
+          />
         </div>
       </div>
     </div>
@@ -198,14 +366,20 @@ const materials: { value: Material; label: string; color: string; desc: string }
   { value: 'embossed/UV', label: 'Embossed/UV', color: 'bg-gradient-to-br from-zinc-200 via-white to-zinc-300', desc: 'Raised texture, premium' },
 ]
 
+const STEPS = [
+  { num: 1, label: 'Configure' },
+  { num: 2, label: 'Upload' },
+  { num: 3, label: 'Review' },
+]
+
 export default function Order() {
   const { addItem } = useCart()
   const [uploadedFile, setUploadedFile] = useState<File | null>(null)
   const [previewUrl, setPreviewUrl] = useState<string | null>(null)
   const [isDragging, setIsDragging] = useState(false)
-  const [designChoice, setDesignChoice] = useState<'none' | 'need' | 'have'>('none')
   const [added, setAdded] = useState(false)
   const [activeMockup, setActiveMockup] = useState<MockupType>('hand-held')
+  const [currentStep, setCurrentStep] = useState(1)
 
   const handleDragOver = useCallback((e: React.DragEvent) => { e.preventDefault(); setIsDragging(true) }, [])
   const handleDragLeave = useCallback((e: React.DragEvent) => { e.preventDefault(); setIsDragging(false) }, [])
@@ -213,18 +387,22 @@ export default function Order() {
     e.preventDefault(); setIsDragging(false)
     const file = e.dataTransfer.files?.[0]
     if (file && (file.type.startsWith('image/') || file.type === 'application/pdf')) {
-      setUploadedFile(file); setPreviewUrl(URL.createObjectURL(file))
+      setUploadedFile(file); setPreviewUrl(URL.createObjectURL(file)); setCurrentStep(3)
     }
   }, [])
   const handleFileSelect = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
     if (file && (file.type.startsWith('image/') || file.type === 'application/pdf')) {
-      setUploadedFile(file); setPreviewUrl(URL.createObjectURL(file))
+      setUploadedFile(file); setPreviewUrl(URL.createObjectURL(file)); setCurrentStep(3)
     }
   }, [])
 
   const [shape, setShape] = useState<Shape>('die-cut')
-  const sizeOptions = shape === 'rectangle' ? RECT_SIZE_OPTIONS : SQUARE_SIZE_OPTIONS
+  const sizeOptions = useMemo(() => {
+    if (shape === 'circle') return CIRCLE_SIZE_OPTIONS
+    if (shape === 'rectangle') return RECT_SIZE_OPTIONS
+    return SQUARE_SIZE_OPTIONS
+  }, [shape])
   const [selectedSize, setSelectedSize] = useState(SQUARE_SIZE_OPTIONS[0])
   const [customWidth, setCustomWidth] = useState(3)
   const [customHeight, setCustomHeight] = useState(3)
@@ -235,7 +413,7 @@ export default function Order() {
 
   const handleShapeChange = (newShape: Shape) => {
     setShape(newShape)
-    const newOptions = newShape === 'rectangle' ? RECT_SIZE_OPTIONS : SQUARE_SIZE_OPTIONS
+    const newOptions = newShape === 'circle' ? CIRCLE_SIZE_OPTIONS : newShape === 'rectangle' ? RECT_SIZE_OPTIONS : SQUARE_SIZE_OPTIONS
     setSelectedSize(newOptions[0])
     setUseCustomSize(false)
   }
@@ -273,332 +451,404 @@ export default function Order() {
     setTimeout(() => setAdded(false), 2000)
   }
 
+  const configSummary = useMemo(() => {
+    const shapeName = shape.charAt(0).toUpperCase() + shape.slice(1)
+    const sizeStr = shape === 'circle' ? `${diameter}"` : `${width}" x ${height}"`
+    const matName = materials.find((m) => m.value === material)?.label ?? material
+    return `${shapeName} · ${sizeStr} · ${matName} · ${quantity} pcs`
+  }, [shape, diameter, width, height, material, quantity])
+
   const mockupTabs = [
     { id: 'hand-held' as MockupType, label: 'Hand-held', icon: Hand },
     { id: 'sheet' as MockupType, label: 'Sheet', icon: Layers },
     { id: 'roll' as MockupType, label: 'Roll', icon: ScrollText },
+    { id: 'laptop' as MockupType, label: 'Laptop', icon: Laptop },
+    { id: 'bottle' as MockupType, label: 'Bottle', icon: GlassWater },
   ]
 
+  const mockupProps: MockupProps = { previewUrl, shape, diameter, width, height, material }
+
   return (
-    <div className="min-h-screen bg-background py-8 md:py-16">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6">
-        <header className="mb-10">
-          <h1 className="text-2xl md:text-4xl font-bold tracking-tight text-foreground">Print customized stickers</h1>
-          <p className="mt-2 text-sm md:text-base text-muted-foreground max-w-2xl">
-            Choose your desired cutline, size, quantity and material. Upload your design and go to checkout.
-          </p>
-        </header>
+    <>
+      {/* Holographic animation keyframes */}
+      <style>{`
+        @keyframes holoShift {
+          0%, 100% { background-position: 0% 50%; }
+          50% { background-position: 100% 50%; }
+        }
+      `}</style>
 
-        {/* 4-Column Configurator */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-          {/* Shape */}
-          <div>
-            <h3 className="text-base font-semibold text-foreground mb-3">Shape</h3>
-            <div className="space-y-2">
-              {([
-                { label: 'Square', value: 'square' as Shape, icon: '□' },
-                { label: 'Circle', value: 'circle' as Shape, icon: '○' },
-                { label: 'Rectangle', value: 'rectangle' as Shape, icon: '▢' },
-                { label: 'Die Cut', value: 'die-cut' as Shape, icon: '◇' },
-                { label: 'Kiss Cut', value: 'kiss-cut' as Shape, icon: '◇' },
-              ]).map((s) => (
+      <div className="min-h-screen bg-background pb-28 lg:pb-8">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 py-8 md:py-12">
+          {/* Header */}
+          <header className="mb-8">
+            <h1 className="text-2xl md:text-4xl font-bold tracking-tight text-foreground">Print customized stickers</h1>
+            <p className="mt-2 text-sm md:text-base text-muted-foreground max-w-2xl">
+              Choose your shape, size, material, and quantity. Upload your design and add to cart.
+            </p>
+          </header>
+
+          {/* Step Progress Bar */}
+          <div className="flex items-center gap-2 mb-8">
+            {STEPS.map((step, i) => (
+              <div key={step.num} className="flex items-center gap-2">
                 <button
-                  key={s.value}
-                  onClick={() => handleShapeChange(s.value)}
-                  className={`w-full flex items-center gap-3 rounded-lg border px-4 py-3 text-sm font-medium transition-colors text-left cursor-pointer ${
-                    shape === s.value
-                      ? 'border-primary bg-primary/5 text-foreground'
-                      : 'border-border bg-card text-muted-foreground hover:text-foreground hover:border-foreground/20'
+                  onClick={() => setCurrentStep(step.num)}
+                  className={`flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-medium transition-colors cursor-pointer ${
+                    currentStep === step.num
+                      ? 'bg-primary text-primary-foreground'
+                      : currentStep > step.num
+                        ? 'bg-primary/20 text-primary'
+                        : 'bg-muted text-muted-foreground'
                   }`}
                 >
-                  <span className="text-lg opacity-60">{s.icon}</span>
-                  {s.label}
-                </button>
-              ))}
-            </div>
-          </div>
-
-          {/* Material */}
-          <div>
-            <h3 className="text-base font-semibold text-foreground mb-3">Material</h3>
-            <div className="grid grid-cols-2 gap-2">
-              {materials.map((m) => (
-                <button
-                  key={m.value}
-                  onClick={() => setMaterial(m.value)}
-                  className={`flex flex-col items-center gap-2 rounded-lg border p-3 transition-colors cursor-pointer ${
-                    material === m.value
-                      ? 'border-primary bg-primary/5'
-                      : 'border-border bg-card hover:border-foreground/20'
-                  }`}
-                >
-                  <div className={`w-12 h-12 rounded-full ${m.color} border border-border shadow-inner`} />
-                  <span className={`text-xs font-medium ${material === m.value ? 'text-foreground' : 'text-muted-foreground'}`}>
-                    {m.label}
+                  <span className="w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold bg-current/20">
+                    {step.num}
                   </span>
-                  <span className="text-[9px] text-muted-foreground leading-tight">{m.desc}</span>
+                  {step.label}
                 </button>
-              ))}
-            </div>
-          </div>
-
-          {/* Size */}
-          <div>
-            <h3 className="text-base font-semibold text-foreground mb-3">Size, inch (WxH)</h3>
-            <div className="space-y-1.5 max-h-[320px] overflow-y-auto pr-1">
-              {sizeOptions.map((size) => (
-                <button
-                  key={size.label}
-                  onClick={() => { setSelectedSize(size); setUseCustomSize(false) }}
-                  className={`w-full rounded-lg border px-4 py-3 text-sm font-medium transition-colors text-left cursor-pointer ${
-                    !useCustomSize && selectedSize.label === size.label
-                      ? 'border-primary bg-primary text-primary-foreground'
-                      : 'border-border bg-card text-muted-foreground hover:text-foreground hover:border-foreground/20'
-                  }`}
-                >
-                  {size.label}
-                </button>
-              ))}
-              <div className={`rounded-lg border p-3 transition-colors ${useCustomSize ? 'border-primary bg-primary/5' : 'border-border bg-card'}`}>
-                <button
-                  onClick={() => setUseCustomSize(true)}
-                  className={`w-full text-left text-sm font-medium mb-2 cursor-pointer ${useCustomSize ? 'text-foreground' : 'text-muted-foreground'}`}
-                >
-                  Custom size
-                </button>
-                {useCustomSize && (
-                  <div className="grid grid-cols-2 gap-2">
-                    <div>
-                      <label className="text-xs text-muted-foreground">Width</label>
-                      <input type="number" min={0.5} step={0.5} value={customWidth}
-                        onChange={(e) => setCustomWidth(parseFloat(e.target.value) || 1)}
-                        className="mt-1 w-full px-3 py-2 rounded-md border border-border bg-background text-foreground text-sm focus:outline-none focus:border-primary"
-                      />
-                    </div>
-                    <div>
-                      <label className="text-xs text-muted-foreground">Height</label>
-                      <input type="number" min={0.5} step={0.5} value={customHeight}
-                        onChange={(e) => setCustomHeight(parseFloat(e.target.value) || 1)}
-                        className="mt-1 w-full px-3 py-2 rounded-md border border-border bg-background text-foreground text-sm focus:outline-none focus:border-primary"
-                      />
-                    </div>
-                  </div>
+                {i < STEPS.length - 1 && (
+                  <div className={`w-8 h-px ${currentStep > step.num ? 'bg-primary' : 'bg-border'}`} />
                 )}
               </div>
-            </div>
+            ))}
           </div>
 
-          {/* Quantity */}
-          <div>
-            <h3 className="text-base font-semibold text-foreground mb-3">Quantity</h3>
-            <div className="space-y-1.5 max-h-[260px] overflow-y-auto pr-1">
-              {tierPrices.map(({ qty, total, discount }) => (
-                <button
-                  key={qty}
-                  onClick={() => { setQuantity(qty); setCustomQuantity('') }}
-                  className={`w-full flex items-center justify-between rounded-lg border px-4 py-3 text-sm transition-colors cursor-pointer ${
-                    quantity === qty && !customQuantity
-                      ? 'border-primary bg-primary text-primary-foreground'
-                      : 'border-border bg-card hover:border-foreground/20'
-                  }`}
-                >
-                  <span className={`font-medium ${quantity === qty && !customQuantity ? 'text-primary-foreground' : 'text-muted-foreground'}`}>
-                    {qty} pcs
-                  </span>
-                  <div className="flex items-center gap-2">
-                    <span className={`font-semibold ${quantity === qty && !customQuantity ? 'text-primary-foreground' : 'text-foreground'}`}>
-                      ${total?.toFixed(0) ?? '—'}
-                    </span>
-                    {discount && (
-                      <span className={`text-xs font-medium ${quantity === qty && !customQuantity ? 'text-primary-foreground/80' : 'text-green-500'}`}>
-                        -{discount}%
+          {/* Two Column Layout */}
+          <div className="flex flex-col lg:flex-row gap-6">
+            {/* LEFT COLUMN — Configurator (~45%) */}
+            <div className="w-full lg:w-[45%] space-y-6">
+              {/* Shape Selector */}
+              <div>
+                <h3 className="text-sm font-semibold text-foreground mb-3 uppercase tracking-wide">Shape</h3>
+                <div className="grid grid-cols-5 gap-2">
+                  {([
+                    { label: 'Square', value: 'square' as Shape, icon: '□' },
+                    { label: 'Circle', value: 'circle' as Shape, icon: '○' },
+                    { label: 'Rectangle', value: 'rectangle' as Shape, icon: '▭' },
+                    { label: 'Die Cut', value: 'die-cut' as Shape, icon: '✂' },
+                    { label: 'Kiss Cut', value: 'kiss-cut' as Shape, icon: '▢' },
+                  ]).map((s) => (
+                    <button
+                      key={s.value}
+                      onClick={() => { handleShapeChange(s.value); setCurrentStep(1) }}
+                      className={`flex flex-col items-center gap-1.5 rounded-xl border px-2 py-3 text-xs font-medium transition-all cursor-pointer ${
+                        shape === s.value
+                          ? 'border-primary bg-primary/10 text-foreground shadow-[0_0_12px_rgba(56,189,248,0.15)]'
+                          : 'border-border bg-card text-muted-foreground hover:text-foreground hover:border-foreground/20'
+                      }`}
+                    >
+                      <span className="text-xl">{s.icon}</span>
+                      <span>{s.label}</span>
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Material Selector */}
+              <div>
+                <h3 className="text-sm font-semibold text-foreground mb-3 uppercase tracking-wide">Material</h3>
+                {/* Desktop: 3x2 grid, Mobile: horizontal scroll */}
+                <div className="hidden sm:grid grid-cols-3 gap-2">
+                  {materials.map((m) => (
+                    <button
+                      key={m.value}
+                      onClick={() => { setMaterial(m.value); setCurrentStep(1) }}
+                      className={`flex items-center gap-3 rounded-xl border p-3 transition-all cursor-pointer ${
+                        material === m.value
+                          ? 'border-primary bg-primary/10 shadow-[0_0_12px_rgba(56,189,248,0.15)]'
+                          : 'border-border bg-card hover:border-foreground/20'
+                      }`}
+                    >
+                      <div className={`w-10 h-10 rounded-full ${m.color} border border-border shadow-inner flex-shrink-0`} />
+                      <div className="text-left min-w-0">
+                        <span className={`text-xs font-medium block ${material === m.value ? 'text-foreground' : 'text-muted-foreground'}`}>
+                          {m.label}
+                        </span>
+                        <span className="text-[10px] text-muted-foreground leading-tight block truncate">{m.desc}</span>
+                      </div>
+                    </button>
+                  ))}
+                </div>
+                {/* Mobile: horizontal scroll */}
+                <div className="sm:hidden flex gap-2 overflow-x-auto pb-2 -mx-1 px-1 scrollbar-none">
+                  {materials.map((m) => (
+                    <button
+                      key={m.value}
+                      onClick={() => { setMaterial(m.value); setCurrentStep(1) }}
+                      className={`flex flex-col items-center gap-2 rounded-xl border p-3 transition-all cursor-pointer flex-shrink-0 w-24 ${
+                        material === m.value
+                          ? 'border-primary bg-primary/10'
+                          : 'border-border bg-card hover:border-foreground/20'
+                      }`}
+                    >
+                      <div className={`w-10 h-10 rounded-full ${m.color} border border-border shadow-inner`} />
+                      <span className={`text-[10px] font-medium ${material === m.value ? 'text-foreground' : 'text-muted-foreground'}`}>
+                        {m.label}
                       </span>
-                    )}
-                  </div>
-                </button>
-              ))}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Size Selector */}
+              <div>
+                <h3 className="text-sm font-semibold text-foreground mb-3 uppercase tracking-wide">
+                  Size {shape === 'circle' ? '(diameter)' : '(W x H)'}
+                </h3>
+                <div className="grid grid-cols-4 gap-2">
+                  {sizeOptions.map((size) => (
+                    <button
+                      key={size.label}
+                      onClick={() => { setSelectedSize(size); setUseCustomSize(false); setCurrentStep(1) }}
+                      className={`rounded-xl border px-3 py-2.5 text-xs font-medium transition-all cursor-pointer ${
+                        !useCustomSize && selectedSize.label === size.label
+                          ? 'border-primary bg-primary text-primary-foreground'
+                          : 'border-border bg-card text-muted-foreground hover:text-foreground hover:border-foreground/20'
+                      }`}
+                    >
+                      {size.label}
+                    </button>
+                  ))}
+                </div>
+                {/* Custom size */}
+                <div className={`mt-2 rounded-xl border p-3 transition-all ${useCustomSize ? 'border-primary bg-primary/5' : 'border-border bg-card'}`}>
+                  <button
+                    onClick={() => { setUseCustomSize(true); setCurrentStep(1) }}
+                    className={`w-full text-left text-xs font-medium cursor-pointer ${useCustomSize ? 'text-foreground' : 'text-muted-foreground'}`}
+                  >
+                    Custom size
+                  </button>
+                  {useCustomSize && (
+                    <div className="grid grid-cols-2 gap-2 mt-2">
+                      <div>
+                        <label className="text-[10px] text-muted-foreground">Width (in)</label>
+                        <input type="number" min={0.5} step={0.5} value={customWidth}
+                          onChange={(e) => setCustomWidth(parseFloat(e.target.value) || 1)}
+                          className="mt-1 w-full px-3 py-2 rounded-lg border border-border bg-background text-foreground text-sm focus:outline-none focus:border-primary"
+                        />
+                      </div>
+                      <div>
+                        <label className="text-[10px] text-muted-foreground">Height (in)</label>
+                        <input type="number" min={0.5} step={0.5} value={customHeight}
+                          onChange={(e) => setCustomHeight(parseFloat(e.target.value) || 1)}
+                          className="mt-1 w-full px-3 py-2 rounded-lg border border-border bg-background text-foreground text-sm focus:outline-none focus:border-primary"
+                        />
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* Quantity Selector */}
+              <div>
+                <h3 className="text-sm font-semibold text-foreground mb-3 uppercase tracking-wide">Quantity</h3>
+                <div className="grid grid-cols-3 gap-2">
+                  {tierPrices.map(({ qty, total, discount }) => (
+                    <button
+                      key={qty}
+                      onClick={() => { setQuantity(qty); setCustomQuantity(''); setCurrentStep(1) }}
+                      className={`flex flex-col items-center rounded-xl border px-3 py-3 text-xs transition-all cursor-pointer ${
+                        quantity === qty && !customQuantity
+                          ? 'border-primary bg-primary text-primary-foreground'
+                          : 'border-border bg-card hover:border-foreground/20'
+                      }`}
+                    >
+                      <span className={`font-bold text-sm ${quantity === qty && !customQuantity ? 'text-primary-foreground' : 'text-foreground'}`}>
+                        {qty}
+                      </span>
+                      <span className={`font-semibold ${quantity === qty && !customQuantity ? 'text-primary-foreground' : 'text-foreground'}`}>
+                        ${total?.toFixed(0) ?? '---'}
+                      </span>
+                      {discount ? (
+                        <span className={`text-[10px] font-semibold mt-0.5 px-1.5 py-0.5 rounded-full ${
+                          quantity === qty && !customQuantity
+                            ? 'bg-white/20 text-primary-foreground'
+                            : 'bg-green-500/10 text-green-500'
+                        }`}>
+                          -{discount}%
+                        </span>
+                      ) : (
+                        <span className="text-[10px] mt-0.5 px-1.5 py-0.5">&nbsp;</span>
+                      )}
+                    </button>
+                  ))}
+                </div>
+                {/* Custom quantity */}
+                <div className="mt-2 flex items-center gap-3 rounded-xl bg-card border border-border p-3">
+                  <input type="number" min={1} placeholder="Custom qty" value={customQuantity}
+                    onChange={(e) => {
+                      setCustomQuantity(e.target.value)
+                      const num = parseInt(e.target.value, 10)
+                      if (!isNaN(num) && num > 0) { setQuantity(num); setCurrentStep(1) }
+                    }}
+                    className="flex-1 px-3 py-2 rounded-lg border border-border bg-background text-foreground text-sm focus:outline-none focus:border-primary"
+                  />
+                  <span className="text-sm font-semibold text-foreground min-w-[60px] text-right">
+                    ${result.total?.toFixed(0) ?? '---'}
+                  </span>
+                </div>
+              </div>
+
+              {/* Upload Area */}
+              <div>
+                <h3 className="text-sm font-semibold text-foreground mb-3 uppercase tracking-wide">Upload Artwork</h3>
+                <div
+                  className={`rounded-2xl border-2 border-dashed p-8 text-center transition-all ${
+                    isDragging
+                      ? 'border-primary bg-primary/5 ring-2 ring-primary/20'
+                      : uploadedFile
+                        ? 'border-primary/40 bg-primary/5'
+                        : 'border-border bg-card hover:border-foreground/20'
+                  }`}
+                  onDragOver={handleDragOver}
+                  onDragLeave={handleDragLeave}
+                  onDrop={handleDrop}
+                >
+                  {uploadedFile ? (
+                    <div className="flex flex-col items-center gap-3">
+                      <div className="flex h-12 w-12 items-center justify-center rounded-full bg-primary/10">
+                        <Upload className="h-5 w-5 text-primary" />
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <span className="text-sm font-medium text-foreground">{uploadedFile.name}</span>
+                        <button
+                          onClick={() => { setUploadedFile(null); setPreviewUrl(null); setCurrentStep(2) }}
+                          className="inline-flex items-center gap-1 rounded-full border border-border px-2 py-1 text-[10px] text-muted-foreground hover:bg-muted transition-colors cursor-pointer"
+                        >
+                          <X className="h-3 w-3" /> Remove
+                        </button>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="flex flex-col items-center gap-3">
+                      <div className="flex h-14 w-14 items-center justify-center rounded-full bg-muted">
+                        <Upload className="h-6 w-6 text-muted-foreground" />
+                      </div>
+                      <div>
+                        <p className="text-sm font-medium text-foreground">Drag & drop or click to upload</p>
+                        <p className="mt-1 text-xs text-muted-foreground">PNG, JPG, PDF, SVG</p>
+                      </div>
+                      <label className="inline-flex cursor-pointer items-center gap-2 rounded-full bg-primary px-5 py-2 text-xs font-medium text-primary-foreground hover:bg-primary/90 transition-colors">
+                        <Upload className="h-3.5 w-3.5" />
+                        <span>Choose file</span>
+                        <input type="file" accept="image/*,.pdf,.svg" className="hidden" onChange={handleFileSelect} />
+                      </label>
+                    </div>
+                  )}
+                </div>
+                <p className="mt-2 text-[10px] text-muted-foreground text-center">
+                  Need design help? <a href="/contact" className="text-primary hover:underline">Contact us</a>
+                </p>
+              </div>
             </div>
-            <div className="mt-3 rounded-lg bg-muted/50 p-3">
-              <p className="text-xs font-medium text-muted-foreground text-center mb-2">Custom quantity</p>
-              <div className="flex items-center gap-3">
-                <input type="number" min={1} placeholder="Enter qty" value={customQuantity}
-                  onChange={(e) => {
-                    setCustomQuantity(e.target.value)
-                    const num = parseInt(e.target.value, 10)
-                    if (!isNaN(num) && num > 0) setQuantity(num)
-                  }}
-                  className="flex-1 px-3 py-2 rounded-md border border-border bg-background text-foreground text-sm focus:outline-none focus:border-primary"
-                />
-                <span className="text-sm font-semibold text-foreground min-w-[60px] text-right">
-                  ${result.total?.toFixed(0) ?? '—'}
-                </span>
+
+            {/* RIGHT COLUMN — Preview + Summary (~55%, sticky) */}
+            <div className="w-full lg:w-[55%]">
+              <div className="lg:sticky lg:top-8 space-y-4">
+                {/* Mockup Preview */}
+                <div className="rounded-2xl border border-border bg-card p-4">
+                  {/* Mockup Tabs */}
+                  <div className="flex justify-center gap-1 mb-3 flex-wrap">
+                    {mockupTabs.map((tab) => (
+                      <button
+                        key={tab.id}
+                        onClick={() => setActiveMockup(tab.id)}
+                        className={`flex items-center gap-1.5 rounded-full px-3 py-1.5 text-[11px] font-medium transition-colors cursor-pointer ${
+                          activeMockup === tab.id
+                            ? 'bg-primary text-primary-foreground'
+                            : 'bg-muted text-muted-foreground hover:text-foreground'
+                        }`}
+                      >
+                        <tab.icon className="h-3.5 w-3.5" />
+                        {tab.label}
+                      </button>
+                    ))}
+                  </div>
+
+                  {/* Mockup Area */}
+                  <div className="rounded-xl bg-muted/50 border border-border min-h-[400px] flex items-center justify-center">
+                    {activeMockup === 'hand-held' && <HandHeldMockup {...mockupProps} />}
+                    {activeMockup === 'sheet' && <SheetMockup {...mockupProps} />}
+                    {activeMockup === 'roll' && <RollMockup {...mockupProps} />}
+                    {activeMockup === 'laptop' && <LaptopMockup {...mockupProps} />}
+                    {activeMockup === 'bottle' && <BottleMockup {...mockupProps} />}
+                  </div>
+
+                  {/* Config summary below mockup */}
+                  <p className="mt-3 text-center text-xs text-muted-foreground">
+                    {configSummary}
+                  </p>
+                </div>
               </div>
             </div>
           </div>
         </div>
 
-        {/* Three Columns: Artwork, Mockup, Summary */}
-        <div className="grid gap-6 lg:grid-cols-3">
-          {/* Artwork */}
-          <div
-            className={`flex flex-col justify-center rounded-2xl border bg-card p-6 text-center transition-colors min-h-[280px] ${
-              isDragging && designChoice === 'have' ? 'border-primary ring-2 ring-primary/20' : 'border-border'
-            }`}
-            onDragOver={designChoice === 'have' ? handleDragOver : undefined}
-            onDragLeave={designChoice === 'have' ? handleDragLeave : undefined}
-            onDrop={designChoice === 'have' ? handleDrop : undefined}
-          >
-            {designChoice === 'none' && (
-              <div className="flex flex-col items-center gap-5">
-                <div>
-                  <p className="text-sm font-medium text-foreground">Do you have artwork ready?</p>
-                  <p className="mt-1 text-xs text-muted-foreground">Let us know so we can help you best</p>
+        {/* Sticky Bottom Order Bar */}
+        <div className="fixed bottom-0 left-0 right-0 z-50 lg:sticky lg:bottom-0 bg-card/95 backdrop-blur-md border-t border-border shadow-lg">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 py-3">
+            {result.total != null ? (
+              <div className="flex items-center justify-between gap-4">
+                {/* Specs */}
+                <div className="hidden sm:block text-xs text-muted-foreground min-w-0">
+                  <span className="font-medium text-foreground">{quantity.toLocaleString()}</span> pcs
+                  {' · '}
+                  <span className="capitalize">{shape}</span>
+                  {' · '}
+                  {shape === 'circle' ? `${diameter}"` : `${width}" x ${height}"`}
+                  {' · '}
+                  {materials.find((m) => m.value === material)?.label}
                 </div>
-                <div className="flex flex-col gap-2 w-full max-w-[200px]">
-                  <button onClick={() => setDesignChoice('need')} className="flex items-center justify-center gap-2 p-3 rounded-xl border border-border bg-muted/50 hover:border-primary hover:bg-primary/5 transition-all cursor-pointer">
-                    <Paintbrush className="h-4 w-4 text-primary" />
-                    <span className="text-xs font-medium text-foreground">I need a design</span>
+
+                {/* Price */}
+                <div className="flex items-center gap-3 flex-shrink-0">
+                  <div className="text-right">
+                    <p className="text-xl font-bold text-foreground leading-none">
+                      ${result.total.toLocaleString(undefined, { minimumFractionDigits: 2 })}
+                    </p>
+                    <div className="flex items-center gap-1.5 mt-0.5">
+                      <span className="text-[10px] text-muted-foreground">${result.unit?.toFixed(3)}/ea</span>
+                      {result.discount && (
+                        <span className="text-[10px] font-semibold text-green-500 bg-green-500/10 px-1.5 py-0.5 rounded-full">
+                          -{result.discount}%
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                </div>
+
+                {/* Add to Cart */}
+                <div className="flex flex-col items-end flex-shrink-0">
+                  <button
+                    onClick={handleAddToCart}
+                    className="inline-flex items-center gap-2 rounded-full bg-primary px-6 py-2.5 text-sm font-semibold text-primary-foreground hover:bg-primary/90 transition-colors cursor-pointer shadow-glow"
+                  >
+                    <ShoppingCart className="w-4 h-4" />
+                    {added ? 'Added!' : 'Add to Cart'}
                   </button>
-                  <button onClick={() => setDesignChoice('have')} className="flex items-center justify-center gap-2 p-3 rounded-xl border border-border bg-muted/50 hover:border-primary hover:bg-primary/5 transition-all cursor-pointer">
-                    <FileCheck className="h-4 w-4 text-primary" />
-                    <span className="text-xs font-medium text-foreground">I have a design</span>
-                  </button>
+                  <p className="text-[9px] text-muted-foreground mt-1 hidden sm:block">
+                    Digital proof within 24 hours
+                  </p>
                 </div>
               </div>
-            )}
-
-            {designChoice === 'need' && (
-              <div className="flex flex-col items-center gap-3">
-                <div className="flex h-12 w-12 items-center justify-center rounded-full bg-primary/10">
-                  <Paintbrush className="h-5 w-5 text-primary" />
+            ) : (
+              <div className="flex items-center justify-between gap-4">
+                <div className="text-xs text-muted-foreground">
+                  <span className="text-amber-500 font-medium">Custom quote needed</span>
+                  <span className="hidden sm:inline"> · {result.reason}</span>
                 </div>
-                <div>
-                  <p className="text-sm font-medium text-foreground">We can help with that!</p>
-                  <p className="mt-1 text-xs text-muted-foreground">Describe your vision in the notes. Our team will create a design proof for you.</p>
-                </div>
-                <button onClick={() => setDesignChoice('none')} className="inline-flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground transition-colors cursor-pointer">
-                  <ArrowLeft className="h-3 w-3" /> Go back
-                </button>
-              </div>
-            )}
-
-            {designChoice === 'have' && (
-              <div className="flex flex-col items-center gap-3">
-                <div className="flex h-12 w-12 items-center justify-center rounded-full bg-muted">
-                  <Upload className="h-5 w-5 text-muted-foreground" />
-                </div>
-                <div>
-                  <p className="text-sm font-medium text-foreground">Drag & drop your artwork</p>
-                  <p className="mt-1 text-xs text-muted-foreground">PNG, JPG, PDF, or SVG</p>
-                </div>
-                <div className="flex flex-wrap items-center justify-center gap-2">
-                  <label className="inline-flex cursor-pointer items-center gap-2 rounded-full bg-primary px-4 py-1.5 text-xs font-medium text-primary-foreground hover:bg-primary/90 transition-colors">
-                    <span>Upload file</span>
-                    <input type="file" accept="image/*,.pdf,.svg" className="hidden" onChange={handleFileSelect} />
-                  </label>
-                  {uploadedFile && (
-                    <button onClick={() => { setUploadedFile(null); setPreviewUrl(null) }} className="inline-flex items-center gap-1 rounded-full border border-border px-3 py-1.5 text-[10px] text-muted-foreground hover:bg-muted transition-colors cursor-pointer">
-                      <X className="h-3 w-3" /> Clear
-                    </button>
-                  )}
-                </div>
-                {uploadedFile && (
-                  <p className="text-[10px] text-muted-foreground"><span className="font-medium text-foreground">{uploadedFile.name}</span></p>
-                )}
-                <button onClick={() => { setDesignChoice('none'); setUploadedFile(null); setPreviewUrl(null) }} className="inline-flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground transition-colors cursor-pointer">
-                  <ArrowLeft className="h-3 w-3" /> Go back
-                </button>
-              </div>
-            )}
-          </div>
-
-          {/* Mockup Preview */}
-          <div className="rounded-2xl border border-border bg-card p-4 min-h-[280px] flex flex-col">
-            <div className="flex justify-center gap-1 mb-3">
-              {mockupTabs.map((tab) => (
-                <button
-                  key={tab.id}
-                  onClick={() => setActiveMockup(tab.id)}
-                  className={`flex items-center gap-1 rounded-full px-3 py-1.5 text-[10px] font-medium transition-colors cursor-pointer ${
-                    activeMockup === tab.id
-                      ? 'bg-primary text-primary-foreground'
-                      : 'bg-muted text-muted-foreground hover:text-foreground'
-                  }`}
+                <a
+                  href="/contact"
+                  className="inline-flex items-center gap-2 rounded-full bg-primary px-6 py-2.5 text-sm font-semibold text-primary-foreground hover:bg-primary/90 transition-colors flex-shrink-0"
                 >
-                  <tab.icon className="h-3 w-3" />
-                  {tab.label}
-                </button>
-              ))}
-            </div>
-            <div className="rounded-xl bg-muted/50 border border-border flex-1 flex items-center justify-center">
-              {activeMockup === 'hand-held' && <HandHeldMockup previewUrl={previewUrl} shape={shape} diameter={diameter} width={width} height={height} />}
-              {activeMockup === 'sheet' && <SheetMockup previewUrl={previewUrl} shape={shape} diameter={diameter} width={width} height={height} />}
-              {activeMockup === 'roll' && <RollMockup previewUrl={previewUrl} shape={shape} diameter={diameter} width={width} height={height} />}
-            </div>
-            <p className="mt-2 text-center text-[10px] text-muted-foreground">
-              {previewUrl ? 'Your design preview' : 'Upload artwork to preview'}
-            </p>
-          </div>
-
-          {/* Order Summary */}
-          <div className="space-y-4 rounded-2xl border border-border bg-card p-5 min-h-[280px]">
-            <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground text-center">Order Summary</p>
-
-            <div className="space-y-1.5 text-center">
-              <p className="text-base font-medium text-foreground">{quantity.toLocaleString()} stickers</p>
-              <p className="text-xs text-muted-foreground">
-                <span className="capitalize">{shape}</span>
-                {shape === 'circle' && ` · ${diameter}"`}
-                {shape === 'square' && ` · ${width}" × ${width}"`}
-                {(shape === 'rectangle' || shape === 'die-cut' || shape === 'kiss-cut') && ` · ${width}" × ${height}"`}
-              </p>
-              <p className="text-[11px] text-muted-foreground">
-                {materials.find((m) => m.value === material)?.label}
-              </p>
-            </div>
-
-            <div className="h-px bg-border" />
-
-            {result.total != null ? (
-              <div className="space-y-1 text-center">
-                <p className="text-[10px] text-primary">Total</p>
-                <p className="text-3xl font-bold text-foreground">
-                  ${result.total.toLocaleString(undefined, { minimumFractionDigits: 2 })}
-                </p>
-                <div className="flex items-center justify-center gap-2">
-                  <p className="text-[10px] text-primary">≈ ${result.unit?.toFixed(3)}/ea</p>
-                  {result.discount && <span className="text-[10px] font-medium text-green-500">{result.discount}% off</span>}
-                </div>
-              </div>
-            ) : (
-              <div className="space-y-1 text-center">
-                <p className="text-xs text-amber-500 font-medium">Custom quote needed</p>
-                <p className="text-[10px] text-muted-foreground">{result.reason}</p>
+                  Request Quote
+                </a>
               </div>
             )}
-
-            <div className="h-px bg-border" />
-
-            {result.total != null ? (
-              <button
-                onClick={handleAddToCart}
-                className="w-full inline-flex items-center justify-center gap-2 rounded-full bg-primary px-5 py-2.5 text-sm font-semibold text-primary-foreground hover:bg-primary/90 transition-colors cursor-pointer"
-              >
-                <ShoppingCart className="w-4 h-4" />
-                {added ? 'Added!' : 'Add to Cart'}
-              </button>
-            ) : (
-              <a href="/contact" className="w-full inline-flex items-center justify-center rounded-full bg-primary px-5 py-2.5 text-sm font-semibold text-primary-foreground hover:bg-primary/90 transition-colors">
-                Request Custom Quote →
-              </a>
-            )}
-
-            <p className="text-[10px] text-muted-foreground text-center">
-              Digital proof within 24 hours. Nothing prints until you approve.
-            </p>
           </div>
         </div>
       </div>
-    </div>
+    </>
   )
 }
