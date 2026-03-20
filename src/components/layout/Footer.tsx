@@ -75,7 +75,7 @@ export default function Footer() {
 
         <div className="mt-12 pt-8 border-t border-border flex flex-col sm:flex-row justify-between items-center gap-4">
           <p className="text-muted-foreground text-sm">
-            &copy; {new Date().getFullYear()} The Sticker Smith. All rights reserved.
+            <Link to="/admin" className="hover:text-foreground transition-colors">&copy;</Link> {new Date().getFullYear()} The Sticker Smith. All rights reserved.
           </p>
           <div className="flex items-center gap-2 text-sm">
             <span className="text-muted-foreground">Website created by</span>
