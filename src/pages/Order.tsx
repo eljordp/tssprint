@@ -1,5 +1,5 @@
 import { useState, useMemo, useCallback } from 'react'
-import { Upload, X, Hand, Layers, ScrollText, ShoppingCart, Laptop, GlassWater } from 'lucide-react'
+import { Upload, X, Hand, Layers, ScrollText, ShoppingCart, Laptop, GlassWater, ChevronRight, ChevronLeft } from 'lucide-react'
 import { useCart } from '@/context/CartContext'
 
 const QUANTITY_TIERS = [50, 100, 200, 300, 500, 1000] as const
@@ -251,11 +251,11 @@ const StickerWithOverlay = ({
 }
 
 const HandHeldMockup = ({ previewUrl, shape, diameter, width, height, material }: MockupProps) => {
-  const size = getStickerStyle(shape, diameter, width, height, 140)
+  const size = getStickerStyle(shape, diameter, width, height, 220)
   return (
     <div className="relative flex items-center justify-center min-h-[350px]">
       <div className="absolute bottom-4 left-1/2 -translate-x-1/2">
-        <svg width="170" height="140" viewBox="0 0 120 100" className="text-zinc-700">
+        <svg width="220" height="180" viewBox="0 0 120 100" className="text-zinc-700">
           <path d="M60 95 C30 95 15 75 15 55 C15 40 25 30 35 25 L35 15 C35 8 40 5 45 5 L50 5 L50 20 L55 20 L55 5 L60 5 L60 20 L65 20 L65 5 L70 5 L70 20 L75 20 L75 8 C80 8 85 12 85 20 L85 30 C95 35 105 45 105 60 C105 80 90 95 60 95Z" fill="currentColor" />
         </svg>
       </div>
@@ -271,11 +271,11 @@ const HandHeldMockup = ({ previewUrl, shape, diameter, width, height, material }
 }
 
 const SheetMockup = ({ previewUrl, shape, diameter, width, height, material }: MockupProps) => {
-  const size = getStickerStyle(shape, diameter, width, height, 52)
+  const size = getStickerStyle(shape, diameter, width, height, 75)
   const borderRadius = getStickerBorderRadius(shape)
   return (
     <div className="relative flex items-center justify-center min-h-[350px]">
-      <div className="relative w-64 h-52 bg-white rounded-lg shadow-lg p-3">
+      <div className="relative w-80 h-64 bg-white rounded-lg shadow-lg p-4">
         <div className="flex flex-wrap gap-2 h-full items-center justify-center">
           {Array.from({ length: 9 }).map((_, i) => (
             <div key={i} className="relative overflow-hidden flex-shrink-0 bg-zinc-100 border border-zinc-200" style={{ width: size.width, height: size.height, borderRadius }}>
@@ -290,14 +290,14 @@ const SheetMockup = ({ previewUrl, shape, diameter, width, height, material }: M
 }
 
 const RollMockup = ({ previewUrl, shape, diameter, width, height, material }: MockupProps) => {
-  const size = getStickerStyle(shape, diameter, width, height, 30)
+  const size = getStickerStyle(shape, diameter, width, height, 45)
   const borderRadius = getStickerBorderRadius(shape)
   return (
     <div className="relative flex items-center justify-center min-h-[350px]">
-      <div className="relative scale-125">
+      <div className="relative scale-150">
         <div className="w-14 h-28 bg-gradient-to-r from-zinc-600 via-zinc-500 to-zinc-600 rounded-full shadow-lg" />
         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-5 h-5 bg-zinc-800 rounded-full border-2 border-zinc-700" />
-        <div className="absolute top-6 left-12 w-36 h-6 bg-white rounded-r-sm shadow-md flex items-center gap-1.5 px-1.5">
+        <div className="absolute top-6 left-12 w-36 h-7 bg-white rounded-r-sm shadow-md flex items-center gap-1.5 px-1.5">
           {Array.from({ length: 4 }).map((_, i) => (
             <div key={i} className="relative overflow-hidden flex-shrink-0 bg-zinc-100 border border-zinc-200" style={{ width: size.width, height: size.height, borderRadius }}>
               <MaterialOverlay material={material} />
@@ -311,12 +311,12 @@ const RollMockup = ({ previewUrl, shape, diameter, width, height, material }: Mo
 }
 
 const LaptopMockup = ({ previewUrl, shape, diameter, width, height, material }: MockupProps) => {
-  const size = getStickerStyle(shape, diameter, width, height, 80)
+  const size = getStickerStyle(shape, diameter, width, height, 120)
   return (
     <div className="relative flex items-center justify-center min-h-[350px]">
       <div className="relative">
         {/* Laptop lid */}
-        <div className="w-56 h-40 bg-gradient-to-b from-zinc-600 to-zinc-700 rounded-t-xl border border-zinc-500 flex items-center justify-center">
+        <div className="w-72 h-48 bg-gradient-to-b from-zinc-600 to-zinc-700 rounded-t-xl border border-zinc-500 flex items-center justify-center">
           <StickerWithOverlay
             previewUrl={previewUrl}
             shape={shape}
@@ -326,7 +326,7 @@ const LaptopMockup = ({ previewUrl, shape, diameter, width, height, material }: 
           />
         </div>
         {/* Laptop base */}
-        <div className="w-64 h-3 bg-gradient-to-b from-zinc-500 to-zinc-600 rounded-b-lg -ml-4 border-t border-zinc-400" />
+        <div className="w-80 h-3 bg-gradient-to-b from-zinc-500 to-zinc-600 rounded-b-lg -ml-4 border-t border-zinc-400" />
         <div className="w-20 h-1 bg-zinc-500 rounded-full mx-auto mt-0.5" />
       </div>
     </div>
@@ -334,7 +334,7 @@ const LaptopMockup = ({ previewUrl, shape, diameter, width, height, material }: 
 }
 
 const BottleMockup = ({ previewUrl, shape, diameter, width, height, material }: MockupProps) => {
-  const size = getStickerStyle(shape, diameter, width, height, 70)
+  const size = getStickerStyle(shape, diameter, width, height, 100)
   return (
     <div className="relative flex items-center justify-center min-h-[350px]">
       <div className="relative flex flex-col items-center">
@@ -343,13 +343,13 @@ const BottleMockup = ({ previewUrl, shape, diameter, width, height, material }: 
         {/* Neck */}
         <div className="w-12 h-4 bg-gradient-to-b from-zinc-500 to-zinc-600 border-x border-zinc-400" />
         {/* Body */}
-        <div className="w-20 h-48 bg-gradient-to-b from-zinc-600 via-zinc-500 to-zinc-600 rounded-b-2xl border border-zinc-400 flex items-center justify-center relative">
+        <div className="w-28 h-56 bg-gradient-to-b from-zinc-600 via-zinc-500 to-zinc-600 rounded-b-2xl border border-zinc-400 flex items-center justify-center relative">
           <StickerWithOverlay
             previewUrl={previewUrl}
             shape={shape}
             material={material}
             className="shadow-md"
-            style={{ width: Math.min(size.width, 64), height: Math.min(size.height, 64) }}
+            style={{ width: Math.min(size.width, 90), height: Math.min(size.height, 90) }}
           />
         </div>
       </div>
@@ -380,6 +380,7 @@ export default function Order() {
   const [added, setAdded] = useState(false)
   const [activeMockup, setActiveMockup] = useState<MockupType>('hand-held')
   const [currentStep, setCurrentStep] = useState(1)
+  const [mobileStep, setMobileStep] = useState(1) // 1: Shape+Size, 2: Material+Qty, 3: Upload+Preview
 
   const handleDragOver = useCallback((e: React.DragEvent) => { e.preventDefault(); setIsDragging(true) }, [])
   const handleDragLeave = useCallback((e: React.DragEvent) => { e.preventDefault(); setIsDragging(false) }, [])
@@ -488,8 +489,8 @@ export default function Order() {
             </p>
           </header>
 
-          {/* Step Progress Bar */}
-          <div className="flex items-center gap-2 mb-8">
+          {/* Step Progress Bar — desktop only */}
+          <div className="hidden lg:flex items-center gap-2 mb-8">
             {STEPS.map((step, i) => (
               <div key={step.num} className="flex items-center gap-2">
                 <button
@@ -514,12 +515,53 @@ export default function Order() {
             ))}
           </div>
 
+          {/* Mobile Step Navigation */}
+          <div className="lg:hidden mb-4">
+            <div className="flex items-center justify-between bg-card border border-border rounded-xl p-3">
+              <button
+                onClick={() => setMobileStep(Math.max(1, mobileStep - 1))}
+                disabled={mobileStep === 1}
+                className="flex items-center gap-1 text-xs font-medium text-muted-foreground disabled:opacity-30 cursor-pointer"
+              >
+                <ChevronLeft className="w-4 h-4" /> Back
+              </button>
+              <div className="flex items-center gap-2">
+                {[1, 2, 3].map((s) => (
+                  <button key={s} onClick={() => setMobileStep(s)} className={`w-2.5 h-2.5 rounded-full transition-colors cursor-pointer ${mobileStep === s ? 'bg-primary' : 'bg-border'}`} />
+                ))}
+              </div>
+              <div className="flex items-center gap-3">
+                {result.total != null && <span className="text-sm font-bold text-foreground">${result.total.toFixed(0)}</span>}
+                {mobileStep < 3 ? (
+                  <button
+                    onClick={() => setMobileStep(mobileStep + 1)}
+                    className="flex items-center gap-1 text-xs font-medium bg-primary text-primary-foreground px-3 py-1.5 rounded-full cursor-pointer"
+                  >
+                    Next <ChevronRight className="w-4 h-4" />
+                  </button>
+                ) : (
+                  <button
+                    onClick={handleAddToCart}
+                    disabled={!result.total}
+                    className="flex items-center gap-1 text-xs font-medium bg-primary text-primary-foreground px-3 py-1.5 rounded-full cursor-pointer disabled:opacity-50"
+                  >
+                    <ShoppingCart className="w-3.5 h-3.5" />
+                    {added ? 'Added!' : 'Add to Cart'}
+                  </button>
+                )}
+              </div>
+            </div>
+            <p className="text-center text-[10px] text-muted-foreground mt-2">
+              {mobileStep === 1 ? 'Step 1: Shape & Size' : mobileStep === 2 ? 'Step 2: Material & Quantity' : 'Step 3: Upload & Review'}
+            </p>
+          </div>
+
           {/* Two Column Layout */}
           <div className="flex flex-col lg:flex-row gap-6">
             {/* LEFT COLUMN — Configurator (~45%) */}
             <div className="w-full lg:w-[45%] space-y-6">
-              {/* Shape Selector */}
-              <div>
+              {/* Shape Selector — mobile step 1, always on desktop */}
+              <div className={`${mobileStep !== 1 ? 'hidden lg:block' : ''}`}>
                 <h3 className="text-sm font-semibold text-foreground mb-3 uppercase tracking-wide">Shape</h3>
                 <div className="grid grid-cols-5 gap-2">
                   {([
@@ -545,8 +587,8 @@ export default function Order() {
                 </div>
               </div>
 
-              {/* Material Selector */}
-              <div>
+              {/* Material Selector — mobile step 2, always on desktop */}
+              <div className={`${mobileStep !== 2 ? 'hidden lg:block' : ''}`}>
                 <h3 className="text-sm font-semibold text-foreground mb-3 uppercase tracking-wide">Material</h3>
                 {/* Desktop: 3x2 grid, Mobile: horizontal scroll */}
                 <div className="hidden sm:grid grid-cols-3 gap-2">
@@ -591,8 +633,8 @@ export default function Order() {
                 </div>
               </div>
 
-              {/* Size Selector */}
-              <div>
+              {/* Size Selector — mobile step 1, always on desktop */}
+              <div className={`${mobileStep !== 1 ? 'hidden lg:block' : ''}`}>
                 <h3 className="text-sm font-semibold text-foreground mb-3 uppercase tracking-wide">
                   Size {shape === 'circle' ? '(diameter)' : '(W x H)'}
                 </h3>
@@ -640,8 +682,8 @@ export default function Order() {
                 </div>
               </div>
 
-              {/* Quantity Selector */}
-              <div>
+              {/* Quantity Selector — mobile step 2, always on desktop */}
+              <div className={`${mobileStep !== 2 ? 'hidden lg:block' : ''}`}>
                 <h3 className="text-sm font-semibold text-foreground mb-3 uppercase tracking-wide">Quantity</h3>
                 <div className="grid grid-cols-3 gap-2">
                   {tierPrices.map(({ qty, total, discount }) => (
@@ -690,8 +732,8 @@ export default function Order() {
                 </div>
               </div>
 
-              {/* Upload Area */}
-              <div>
+              {/* Upload Area — mobile step 3, always on desktop */}
+              <div className={`${mobileStep !== 3 ? 'hidden lg:block' : ''}`}>
                 <h3 className="text-sm font-semibold text-foreground mb-3 uppercase tracking-wide">Upload Artwork</h3>
                 <div
                   className={`rounded-2xl border-2 border-dashed p-8 text-center transition-all ${
@@ -743,8 +785,8 @@ export default function Order() {
               </div>
             </div>
 
-            {/* RIGHT COLUMN — Preview + Summary (~55%, sticky) */}
-            <div className="w-full lg:w-[55%]">
+            {/* RIGHT COLUMN — Preview + Summary (~55%, sticky). Hidden on mobile until step 3. */}
+            <div className={`w-full lg:w-[55%] ${mobileStep !== 3 ? 'hidden lg:block' : ''}`}>
               <div className="lg:sticky lg:top-8 space-y-4">
                 {/* Mockup Preview */}
                 <div className="rounded-2xl border border-border bg-card p-4">
@@ -785,8 +827,8 @@ export default function Order() {
           </div>
         </div>
 
-        {/* Sticky Bottom Order Bar */}
-        <div className="fixed bottom-0 left-0 right-0 z-50 lg:sticky lg:bottom-0 bg-card/95 backdrop-blur-md border-t border-border shadow-lg">
+        {/* Sticky Bottom Order Bar — desktop only, mobile uses the step nav */}
+        <div className="hidden lg:block sticky bottom-0 z-50 bg-card/95 backdrop-blur-md border-t border-border shadow-lg">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 py-3">
             {result.total != null ? (
               <div className="flex items-center justify-between gap-4">
