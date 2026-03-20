@@ -1,5 +1,5 @@
 import { useState, useMemo, useCallback } from 'react'
-import { Upload, X, Hand, Layers, ScrollText, Paintbrush, FileCheck, ArrowLeft, ShoppingCart, Laptop, GlassWater } from 'lucide-react'
+import { Upload, X, Hand, Layers, Paintbrush, FileCheck, ArrowLeft, ShoppingCart, Laptop, GlassWater } from 'lucide-react'
 import { useCart } from '@/context/CartContext'
 
 const QUANTITY_TIERS = [50, 100, 200, 300, 500, 1000] as const

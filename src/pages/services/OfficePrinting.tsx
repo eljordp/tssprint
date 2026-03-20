@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react"
+import React, { useState, useMemo } from "react"
 import { motion } from "framer-motion"
 import { Link } from "react-router-dom"
 import { ArrowRight, Briefcase, CheckCircle } from "lucide-react"
@@ -171,7 +171,7 @@ function LetterheadConfigurator() {
       />
       <OptionRow
         label="Quantity"
-        options={letterheadQty.map((q, i) => ({ label: q.label, detail: undefined }))}
+        options={letterheadQty.map((q) => ({ label: q.label, detail: undefined }))}
         value={qtyLabel}
         onChange={(v) => setCfg((s) => ({ ...s, quantity: letterheadQty.findIndex((q) => q.label === v) }))}
       />
@@ -322,7 +322,7 @@ function PriceBar({ price, name, size, option }: { price: number; name: string; 
 
 // --- Main page ---
 
-const configurators: Record<ProductName, () => JSX.Element> = {
+const configurators: Record<ProductName, () => React.JSX.Element> = {
   Letterhead: LetterheadConfigurator,
   Envelopes: EnvelopeConfigurator,
   Notepads: NotepadConfigurator,
