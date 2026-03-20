@@ -21,22 +21,6 @@ export default function Hero() {
       <div className="section-container relative z-10 w-full">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-16 items-center">
           <div className="order-2 lg:order-1">
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5 }}
-              className="inline-flex items-center gap-1.5 px-4 py-2 rounded-full bg-secondary border border-border mb-8"
-            >
-              <div className="flex">
-                {[...Array(5)].map((_, i) => (
-                  <Star key={i} size={14} className="fill-yellow-400 text-yellow-400" />
-                ))}
-              </div>
-              <span className="text-sm font-medium text-foreground">4.9 out of 5</span>
-              <span className="text-muted-foreground text-sm">·</span>
-              <span className="text-sm text-muted-foreground">Bay Area's Trusted Print Shop</span>
-            </motion.div>
-
             <motion.h1
               initial={{ opacity: 0, y: 30 }}
               animate={{ opacity: 1, y: 0 }}
@@ -93,8 +77,18 @@ export default function Hero() {
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
             transition={{ duration: 0.7, delay: 0.2 }}
-            className="order-1 lg:order-2 flex justify-center"
+            className="order-1 lg:order-2 flex flex-col items-center gap-4"
           >
+            <div className="inline-flex items-center gap-1.5 px-4 py-2 rounded-full bg-secondary border border-border">
+              <div className="flex">
+                {[...Array(5)].map((_, i) => (
+                  <Star key={i} size={14} className="fill-yellow-400 text-yellow-400" />
+                ))}
+              </div>
+              <span className="text-sm font-medium text-foreground">4.9 out of 5</span>
+              <span className="text-muted-foreground text-sm">·</span>
+              <span className="text-sm text-muted-foreground">Bay Area's Trusted Print Shop</span>
+            </div>
             <img
               src={heroImg}
               alt="Custom stickers by The Sticker Smith"
