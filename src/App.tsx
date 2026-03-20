@@ -15,6 +15,7 @@ import Checkout from '@/pages/Checkout'
 import Projects from '@/pages/Projects'
 import Contact from '@/pages/Contact'
 import About from '@/pages/About'
+import Admin from '@/pages/Admin'
 import NotFound from '@/pages/NotFound'
 
 // Service sub-pages
@@ -76,6 +77,7 @@ export default function App() {
             <Route path="/vehicle-graphics/full-wraps" element={<FullWraps />} />
             <Route path="/vehicle-graphics/fleet-branding" element={<FleetBranding />} />
 
+            <Route path="/admin" element={<Admin />} />
             <Route path="*" element={<NotFound />} />
           </Route>
         </Routes>
