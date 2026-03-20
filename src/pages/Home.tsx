@@ -1,19 +1,23 @@
 import Hero from '@/components/home/Hero'
 import TrustedBy from '@/components/home/TrustedBy'
-import ServicesOverview from '@/components/home/ServicesOverview'
+import ServiceCategories from '@/components/home/ServiceCategories'
+import ProjectShowcase from '@/components/home/ProjectShowcase'
 import ProofProcess from '@/components/home/ProofProcess'
-import QuickContact from '@/components/home/QuickContact'
 import Reviews from '@/components/home/Reviews'
+import FAQ from '@/components/home/FAQ'
+import QuickContact from '@/components/home/QuickContact'
 
 export default function Home() {
   return (
     <>
       <Hero />
       <TrustedBy />
-      <ServicesOverview />
+      <ServiceCategories />
+      <ProjectShowcase />
       <ProofProcess />
-      <QuickContact />
       <Reviews />
+      <FAQ />
+      <QuickContact />
     </>
   )
 }
