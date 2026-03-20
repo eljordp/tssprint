@@ -1,11 +1,9 @@
-import { useEffect, useState, useRef } from 'react'
+import { useEffect, useRef, useState } from 'react'
 
 export default function CursorGlow() {
-  const [position, setPosition] = useState({ x: 0, y: 0 })
-  const [trailPosition, setTrailPosition] = useState({ x: 0, y: 0 })
-  const [isVisible, setIsVisible] = useState(false)
-  const animationRef = useRef<number>(null)
+  const dotRef = useRef<HTMLDivElement>(null)
   const [isMobile, setIsMobile] = useState(typeof window !== 'undefined' && window.innerWidth < 768)
+  const [visible, setVisible] = useState(false)
 
   useEffect(() => {
     const check = () => setIsMobile(window.innerWidth < 768)
@@ -17,67 +15,51 @@ export default function CursorGlow() {
   useEffect(() => {
     if (isMobile) return
 
-    const handleMouseMove = (e: MouseEvent) => {
-      setPosition({ x: e.clientX, y: e.clientY })
-      if (!isVisible) setIsVisible(true)
-    }
-    const handleMouseLeave = () => setIsVisible(false)
-    const handleMouseEnter = () => setIsVisible(true)
+    document.body.style.cursor = 'none'
 
-    window.addEventListener('mousemove', handleMouseMove)
-    document.body.addEventListener('mouseleave', handleMouseLeave)
-    document.body.addEventListener('mouseenter', handleMouseEnter)
+    const move = (e: MouseEvent) => {
+      if (dotRef.current) {
+        dotRef.current.style.left = `${e.clientX}px`
+        dotRef.current.style.top = `${e.clientY}px`
+      }
+      if (!visible) setVisible(true)
+    }
+    const leave = () => setVisible(false)
+    const enter = () => setVisible(true)
+
+    window.addEventListener('mousemove', move)
+    document.body.addEventListener('mouseleave', leave)
+    document.body.addEventListener('mouseenter', enter)
 
     return () => {
-      window.removeEventListener('mousemove', handleMouseMove)
-      document.body.removeEventListener('mouseleave', handleMouseLeave)
-      document.body.removeEventListener('mouseenter', handleMouseEnter)
+      document.body.style.cursor = ''
+      window.removeEventListener('mousemove', move)
+      document.body.removeEventListener('mouseleave', leave)
+      document.body.removeEventListener('mouseenter', enter)
     }
-  }, [isVisible, isMobile])
-
-  useEffect(() => {
-    if (isMobile) return
-
-    const animate = () => {
-      setTrailPosition((prev) => ({
-        x: prev.x + (position.x - prev.x) * 0.08,
-        y: prev.y + (position.y - prev.y) * 0.08,
-      }))
-      animationRef.current = requestAnimationFrame(animate)
-    }
-    animationRef.current = requestAnimationFrame(animate)
-    return () => {
-      if (animationRef.current) cancelAnimationFrame(animationRef.current)
-    }
-  }, [position, isMobile])
+  }, [isMobile, visible])
 
   if (isMobile) return null
 
   return (
-    <div
-      className="pointer-events-none fixed inset-0 z-40 transition-opacity duration-300"
-      style={{ opacity: isVisible ? 1 : 0 }}
-    >
+    <>
+      <style>{`
+        *, *::before, *::after { cursor: none !important; }
+      `}</style>
       <div
-        className="absolute rounded-full blur-[100px]"
+        ref={dotRef}
+        className="pointer-events-none fixed z-[9999]"
         style={{
-          width: '280px',
-          height: '280px',
-          left: trailPosition.x - 140,
-          top: trailPosition.y - 140,
-          background: 'radial-gradient(circle, hsl(198 93% 60% / 0.4) 0%, transparent 70%)',
+          width: 12,
+          height: 12,
+          marginLeft: -6,
+          marginTop: -6,
+          borderRadius: '50%',
+          backgroundColor: 'hsl(198 93% 60%)',
+          opacity: visible ? 1 : 0,
+          boxShadow: '0 0 8px hsl(198 93% 60% / 0.6)',
         }}
       />
-      <div
-        className="absolute rounded-full blur-[60px]"
-        style={{
-          width: '180px',
-          height: '180px',
-          left: position.x - 90,
-          top: position.y - 90,
-          background: 'radial-gradient(circle, hsl(198 93% 60% / 0.6) 0%, hsl(198 93% 60% / 0.3) 40%, transparent 70%)',
-        }}
-      />
-    </div>
+    </>
   )
 }
