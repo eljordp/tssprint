@@ -1,13 +1,13 @@
 import { Link } from 'react-router-dom'
-import { MapPin, Clock, Phone, ArrowRight, Users, Award, Truck, Zap } from 'lucide-react'
+import { MapPin, Clock, Phone, ArrowRight, FileCheck, Zap } from 'lucide-react'
 import Button from '@/components/ui/Button'
 import FadeIn from '@/components/ui/FadeIn'
 
 const stats = [
-  { icon: Award, value: '500+', label: 'Projects Completed' },
-  { icon: Users, value: '200+', label: 'Clients Served' },
-  { icon: Truck, value: '50+', label: 'Fleets Branded' },
-  { icon: Zap, value: '24hr', label: 'Proof Turnaround' },
+  { icon: Clock, value: '24hr', label: 'Proof Turnaround' },
+  { icon: FileCheck, value: 'Free', label: 'Digital Proofs' },
+  { icon: MapPin, value: 'Bay Area', label: 'Local Service' },
+  { icon: Zap, value: 'Same Day', label: 'Quotes' },
 ]
 
 export default function About() {
@@ -50,7 +50,7 @@ export default function About() {
             <div className="flex flex-col md:flex-row">
               {/* Image placeholder */}
               <div className="w-full md:w-72 lg:w-80 h-48 md:h-auto bg-muted/50 flex items-center justify-center flex-shrink-0 border-b md:border-b-0 md:border-r border-border">
-                <p className="text-muted-foreground/30 text-sm">Founder / Team</p>
+                <p className="text-muted-foreground/30 text-sm">Coming Soon</p>
               </div>
               <div className="p-6 sm:p-8 flex-1">
                 <h2 className="text-2xl font-bold mb-4">
@@ -65,6 +65,10 @@ export default function About() {
                   <p>
                     We work with local businesses, national brands, and everyone in between. From a 50-piece
                     sticker order to a 12-vehicle fleet wrap, every job gets the same attention to detail.
+                  </p>
+                  <p>
+                    Our process is built on trust: you see a digital proof of your order before anything goes
+                    to print. No surprises, no guesswork. You approve it, we produce it.
                   </p>
                 </div>
               </div>
