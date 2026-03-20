@@ -81,6 +81,159 @@ const DEFAULT_PROMOS: PromoCode[] = [
   { code: 'WELCOME15', discountPercent: 15, minOrder: 50, active: true, expiry: '' },
 ]
 
+// ── Service Pricing Defaults ──
+const DEFAULT_MYLAR_PRICING = {
+  eighth: [
+    { tier: '1-249', regular: 0.90, holo: 1.00 },
+    { tier: '250-999', regular: 0.85, holo: 0.95 },
+    { tier: '1000-2499', regular: 0.80, holo: 0.90 },
+    { tier: '2500-4999', regular: 0.75, holo: 0.85 },
+    { tier: '5000+', regular: 0.70, holo: 0.80 },
+  ],
+  qtr: [
+    { tier: '1-249', regular: 1.00, holo: 1.25 },
+    { tier: '250-999', regular: 0.97, holo: 1.15 },
+    { tier: '1000-2499', regular: 0.90, holo: 1.00 },
+    { tier: '2500-4999', regular: 0.87, holo: 0.95 },
+    { tier: '5000+', regular: 0.72, holo: 0.90 },
+  ],
+  ounce: [
+    { tier: '1-249', regular: 2.00, holo: 2.25 },
+    { tier: '250-999', regular: 1.95, holo: 2.00 },
+    { tier: '1000-2499', regular: 1.85, holo: 1.95 },
+    { tier: '2500-4999', regular: 1.80, holo: 1.90 },
+    { tier: '5000+', regular: 1.75, holo: 1.85 },
+  ],
+  half: [
+    { tier: '1-49', regular: 7.50, holo: 8.00 },
+    { tier: '50-99', regular: 7.00, holo: 7.50 },
+    { tier: '100-249', regular: 6.50, holo: 7.00 },
+    { tier: '250+', regular: 6.00, holo: 6.50 },
+  ],
+  pound: [
+    { tier: '1-49', regular: 10.00, holo: 12.00 },
+    { tier: '50-99', regular: 9.00, holo: 10.00 },
+    { tier: '100-249', regular: 8.00, holo: 9.00 },
+    { tier: '250+', regular: 7.50, holo: 8.50 },
+  ],
+  jar: [
+    { tier: '1-640', regular: 2.00, holo: 2.50 },
+    { tier: '641-1280', regular: 1.95, holo: 2.45 },
+    { tier: '1281-1920', regular: 1.90, holo: 2.40 },
+    { tier: '1921-2500', regular: 1.85, holo: 2.35 },
+    { tier: '2501+', regular: 1.80, holo: 2.30 },
+  ],
+}
+
+const DEFAULT_BUSINESS_CARDS_PRICING = {
+  sizes: [
+    { size: 'Standard (3.5" x 2")', qty250: 49, qty500: 79, qty1000: 129 },
+    { size: 'Square (2.5" x 2.5")', qty250: 59, qty500: 89, qty1000: 149 },
+    { size: 'Mini (3" x 1")', qty250: 39, qty500: 59, qty1000: 99 },
+  ],
+  finishes: [
+    { name: 'Soft-Touch', price: 15 },
+    { name: 'Spot UV', price: 25 },
+    { name: 'Foil Stamping', price: 35 },
+    { name: 'Rounded Corners', price: 10 },
+  ],
+}
+
+const DEFAULT_OFFICE_PRICING = [
+  { product: 'Letterhead', qty1: 99, qty2: 149, qty3: 229, labels: ['250', '500', '1000'] },
+  { product: '#10 Envelopes', qty1: 129, qty2: 189, qty3: 299, labels: ['250', '500', '1000'] },
+  { product: 'Notepads', qty1: 79, qty2: 159, qty3: 279, labels: ['10 pads', '25 pads', '50 pads'] },
+  { product: 'Presentation Folders', qty1: 199, qty2: 349, qty3: 549, labels: ['100', '250', '500'] },
+]
+
+const DEFAULT_RETRACTABLE_BANNERS = [
+  { size: 'Economy (33" x 78")', qty1: 89, qty2_5: 79, qty6: 69 },
+  { size: 'Standard (33" x 81")', qty1: 129, qty2_5: 109, qty6: 95 },
+  { size: 'Premium (36" x 85")', qty1: 169, qty2_5: 149, qty6: 129 },
+  { size: 'Wide (47" x 85")', qty1: 229, qty2_5: 199, qty6: 179 },
+]
+
+const DEFAULT_AFRAME_SIGNS = [
+  { size: 'Small (20" x 20")', qty1_2: 129, qty3_5: 120, qty6: 108 },
+  { size: 'Standard (24" x 36")', qty1_2: 259, qty3_5: 240, qty6: 218 },
+]
+
+const DEFAULT_FEATHER_FLAGS = [
+  { size: 'Medium (7ft)', basePrice: 200 },
+  { size: 'Large (14ft)', basePrice: 279 },
+]
+
+const DEFAULT_DOOR_SPOT = [
+  { size: 'Small (12" x 12")', qty1_2: 75, qty3_5: 65, qty6: 55 },
+  { size: 'Medium (18" x 18")', qty1_2: 120, qty3_5: 100, qty6: 85 },
+  { size: 'Large (24" x 24")', qty1_2: 175, qty3_5: 150, qty6: 125 },
+  { size: 'Door Panel (36" x 18")', qty1_2: 225, qty3_5: 195, qty6: 165 },
+]
+
+const DEFAULT_PARTIAL_WRAPS = [
+  { coverage: 'Quarter Wrap', qty1: 500, qty2_3: 450, qty4: 400 },
+  { coverage: 'Half Wrap', qty1: 900, qty2_3: 800, qty4: 700 },
+  { coverage: 'Three-Quarter Wrap', qty1: 1400, qty2_3: 1250, qty4: 1100 },
+]
+
+const DEFAULT_FULL_WRAPS = [
+  { vehicle: 'Compact Car', qty1: 2500, qty2_3: 2250, qty4: 2000 },
+  { vehicle: 'Sedan/SUV', qty1: 3200, qty2_3: 2900, qty4: 2600 },
+  { vehicle: 'Truck/Van', qty1: 4000, qty2_3: 3600, qty4: 3200 },
+  { vehicle: 'Box Truck/Trailer', qty1: 5500, qty2_3: 0, qty4: 0 },
+]
+
+const DEFAULT_FLEET_DISCOUNTS = [
+  { tier: 'Starter (3-5)', discount: '15%', doors: 55, partials: 600, fulls: 2200 },
+  { tier: 'Growing (6-10)', discount: '20%', doors: 50, partials: 550, fulls: 2000 },
+  { tier: 'Large (11-25)', discount: '25%', doors: 45, partials: 500, fulls: 1800 },
+]
+
+const DEFAULT_WINDOW_FILM = [
+  { type: 'Frosted', pricePerSqft: 8 },
+  { type: 'Solar', pricePerSqft: 12 },
+  { type: 'Security', pricePerSqft: 15 },
+  { type: 'Decorative', pricePerSqft: 10 },
+  { type: 'One-Way', pricePerSqft: 14 },
+]
+
+type ServicePricingKey = 'mylar' | 'businessCards' | 'office' | 'banners' | 'aframes' | 'featherFlags' | 'doorSpot' | 'partialWraps' | 'fullWraps' | 'fleet' | 'windowFilm'
+
+const SERVICE_SECTIONS: { id: ServicePricingKey; label: string }[] = [
+  { id: 'mylar', label: 'Mylar Packaging' },
+  { id: 'businessCards', label: 'Business Cards' },
+  { id: 'office', label: 'Office Printing' },
+  { id: 'banners', label: 'Retractable Banners' },
+  { id: 'aframes', label: 'A-Frame Signs' },
+  { id: 'featherFlags', label: 'Feather Flags' },
+  { id: 'doorSpot', label: 'Door/Spot Graphics' },
+  { id: 'partialWraps', label: 'Partial Wraps' },
+  { id: 'fullWraps', label: 'Full Wraps' },
+  { id: 'fleet', label: 'Fleet Discounts' },
+  { id: 'windowFilm', label: 'Window Film' },
+]
+
+function getServiceDefault(key: ServicePricingKey): any {
+  const map: Record<ServicePricingKey, any> = {
+    mylar: DEFAULT_MYLAR_PRICING,
+    businessCards: DEFAULT_BUSINESS_CARDS_PRICING,
+    office: DEFAULT_OFFICE_PRICING,
+    banners: DEFAULT_RETRACTABLE_BANNERS,
+    aframes: DEFAULT_AFRAME_SIGNS,
+    featherFlags: DEFAULT_FEATHER_FLAGS,
+    doorSpot: DEFAULT_DOOR_SPOT,
+    partialWraps: DEFAULT_PARTIAL_WRAPS,
+    fullWraps: DEFAULT_FULL_WRAPS,
+    fleet: DEFAULT_FLEET_DISCOUNTS,
+    windowFilm: DEFAULT_WINDOW_FILM,
+  }
+  return structuredClone(map[key])
+}
+
+function loadServicePricing(key: ServicePricingKey): any {
+  return loadJSON(`tss-admin-pricing-${key}`, null) ?? getServiceDefault(key)
+}
+
 const ORDER_STATUSES = ['submitted', 'proof-sent', 'approved', 'printing', 'shipped', 'delivered'] as const
 const ORDER_FILTER_STATUSES = ['All', 'Submitted', 'Printing', 'Shipped', 'Delivered'] as const
 
@@ -192,6 +345,15 @@ export default function Admin() {
   const [customerOrders, setCustomerOrders] = useState<Record<string, any[]>>({})
   const [customerNotes, setCustomerNotes] = useState<Record<string, string>>({})
   const [customerNoteSaved, setCustomerNoteSaved] = useState<string | null>(null)
+
+  // Service pricing state
+  const [openPricingSection, setOpenPricingSection] = useState<string | null>('stickers')
+  const [servicePricing, setServicePricing] = useState<Record<ServicePricingKey, any>>(() => {
+    const out: any = {}
+    for (const s of SERVICE_SECTIONS) out[s.id] = loadServicePricing(s.id)
+    return out
+  })
+  const [serviceSaved, setServiceSaved] = useState<string | null>(null)
 
   // Fetch orders for Orders tab
   useEffect(() => {
@@ -337,6 +499,29 @@ export default function Admin() {
   function saveGA() {
     localStorage.setItem(GA_KEY, gaTrackingId)
   }
+
+  function saveServicePricing(key: ServicePricingKey) {
+    localStorage.setItem(`tss-admin-pricing-${key}`, JSON.stringify(servicePricing[key]))
+    setServiceSaved(key)
+    setTimeout(() => setServiceSaved(null), 2000)
+  }
+
+  function resetServicePricing(key: ServicePricingKey) {
+    setServicePricing(prev => ({ ...prev, [key]: getServiceDefault(key) }))
+    localStorage.removeItem(`tss-admin-pricing-${key}`)
+  }
+
+  function updateServiceField(key: ServicePricingKey, path: (string | number)[], value: any) {
+    setServicePricing(prev => {
+      const updated = structuredClone(prev)
+      let target: any = updated[key]
+      for (let i = 0; i < path.length - 1; i++) target = target[path[i]]
+      target[path[path.length - 1]] = value
+      return updated
+    })
+  }
+
+  const togglePricingSection = (id: string) => setOpenPricingSection(openPricingSection === id ? null : id)
 
   async function updateOrderStatus(orderId: string) {
     const newStatus = orderStatusUpdates[orderId]
@@ -873,119 +1058,421 @@ export default function Admin() {
 
         {/* Tab: Pricing */}
         {tab === 'pricing' && (
-          <div className="space-y-8 pb-12">
-            {/* Base Prices Table */}
-            <div className="bg-card border border-border rounded-xl p-6">
-              <h2 className="text-lg font-semibold mb-4">Base Circle Prices ($)</h2>
-              <div className="overflow-x-auto">
-                <table className="w-full text-sm">
-                  <thead>
-                    <tr className="text-muted-foreground">
-                      <th className="text-left py-2 pr-4">Diameter</th>
-                      {QUANTITY_TIERS.map(q => (
-                        <th key={q} className="text-center py-2 px-2">{q}</th>
-                      ))}
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {DIAMETERS.map(d => (
-                      <tr key={d} className="border-t border-border">
-                        <td className="py-2 pr-4 font-medium">{d}"</td>
-                        {QUANTITY_TIERS.map(q => (
-                          <td key={q} className="py-2 px-1">
-                            <input
-                              type="number"
-                              step="0.01"
-                              value={basePrices[d]?.[q] ?? ''}
-                              onChange={e => updateBasePrice(d, q, e.target.value)}
-                              className={smallInputClass}
-                            />
-                          </td>
-                        ))}
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            </div>
+          <div className="space-y-4 pb-12">
+            <p className="text-xs text-muted-foreground">
+              Pricing changes are saved locally. Contact developer to update live prices.
+            </p>
 
-            {/* Material Multipliers */}
-            <div className="bg-card border border-border rounded-xl p-6">
-              <h2 className="text-lg font-semibold mb-4">Material Multipliers</h2>
-              <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
-                {Object.entries(materialMultipliers).map(([mat, mult]) => (
-                  <div key={mat} className="flex items-center gap-3">
-                    <label className="text-sm text-muted-foreground w-28 capitalize">{mat}</label>
-                    <input
-                      type="number"
-                      step="0.01"
-                      value={mult}
-                      onChange={e => {
-                        const v = parseFloat(e.target.value)
-                        if (!isNaN(v)) setMaterialMultipliers(prev => ({ ...prev, [mat]: v }))
-                      }}
-                      className={smallInputClass}
-                    />
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            {/* Quantity Discounts */}
-            <div className="bg-card border border-border rounded-xl p-6">
-              <h2 className="text-lg font-semibold mb-4">Quantity Discount Tiers</h2>
-              <div className="space-y-3">
-                {quantityDiscounts.map((tier, i) => (
-                  <div key={i} className="flex items-center gap-4">
-                    <label className="text-sm text-muted-foreground w-16">Min Qty</label>
-                    <input
-                      type="number"
-                      value={tier.minQty}
-                      onChange={e => {
-                        const v = parseInt(e.target.value)
-                        if (!isNaN(v)) {
-                          const updated = [...quantityDiscounts]
-                          updated[i] = { ...updated[i], minQty: v }
-                          setQuantityDiscounts(updated)
-                        }
-                      }}
-                      className={smallInputClass}
-                    />
-                    <label className="text-sm text-muted-foreground w-16">Discount</label>
-                    <div className="flex items-center gap-1">
-                      <input
-                        type="number"
-                        value={tier.discount}
-                        onChange={e => {
-                          const v = parseFloat(e.target.value)
-                          if (!isNaN(v)) {
-                            const updated = [...quantityDiscounts]
-                            updated[i] = { ...updated[i], discount: v }
-                            setQuantityDiscounts(updated)
-                          }
-                        }}
-                        className={smallInputClass}
-                      />
-                      <span className="text-sm text-muted-foreground">%</span>
+            {/* ── Stickers (collapsible) ── */}
+            <div className="bg-card border border-border rounded-xl overflow-hidden">
+              <button onClick={() => togglePricingSection('stickers')} className="w-full px-5 py-3 flex items-center justify-between hover:bg-secondary/50 transition-colors">
+                <h2 className="text-base font-semibold">Stickers</h2>
+                <span className="text-muted-foreground text-xs">{openPricingSection === 'stickers' ? '▲' : '▼'}</span>
+              </button>
+              {openPricingSection === 'stickers' && (
+                <div className="border-t border-border p-5 space-y-6">
+                  {/* Base Prices */}
+                  <div>
+                    <h3 className="text-sm font-semibold mb-3">Base Circle Prices ($)</h3>
+                    <div className="overflow-x-auto">
+                      <table className="w-full text-sm">
+                        <thead>
+                          <tr className="text-muted-foreground">
+                            <th className="text-left py-2 pr-4">Diameter</th>
+                            {QUANTITY_TIERS.map(q => <th key={q} className="text-center py-2 px-2">{q}</th>)}
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {DIAMETERS.map(d => (
+                            <tr key={d} className="border-t border-border">
+                              <td className="py-2 pr-4 font-medium">{d}"</td>
+                              {QUANTITY_TIERS.map(q => (
+                                <td key={q} className="py-2 px-1">
+                                  <input type="number" step="0.01" value={basePrices[d]?.[q] ?? ''} onChange={e => updateBasePrice(d, q, e.target.value)} className={smallInputClass} />
+                                </td>
+                              ))}
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
                     </div>
                   </div>
-                ))}
-              </div>
+                  {/* Material Multipliers */}
+                  <div>
+                    <h3 className="text-sm font-semibold mb-3">Material Multipliers</h3>
+                    <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                      {Object.entries(materialMultipliers).map(([mat, mult]) => (
+                        <div key={mat} className="flex items-center gap-2">
+                          <label className="text-sm text-muted-foreground w-24 capitalize">{mat}</label>
+                          <input type="number" step="0.01" value={mult} onChange={e => { const v = parseFloat(e.target.value); if (!isNaN(v)) setMaterialMultipliers(prev => ({ ...prev, [mat]: v })) }} className={smallInputClass} />
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                  {/* Quantity Discounts */}
+                  <div>
+                    <h3 className="text-sm font-semibold mb-3">Quantity Discount Tiers</h3>
+                    <div className="space-y-2">
+                      {quantityDiscounts.map((tier, i) => (
+                        <div key={i} className="flex items-center gap-3">
+                          <label className="text-xs text-muted-foreground">Min Qty</label>
+                          <input type="number" value={tier.minQty} onChange={e => { const v = parseInt(e.target.value); if (!isNaN(v)) { const u = [...quantityDiscounts]; u[i] = { ...u[i], minQty: v }; setQuantityDiscounts(u) } }} className={smallInputClass} />
+                          <label className="text-xs text-muted-foreground">Discount</label>
+                          <input type="number" value={tier.discount} onChange={e => { const v = parseFloat(e.target.value); if (!isNaN(v)) { const u = [...quantityDiscounts]; u[i] = { ...u[i], discount: v }; setQuantityDiscounts(u) } }} className={smallInputClass} />
+                          <span className="text-xs text-muted-foreground">%</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <button onClick={savePricing} className="btn-primary text-xs px-3 py-1.5">Save Sticker Pricing</button>
+                    <button onClick={resetPricing} className="btn-secondary text-xs px-3 py-1.5">Reset</button>
+                    {pricingSaved && <span className="text-xs text-primary">Saved.</span>}
+                  </div>
+                </div>
+              )}
             </div>
 
-            {/* Save / Reset */}
-            <div className="flex items-center gap-4">
-              <button onClick={savePricing} className="btn-primary text-sm">
-                Save Changes
+            {/* ── Mylar Packaging ── */}
+            <div className="bg-card border border-border rounded-xl overflow-hidden">
+              <button onClick={() => togglePricingSection('mylar')} className="w-full px-5 py-3 flex items-center justify-between hover:bg-secondary/50 transition-colors">
+                <h2 className="text-base font-semibold">Mylar Packaging</h2>
+                <span className="text-muted-foreground text-xs">{openPricingSection === 'mylar' ? '▲' : '▼'}</span>
               </button>
-              <button onClick={resetPricing} className="btn-secondary text-sm">
-                Reset to Defaults
-              </button>
-              {pricingSaved && <span className="text-sm text-primary">Saved.</span>}
+              {openPricingSection === 'mylar' && (
+                <div className="border-t border-border p-5 space-y-4">
+                  {Object.entries(servicePricing.mylar as typeof DEFAULT_MYLAR_PRICING).map(([sizeKey, tiers]) => (
+                    <div key={sizeKey}>
+                      <h3 className="text-sm font-semibold mb-2 capitalize">{sizeKey === 'qtr' ? 'QTRs' : sizeKey === 'jar' ? '2oz Jars' : sizeKey}</h3>
+                      <div className="overflow-x-auto">
+                        <table className="text-xs w-full">
+                          <thead><tr className="text-muted-foreground"><th className="text-left py-1">Tier</th><th className="text-center py-1">Regular</th><th className="text-center py-1">Holo</th></tr></thead>
+                          <tbody>
+                            {(tiers as any[]).map((t: any, i: number) => (
+                              <tr key={i} className="border-t border-border">
+                                <td className="py-1 pr-2">{t.tier}</td>
+                                <td className="py-1 px-1"><input type="number" step="0.01" value={t.regular} onChange={e => { const v = parseFloat(e.target.value); if (!isNaN(v)) updateServiceField('mylar', [sizeKey, i, 'regular'], v) }} className={smallInputClass + ' !w-16 text-xs'} /></td>
+                                <td className="py-1 px-1"><input type="number" step="0.01" value={t.holo} onChange={e => { const v = parseFloat(e.target.value); if (!isNaN(v)) updateServiceField('mylar', [sizeKey, i, 'holo'], v) }} className={smallInputClass + ' !w-16 text-xs'} /></td>
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                      </div>
+                    </div>
+                  ))}
+                  <div className="flex items-center gap-3 pt-2">
+                    <button onClick={() => saveServicePricing('mylar')} className="btn-primary text-xs px-3 py-1.5">Save</button>
+                    <button onClick={() => resetServicePricing('mylar')} className="btn-secondary text-xs px-3 py-1.5">Reset</button>
+                    {serviceSaved === 'mylar' && <span className="text-xs text-primary">Saved.</span>}
+                  </div>
+                </div>
+              )}
             </div>
-            <p className="text-xs text-muted-foreground">
-              Pricing changes are saved locally. To update live prices, contact your developer.
-            </p>
+
+            {/* ── Business Cards ── */}
+            <div className="bg-card border border-border rounded-xl overflow-hidden">
+              <button onClick={() => togglePricingSection('businessCards')} className="w-full px-5 py-3 flex items-center justify-between hover:bg-secondary/50 transition-colors">
+                <h2 className="text-base font-semibold">Business Cards</h2>
+                <span className="text-muted-foreground text-xs">{openPricingSection === 'businessCards' ? '▲' : '▼'}</span>
+              </button>
+              {openPricingSection === 'businessCards' && (
+                <div className="border-t border-border p-5 space-y-4">
+                  <h3 className="text-sm font-semibold">Size Pricing</h3>
+                  <table className="text-xs w-full">
+                    <thead><tr className="text-muted-foreground"><th className="text-left py-1">Size</th><th className="text-center py-1">250</th><th className="text-center py-1">500</th><th className="text-center py-1">1000</th></tr></thead>
+                    <tbody>
+                      {(servicePricing.businessCards.sizes as any[]).map((s: any, i: number) => (
+                        <tr key={i} className="border-t border-border">
+                          <td className="py-1 pr-2 text-sm">{s.size}</td>
+                          <td className="py-1 px-1"><input type="number" value={s.qty250} onChange={e => { const v = parseFloat(e.target.value); if (!isNaN(v)) updateServiceField('businessCards', ['sizes', i, 'qty250'], v) }} className={smallInputClass + ' !w-16 text-xs'} /></td>
+                          <td className="py-1 px-1"><input type="number" value={s.qty500} onChange={e => { const v = parseFloat(e.target.value); if (!isNaN(v)) updateServiceField('businessCards', ['sizes', i, 'qty500'], v) }} className={smallInputClass + ' !w-16 text-xs'} /></td>
+                          <td className="py-1 px-1"><input type="number" value={s.qty1000} onChange={e => { const v = parseFloat(e.target.value); if (!isNaN(v)) updateServiceField('businessCards', ['sizes', i, 'qty1000'], v) }} className={smallInputClass + ' !w-16 text-xs'} /></td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                  <h3 className="text-sm font-semibold pt-2">Finish Add-ons ($)</h3>
+                  <div className="grid grid-cols-2 gap-2">
+                    {(servicePricing.businessCards.finishes as any[]).map((f: any, i: number) => (
+                      <div key={i} className="flex items-center gap-2">
+                        <label className="text-xs text-muted-foreground w-28">{f.name}</label>
+                        <input type="number" value={f.price} onChange={e => { const v = parseFloat(e.target.value); if (!isNaN(v)) updateServiceField('businessCards', ['finishes', i, 'price'], v) }} className={smallInputClass + ' !w-16 text-xs'} />
+                      </div>
+                    ))}
+                  </div>
+                  <div className="flex items-center gap-3 pt-2">
+                    <button onClick={() => saveServicePricing('businessCards')} className="btn-primary text-xs px-3 py-1.5">Save</button>
+                    <button onClick={() => resetServicePricing('businessCards')} className="btn-secondary text-xs px-3 py-1.5">Reset</button>
+                    {serviceSaved === 'businessCards' && <span className="text-xs text-primary">Saved.</span>}
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* ── Office Printing ── */}
+            <div className="bg-card border border-border rounded-xl overflow-hidden">
+              <button onClick={() => togglePricingSection('office')} className="w-full px-5 py-3 flex items-center justify-between hover:bg-secondary/50 transition-colors">
+                <h2 className="text-base font-semibold">Office Printing</h2>
+                <span className="text-muted-foreground text-xs">{openPricingSection === 'office' ? '▲' : '▼'}</span>
+              </button>
+              {openPricingSection === 'office' && (
+                <div className="border-t border-border p-5 space-y-4">
+                  {(servicePricing.office as typeof DEFAULT_OFFICE_PRICING).map((item, i) => (
+                    <div key={i}>
+                      <h3 className="text-sm font-semibold mb-1">{item.product}</h3>
+                      <div className="flex items-center gap-3 flex-wrap">
+                        {(['qty1', 'qty2', 'qty3'] as const).map((qk, qi) => (
+                          <div key={qk} className="flex items-center gap-1">
+                            <label className="text-xs text-muted-foreground">{item.labels[qi]}</label>
+                            <input type="number" value={(item as any)[qk]} onChange={e => { const v = parseFloat(e.target.value); if (!isNaN(v)) updateServiceField('office', [i, qk], v) }} className={smallInputClass + ' !w-16 text-xs'} />
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  ))}
+                  <div className="flex items-center gap-3 pt-2">
+                    <button onClick={() => saveServicePricing('office')} className="btn-primary text-xs px-3 py-1.5">Save</button>
+                    <button onClick={() => resetServicePricing('office')} className="btn-secondary text-xs px-3 py-1.5">Reset</button>
+                    {serviceSaved === 'office' && <span className="text-xs text-primary">Saved.</span>}
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* ── Retractable Banners ── */}
+            <div className="bg-card border border-border rounded-xl overflow-hidden">
+              <button onClick={() => togglePricingSection('banners')} className="w-full px-5 py-3 flex items-center justify-between hover:bg-secondary/50 transition-colors">
+                <h2 className="text-base font-semibold">Retractable Banners</h2>
+                <span className="text-muted-foreground text-xs">{openPricingSection === 'banners' ? '▲' : '▼'}</span>
+              </button>
+              {openPricingSection === 'banners' && (
+                <div className="border-t border-border p-5 space-y-3">
+                  <table className="text-xs w-full">
+                    <thead><tr className="text-muted-foreground"><th className="text-left py-1">Size</th><th className="text-center py-1">1</th><th className="text-center py-1">2-5</th><th className="text-center py-1">6+</th></tr></thead>
+                    <tbody>
+                      {(servicePricing.banners as typeof DEFAULT_RETRACTABLE_BANNERS).map((b, i) => (
+                        <tr key={i} className="border-t border-border">
+                          <td className="py-1 pr-2 text-sm">{b.size}</td>
+                          <td className="py-1 px-1"><input type="number" value={b.qty1} onChange={e => { const v = parseFloat(e.target.value); if (!isNaN(v)) updateServiceField('banners', [i, 'qty1'], v) }} className={smallInputClass + ' !w-16 text-xs'} /></td>
+                          <td className="py-1 px-1"><input type="number" value={b.qty2_5} onChange={e => { const v = parseFloat(e.target.value); if (!isNaN(v)) updateServiceField('banners', [i, 'qty2_5'], v) }} className={smallInputClass + ' !w-16 text-xs'} /></td>
+                          <td className="py-1 px-1"><input type="number" value={b.qty6} onChange={e => { const v = parseFloat(e.target.value); if (!isNaN(v)) updateServiceField('banners', [i, 'qty6'], v) }} className={smallInputClass + ' !w-16 text-xs'} /></td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                  <div className="flex items-center gap-3 pt-2">
+                    <button onClick={() => saveServicePricing('banners')} className="btn-primary text-xs px-3 py-1.5">Save</button>
+                    <button onClick={() => resetServicePricing('banners')} className="btn-secondary text-xs px-3 py-1.5">Reset</button>
+                    {serviceSaved === 'banners' && <span className="text-xs text-primary">Saved.</span>}
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* ── A-Frame Signs ── */}
+            <div className="bg-card border border-border rounded-xl overflow-hidden">
+              <button onClick={() => togglePricingSection('aframes')} className="w-full px-5 py-3 flex items-center justify-between hover:bg-secondary/50 transition-colors">
+                <h2 className="text-base font-semibold">A-Frame Signs</h2>
+                <span className="text-muted-foreground text-xs">{openPricingSection === 'aframes' ? '▲' : '▼'}</span>
+              </button>
+              {openPricingSection === 'aframes' && (
+                <div className="border-t border-border p-5 space-y-3">
+                  <table className="text-xs w-full">
+                    <thead><tr className="text-muted-foreground"><th className="text-left py-1">Size</th><th className="text-center py-1">1-2</th><th className="text-center py-1">3-5</th><th className="text-center py-1">6+</th></tr></thead>
+                    <tbody>
+                      {(servicePricing.aframes as typeof DEFAULT_AFRAME_SIGNS).map((a, i) => (
+                        <tr key={i} className="border-t border-border">
+                          <td className="py-1 pr-2 text-sm">{a.size}</td>
+                          <td className="py-1 px-1"><input type="number" value={a.qty1_2} onChange={e => { const v = parseFloat(e.target.value); if (!isNaN(v)) updateServiceField('aframes', [i, 'qty1_2'], v) }} className={smallInputClass + ' !w-16 text-xs'} /></td>
+                          <td className="py-1 px-1"><input type="number" value={a.qty3_5} onChange={e => { const v = parseFloat(e.target.value); if (!isNaN(v)) updateServiceField('aframes', [i, 'qty3_5'], v) }} className={smallInputClass + ' !w-16 text-xs'} /></td>
+                          <td className="py-1 px-1"><input type="number" value={a.qty6} onChange={e => { const v = parseFloat(e.target.value); if (!isNaN(v)) updateServiceField('aframes', [i, 'qty6'], v) }} className={smallInputClass + ' !w-16 text-xs'} /></td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                  <div className="flex items-center gap-3 pt-2">
+                    <button onClick={() => saveServicePricing('aframes')} className="btn-primary text-xs px-3 py-1.5">Save</button>
+                    <button onClick={() => resetServicePricing('aframes')} className="btn-secondary text-xs px-3 py-1.5">Reset</button>
+                    {serviceSaved === 'aframes' && <span className="text-xs text-primary">Saved.</span>}
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* ── Feather Flags ── */}
+            <div className="bg-card border border-border rounded-xl overflow-hidden">
+              <button onClick={() => togglePricingSection('featherFlags')} className="w-full px-5 py-3 flex items-center justify-between hover:bg-secondary/50 transition-colors">
+                <h2 className="text-base font-semibold">Feather Flags</h2>
+                <span className="text-muted-foreground text-xs">{openPricingSection === 'featherFlags' ? '▲' : '▼'}</span>
+              </button>
+              {openPricingSection === 'featherFlags' && (
+                <div className="border-t border-border p-5 space-y-3">
+                  <div className="grid grid-cols-2 gap-3">
+                    {(servicePricing.featherFlags as typeof DEFAULT_FEATHER_FLAGS).map((f, i) => (
+                      <div key={i} className="flex items-center gap-2">
+                        <label className="text-sm text-muted-foreground w-28">{f.size}</label>
+                        <span className="text-xs text-muted-foreground">$</span>
+                        <input type="number" value={f.basePrice} onChange={e => { const v = parseFloat(e.target.value); if (!isNaN(v)) updateServiceField('featherFlags', [i, 'basePrice'], v) }} className={smallInputClass + ' !w-20 text-xs'} />
+                      </div>
+                    ))}
+                  </div>
+                  <p className="text-xs text-muted-foreground">Bulk: 2-5 = 10% off, 6-9 = 15% off, 10+ = 20% off</p>
+                  <div className="flex items-center gap-3 pt-2">
+                    <button onClick={() => saveServicePricing('featherFlags')} className="btn-primary text-xs px-3 py-1.5">Save</button>
+                    <button onClick={() => resetServicePricing('featherFlags')} className="btn-secondary text-xs px-3 py-1.5">Reset</button>
+                    {serviceSaved === 'featherFlags' && <span className="text-xs text-primary">Saved.</span>}
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* ── Door/Spot Graphics ── */}
+            <div className="bg-card border border-border rounded-xl overflow-hidden">
+              <button onClick={() => togglePricingSection('doorSpot')} className="w-full px-5 py-3 flex items-center justify-between hover:bg-secondary/50 transition-colors">
+                <h2 className="text-base font-semibold">Door/Spot Graphics</h2>
+                <span className="text-muted-foreground text-xs">{openPricingSection === 'doorSpot' ? '▲' : '▼'}</span>
+              </button>
+              {openPricingSection === 'doorSpot' && (
+                <div className="border-t border-border p-5 space-y-3">
+                  <table className="text-xs w-full">
+                    <thead><tr className="text-muted-foreground"><th className="text-left py-1">Size</th><th className="text-center py-1">1-2</th><th className="text-center py-1">3-5</th><th className="text-center py-1">6+</th></tr></thead>
+                    <tbody>
+                      {(servicePricing.doorSpot as typeof DEFAULT_DOOR_SPOT).map((d, i) => (
+                        <tr key={i} className="border-t border-border">
+                          <td className="py-1 pr-2 text-sm">{d.size}</td>
+                          <td className="py-1 px-1"><input type="number" value={d.qty1_2} onChange={e => { const v = parseFloat(e.target.value); if (!isNaN(v)) updateServiceField('doorSpot', [i, 'qty1_2'], v) }} className={smallInputClass + ' !w-16 text-xs'} /></td>
+                          <td className="py-1 px-1"><input type="number" value={d.qty3_5} onChange={e => { const v = parseFloat(e.target.value); if (!isNaN(v)) updateServiceField('doorSpot', [i, 'qty3_5'], v) }} className={smallInputClass + ' !w-16 text-xs'} /></td>
+                          <td className="py-1 px-1"><input type="number" value={d.qty6} onChange={e => { const v = parseFloat(e.target.value); if (!isNaN(v)) updateServiceField('doorSpot', [i, 'qty6'], v) }} className={smallInputClass + ' !w-16 text-xs'} /></td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                  <div className="flex items-center gap-3 pt-2">
+                    <button onClick={() => saveServicePricing('doorSpot')} className="btn-primary text-xs px-3 py-1.5">Save</button>
+                    <button onClick={() => resetServicePricing('doorSpot')} className="btn-secondary text-xs px-3 py-1.5">Reset</button>
+                    {serviceSaved === 'doorSpot' && <span className="text-xs text-primary">Saved.</span>}
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* ── Partial Wraps ── */}
+            <div className="bg-card border border-border rounded-xl overflow-hidden">
+              <button onClick={() => togglePricingSection('partialWraps')} className="w-full px-5 py-3 flex items-center justify-between hover:bg-secondary/50 transition-colors">
+                <h2 className="text-base font-semibold">Partial Wraps</h2>
+                <span className="text-muted-foreground text-xs">{openPricingSection === 'partialWraps' ? '▲' : '▼'}</span>
+              </button>
+              {openPricingSection === 'partialWraps' && (
+                <div className="border-t border-border p-5 space-y-3">
+                  <table className="text-xs w-full">
+                    <thead><tr className="text-muted-foreground"><th className="text-left py-1">Coverage</th><th className="text-center py-1">1</th><th className="text-center py-1">2-3</th><th className="text-center py-1">4+</th></tr></thead>
+                    <tbody>
+                      {(servicePricing.partialWraps as typeof DEFAULT_PARTIAL_WRAPS).map((p, i) => (
+                        <tr key={i} className="border-t border-border">
+                          <td className="py-1 pr-2 text-sm">{p.coverage}</td>
+                          <td className="py-1 px-1"><input type="number" value={p.qty1} onChange={e => { const v = parseFloat(e.target.value); if (!isNaN(v)) updateServiceField('partialWraps', [i, 'qty1'], v) }} className={smallInputClass + ' !w-20 text-xs'} /></td>
+                          <td className="py-1 px-1"><input type="number" value={p.qty2_3} onChange={e => { const v = parseFloat(e.target.value); if (!isNaN(v)) updateServiceField('partialWraps', [i, 'qty2_3'], v) }} className={smallInputClass + ' !w-20 text-xs'} /></td>
+                          <td className="py-1 px-1"><input type="number" value={p.qty4} onChange={e => { const v = parseFloat(e.target.value); if (!isNaN(v)) updateServiceField('partialWraps', [i, 'qty4'], v) }} className={smallInputClass + ' !w-20 text-xs'} /></td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                  <div className="flex items-center gap-3 pt-2">
+                    <button onClick={() => saveServicePricing('partialWraps')} className="btn-primary text-xs px-3 py-1.5">Save</button>
+                    <button onClick={() => resetServicePricing('partialWraps')} className="btn-secondary text-xs px-3 py-1.5">Reset</button>
+                    {serviceSaved === 'partialWraps' && <span className="text-xs text-primary">Saved.</span>}
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* ── Full Wraps ── */}
+            <div className="bg-card border border-border rounded-xl overflow-hidden">
+              <button onClick={() => togglePricingSection('fullWraps')} className="w-full px-5 py-3 flex items-center justify-between hover:bg-secondary/50 transition-colors">
+                <h2 className="text-base font-semibold">Full Wraps</h2>
+                <span className="text-muted-foreground text-xs">{openPricingSection === 'fullWraps' ? '▲' : '▼'}</span>
+              </button>
+              {openPricingSection === 'fullWraps' && (
+                <div className="border-t border-border p-5 space-y-3">
+                  <table className="text-xs w-full">
+                    <thead><tr className="text-muted-foreground"><th className="text-left py-1">Vehicle</th><th className="text-center py-1">1</th><th className="text-center py-1">2-3</th><th className="text-center py-1">4+</th></tr></thead>
+                    <tbody>
+                      {(servicePricing.fullWraps as typeof DEFAULT_FULL_WRAPS).map((fw, i) => (
+                        <tr key={i} className="border-t border-border">
+                          <td className="py-1 pr-2 text-sm">{fw.vehicle}</td>
+                          <td className="py-1 px-1"><input type="number" value={fw.qty1} onChange={e => { const v = parseFloat(e.target.value); if (!isNaN(v)) updateServiceField('fullWraps', [i, 'qty1'], v) }} className={smallInputClass + ' !w-20 text-xs'} /></td>
+                          <td className="py-1 px-1"><input type="number" value={fw.qty2_3 || ''} onChange={e => { const v = parseFloat(e.target.value); if (!isNaN(v)) updateServiceField('fullWraps', [i, 'qty2_3'], v) }} className={smallInputClass + ' !w-20 text-xs'} placeholder={fw.qty2_3 === 0 ? 'Quote' : ''} /></td>
+                          <td className="py-1 px-1"><input type="number" value={fw.qty4 || ''} onChange={e => { const v = parseFloat(e.target.value); if (!isNaN(v)) updateServiceField('fullWraps', [i, 'qty4'], v) }} className={smallInputClass + ' !w-20 text-xs'} placeholder={fw.qty4 === 0 ? 'Quote' : ''} /></td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                  <div className="flex items-center gap-3 pt-2">
+                    <button onClick={() => saveServicePricing('fullWraps')} className="btn-primary text-xs px-3 py-1.5">Save</button>
+                    <button onClick={() => resetServicePricing('fullWraps')} className="btn-secondary text-xs px-3 py-1.5">Reset</button>
+                    {serviceSaved === 'fullWraps' && <span className="text-xs text-primary">Saved.</span>}
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* ── Fleet Discounts ── */}
+            <div className="bg-card border border-border rounded-xl overflow-hidden">
+              <button onClick={() => togglePricingSection('fleet')} className="w-full px-5 py-3 flex items-center justify-between hover:bg-secondary/50 transition-colors">
+                <h2 className="text-base font-semibold">Fleet Discounts</h2>
+                <span className="text-muted-foreground text-xs">{openPricingSection === 'fleet' ? '▲' : '▼'}</span>
+              </button>
+              {openPricingSection === 'fleet' && (
+                <div className="border-t border-border p-5 space-y-3">
+                  <table className="text-xs w-full">
+                    <thead><tr className="text-muted-foreground"><th className="text-left py-1">Tier</th><th className="text-center py-1">Discount</th><th className="text-center py-1">Doors (from $)</th><th className="text-center py-1">Partials (from $)</th><th className="text-center py-1">Fulls (from $)</th></tr></thead>
+                    <tbody>
+                      {(servicePricing.fleet as typeof DEFAULT_FLEET_DISCOUNTS).map((f, i) => (
+                        <tr key={i} className="border-t border-border">
+                          <td className="py-1 pr-2 text-sm">{f.tier}</td>
+                          <td className="py-1 px-1 text-center text-sm">{f.discount}</td>
+                          <td className="py-1 px-1"><input type="number" value={f.doors} onChange={e => { const v = parseFloat(e.target.value); if (!isNaN(v)) updateServiceField('fleet', [i, 'doors'], v) }} className={smallInputClass + ' !w-16 text-xs'} /></td>
+                          <td className="py-1 px-1"><input type="number" value={f.partials} onChange={e => { const v = parseFloat(e.target.value); if (!isNaN(v)) updateServiceField('fleet', [i, 'partials'], v) }} className={smallInputClass + ' !w-16 text-xs'} /></td>
+                          <td className="py-1 px-1"><input type="number" value={f.fulls} onChange={e => { const v = parseFloat(e.target.value); if (!isNaN(v)) updateServiceField('fleet', [i, 'fulls'], v) }} className={smallInputClass + ' !w-16 text-xs'} /></td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                  <div className="flex items-center gap-3 pt-2">
+                    <button onClick={() => saveServicePricing('fleet')} className="btn-primary text-xs px-3 py-1.5">Save</button>
+                    <button onClick={() => resetServicePricing('fleet')} className="btn-secondary text-xs px-3 py-1.5">Reset</button>
+                    {serviceSaved === 'fleet' && <span className="text-xs text-primary">Saved.</span>}
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* ── Window Film ── */}
+            <div className="bg-card border border-border rounded-xl overflow-hidden">
+              <button onClick={() => togglePricingSection('windowFilm')} className="w-full px-5 py-3 flex items-center justify-between hover:bg-secondary/50 transition-colors">
+                <h2 className="text-base font-semibold">Window Film</h2>
+                <span className="text-muted-foreground text-xs">{openPricingSection === 'windowFilm' ? '▲' : '▼'}</span>
+              </button>
+              {openPricingSection === 'windowFilm' && (
+                <div className="border-t border-border p-5 space-y-3">
+                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                    {(servicePricing.windowFilm as typeof DEFAULT_WINDOW_FILM).map((f, i) => (
+                      <div key={i} className="flex items-center gap-2">
+                        <label className="text-sm text-muted-foreground w-24">{f.type}</label>
+                        <span className="text-xs text-muted-foreground">$/sqft</span>
+                        <input type="number" value={f.pricePerSqft} onChange={e => { const v = parseFloat(e.target.value); if (!isNaN(v)) updateServiceField('windowFilm', [i, 'pricePerSqft'], v) }} className={smallInputClass + ' !w-16 text-xs'} />
+                      </div>
+                    ))}
+                  </div>
+                  <div className="flex items-center gap-3 pt-2">
+                    <button onClick={() => saveServicePricing('windowFilm')} className="btn-primary text-xs px-3 py-1.5">Save</button>
+                    <button onClick={() => resetServicePricing('windowFilm')} className="btn-secondary text-xs px-3 py-1.5">Reset</button>
+                    {serviceSaved === 'windowFilm' && <span className="text-xs text-primary">Saved.</span>}
+                  </div>
+                </div>
+              )}
+            </div>
+
           </div>
         )}
 
