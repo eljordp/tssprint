@@ -17,8 +17,14 @@ export interface ProductCategory {
   addOns: AddOn[]
 }
 
+export interface SizeMultiplier {
+  name: string
+  multiplier: number
+}
+
 export interface PricingConfig {
   basePrices: { maxQty: number; price: number }[]
+  sizeMultipliers: SizeMultiplier[]
   materialMultipliers: { name: string; multiplier: number }[]
   stickerAddOns: AddOn[]
   products: ProductCategory[]
@@ -26,25 +32,36 @@ export interface PricingConfig {
 
 export const defaultPricing: PricingConfig = {
   basePrices: [
-    { maxQty: 50, price: 0.45 },
-    { maxQty: 100, price: 0.35 },
-    { maxQty: 200, price: 0.28 },
-    { maxQty: 500, price: 0.22 },
-    { maxQty: Infinity, price: 0.18 },
+    { maxQty: 50, price: 0.55 },
+    { maxQty: 100, price: 0.45 },
+    { maxQty: 250, price: 0.38 },
+    { maxQty: 500, price: 0.32 },
+    { maxQty: 1000, price: 0.28 },
+    { maxQty: Infinity, price: 0.25 },
+  ],
+  sizeMultipliers: [
+    { name: '2" x 2"', multiplier: 1.0 },
+    { name: '3" x 3"', multiplier: 1.3 },
+    { name: '4" x 4"', multiplier: 1.7 },
+    { name: '5" x 5"', multiplier: 2.1 },
+    { name: '6" x 6"', multiplier: 2.5 },
+    { name: '7" x 7"', multiplier: 3.0 },
   ],
   materialMultipliers: [
     { name: 'Matte Vinyl', multiplier: 1.0 },
     { name: 'Glossy Vinyl', multiplier: 1.0 },
-    { name: 'Clear', multiplier: 1.2 },
-    { name: 'Holographic', multiplier: 1.4 },
-    { name: 'Paper', multiplier: 1.0 },
+    { name: 'Clear', multiplier: 1.4 },
+    { name: 'Holographic', multiplier: 1.8 },
+    { name: 'Paper', multiplier: 0.9 },
   ],
   stickerAddOns: [
-    { name: 'Gloss', type: 'flat', value: 0.05 },
-    { name: 'Holo', type: 'flat', value: 0.15 },
-    { name: 'UV', type: 'flat', value: 0.25 },
-    { name: 'Paper', type: 'flat', value: 0.03 },
-    { name: 'Embossed', type: 'flat', value: 0.30 },
+    { name: 'Gloss', type: 'flat', value: 0.08 },
+    { name: 'Holo', type: 'flat', value: 0.20 },
+    { name: 'UV', type: 'flat', value: 0.35 },
+    { name: 'Paper', type: 'flat', value: 0.05 },
+    { name: 'Embossed', type: 'flat', value: 0.45 },
+    { name: 'Design Assist', type: 'flat', value: 40.00 },
+    { name: 'Rush (2-day)', type: 'flat', value: 25.00 },
   ],
   products: [
     // 0: Mylar Packaging
@@ -56,10 +73,10 @@ export const defaultPricing: PricingConfig = {
       { size: 'Pound Bags (14"×16")', quantities: [{ qty: 50, price: 10.00 }, { qty: 100, price: 9.00 }, { qty: 250, price: 8.00 }, { qty: 500, price: 7.50 }] },
       { size: '2oz Jar Labels', quantities: [{ qty: 100, price: 2.00 }, { qty: 250, price: 1.95 }, { qty: 500, price: 1.90 }, { qty: 1000, price: 1.85 }, { qty: 2500, price: 1.80 }] },
     ], addOns: [
-      { name: 'Holographic Upgrade', type: 'flat', value: 0.15 },
-      { name: 'Direct Print', type: 'flat', value: 0.25 },
-      { name: 'Window Cutout', type: 'flat', value: 0.10 },
-      { name: 'Foil Finish', type: 'flat', value: 0.10 },
+      { name: 'Holographic Upgrade', type: 'flat', value: 0.30 },
+      { name: 'Direct Print', type: 'flat', value: 0.40 },
+      { name: 'Window Cutout', type: 'flat', value: 0.20 },
+      { name: 'Foil Finish', type: 'flat', value: 0.20 },
     ]},
     // 1: Event Displays
     { name: 'Event Displays', items: [
@@ -287,6 +304,7 @@ export function getPricing(): PricingConfig {
         maxQty: t.maxQty === null ? Infinity : t.maxQty,
       }))
       // Ensure new fields exist with defaults
+      if (!parsed.sizeMultipliers) parsed.sizeMultipliers = defaultPricing.sizeMultipliers
       if (!parsed.stickerAddOns) parsed.stickerAddOns = defaultPricing.stickerAddOns
       if (!parsed.products) {
         parsed.products = defaultPricing.products
@@ -315,5 +333,10 @@ export function getBasePrice(quantity: number, config: PricingConfig): number {
 
 export function getMaterialMultiplier(material: string, config: PricingConfig): number {
   const found = config.materialMultipliers.find(m => m.name === material)
+  return found ? found.multiplier : 1.0
+}
+
+export function getSizeMultiplier(size: string, config: PricingConfig): number {
+  const found = config.sizeMultipliers.find(s => s.name === size)
   return found ? found.multiplier : 1.0
 }

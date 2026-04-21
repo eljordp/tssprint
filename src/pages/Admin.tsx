@@ -387,6 +387,9 @@ function PricingTab() {
   const updateMultiplier = (index: number, value: string) => {
     setConfig({ ...config, materialMultipliers: config.materialMultipliers.map((m, i) => i === index ? { ...m, multiplier: parseFloat(value) || 1 } : m) })
   }
+  const updateSizeMultiplier = (index: number, value: string) => {
+    setConfig({ ...config, sizeMultipliers: config.sizeMultipliers.map((s, i) => i === index ? { ...s, multiplier: parseFloat(value) || 1 } : s) })
+  }
   const updateStickerAddOn = (index: number, value: string) => {
     setConfig({ ...config, stickerAddOns: config.stickerAddOns.map((a, i) => i === index ? { ...a, value: parseFloat(value) || 0 } : a) })
   }
@@ -411,7 +414,7 @@ function PricingTab() {
   const handleSave = () => { savePricing(config); setSaved(true); toast.success('Pricing saved'); setTimeout(() => setSaved(false), 2000) }
   const handleReset = () => { setConfig(defaultPricing); savePricing(defaultPricing); setSaved(true); toast.success('Pricing reset to defaults'); setTimeout(() => setSaved(false), 2000) }
 
-  const tierLabels = ['1–50', '51–100', '101–200', '201–500', '501+']
+  const tierLabels = ['1–50', '51–100', '101–250', '251–500', '501–1000', '1000+']
   const activeProduct = categoryTabs.find(t => t.id === activeTab)
 
   return (
@@ -442,14 +445,32 @@ function PricingTab() {
 
       {activeTab === 'stickers' && (
         <div className="space-y-5">
-          <SubTabs active={getSubTab('stickers')} tabs={[{ id: 'pricing', label: 'Quantity Pricing' }, { id: 'materials', label: 'Materials' }]} onChange={v => setSubTabFor('stickers', v)} />
+          <SubTabs active={getSubTab('stickers')} tabs={[{ id: 'pricing', label: 'Quantity Pricing' }, { id: 'sizes', label: 'Sizes' }, { id: 'materials', label: 'Materials' }]} onChange={v => setSubTabFor('stickers', v)} />
           {getSubTab('stickers') === 'pricing' && (
             <div className="bg-card border border-border rounded-2xl p-6">
               <h3 className="font-bold mb-1">Base Price Per Sticker</h3>
               <p className="text-sm text-muted-foreground mb-4">Price per unit at each quantity tier</p>
-              <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
+              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
                 {config.basePrices.map((tier, i) => (
                   <PriceInput key={i} label={`${tierLabels[i]} pcs`} value={tier.price} onChange={v => updateTierPrice(i, v)} />
+                ))}
+              </div>
+            </div>
+          )}
+          {getSubTab('stickers') === 'sizes' && (
+            <div className="bg-card border border-border rounded-2xl p-6">
+              <h3 className="font-bold mb-1">Size Multipliers</h3>
+              <p className="text-sm text-muted-foreground mb-4">Price multiplier per sticker size (1.0x = base price at 2"×2")</p>
+              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
+                {config.sizeMultipliers.map((s, i) => (
+                  <div key={s.name} className="bg-muted/30 rounded-xl p-3">
+                    <label className="block text-xs font-medium text-foreground mb-1.5">{s.name}</label>
+                    <div className="relative">
+                      <input type="number" step="0.1" min="0.1" value={s.multiplier} onChange={e => updateSizeMultiplier(i, e.target.value)}
+                        className="w-full px-3 py-2 bg-background border border-border rounded-lg text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all" />
+                      <span className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground text-xs">x</span>
+                    </div>
+                  </div>
                 ))}
               </div>
             </div>

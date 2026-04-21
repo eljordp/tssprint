@@ -2,7 +2,7 @@ import { useState, useMemo, useRef } from 'react'
 import { motion } from 'framer-motion'
 import { ShoppingCart, Sparkles, FileUp, Check } from 'lucide-react'
 import { useCart } from '@/context/CartContext'
-import { getPricing, getBasePrice, getMaterialMultiplier } from '@/lib/pricing'
+import { getPricing, getBasePrice, getMaterialMultiplier, getSizeMultiplier } from '@/lib/pricing'
 
 const shapeData = [
   { name: 'Square', value: 'Square' },
@@ -22,7 +22,7 @@ const materialData = [
 ]
 
 const sizeOptions = ['2" x 2"', '3" x 3"', '4" x 4"', '5" x 5"', '6" x 6"', '7" x 7"']
-const qtyOptions = [50, 100, 200, 300, 500]
+const qtyOptions = [50, 100, 250, 500, 1000]
 
 function ShapeIcon({ shape }: { shape: string }) {
   return (
@@ -54,15 +54,16 @@ export default function Order() {
   const effectiveQty = customQty ? (parseInt(customQty) || 50) : quantity
   const basePrice = getBasePrice(effectiveQty, pricingConfig)
   const matMult = getMaterialMultiplier(material, pricingConfig)
-  const totalPrice = +(basePrice * matMult * effectiveQty).toFixed(2)
-  const perUnit = +(basePrice * matMult).toFixed(3)
+  const sizeMult = getSizeMultiplier(size, pricingConfig)
+  const totalPrice = +(basePrice * matMult * sizeMult * effectiveQty).toFixed(2)
+  const perUnit = +(basePrice * matMult * sizeMult).toFixed(3)
 
-  const refPerUnit = getBasePrice(50, pricingConfig) * matMult
+  const refPerUnit = getBasePrice(50, pricingConfig) * matMult * sizeMult
   const getDiscount = (qty: number) => {
-    const pu = getBasePrice(qty, pricingConfig) * matMult
+    const pu = getBasePrice(qty, pricingConfig) * matMult * sizeMult
     return Math.round((1 - pu / refPerUnit) * 100)
   }
-  const getQtyTotal = (qty: number) => +(getBasePrice(qty, pricingConfig) * matMult * qty).toFixed(0)
+  const getQtyTotal = (qty: number) => +(getBasePrice(qty, pricingConfig) * matMult * sizeMult * qty).toFixed(0)
 
   const materialLabel = materialData.find(m => m.value === material)?.label || material
   const shapeLabel = shapeData.find(s => s.value === shape)?.name || shape
