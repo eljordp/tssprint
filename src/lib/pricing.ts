@@ -52,7 +52,8 @@ export const defaultPricing: PricingConfig = {
     { name: 'Glossy Vinyl', multiplier: 1.0 },
     { name: 'Clear', multiplier: 1.4 },
     { name: 'Holographic', multiplier: 1.8 },
-    { name: 'Paper', multiplier: 0.9 },
+    { name: 'Paper', multiplier: 1.0 },
+    { name: 'Embossed/UV', multiplier: 2.0 },
   ],
   stickerAddOns: [
     { name: 'Gloss', type: 'flat', value: 0.08 },
