@@ -20,8 +20,6 @@ export default function Hero() {
           {/* Left: Text */}
           <div>
             <motion.h1 initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6, delay: 0.2 }} className="text-3xl sm:text-5xl md:text-6xl lg:text-7xl font-black mb-4 md:mb-6 leading-[1.1] tracking-tight">
-              The Sticker Smith
-              <br />
               <span className="text-gradient">Bay Area's Full-Service</span>
               <br />
               Print & Branding Studio
