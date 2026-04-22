@@ -128,8 +128,7 @@ export default function PrinterIntro() {
     <AnimatePresence>
       {show && (
         <motion.div
-          onClick={skip}
-          className="fixed inset-0 z-[9999] cursor-pointer"
+          className="fixed inset-0 z-[9999]"
           initial={{ opacity: 1 }}
           exit={{ opacity: 0 }}
           transition={{ duration: 0.4, ease: 'easeOut' }}
@@ -323,15 +322,18 @@ export default function PrinterIntro() {
             </>
           )}
 
-          {/* Skip hint */}
-          <motion.div
-            className="absolute bottom-6 left-1/2 -translate-x-1/2 text-[10px] md:text-xs text-neutral-600 font-mono tracking-widest uppercase z-[6]"
+          {/* Skip button — explicit, separate from the rest of the surface so
+              tapping the body of the intro doesn't dismiss it (that gesture
+              only unlocks the audio via the window-level listener) */}
+          <motion.button
+            onClick={skip}
+            className="absolute bottom-4 left-1/2 -translate-x-1/2 text-[10px] md:text-xs text-neutral-500 hover:text-neutral-300 font-mono tracking-widest uppercase z-[6] px-4 py-3 rounded-full bg-black/40 backdrop-blur-sm border border-white/5 transition-colors"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
-            transition={{ delay: 1.2 }}
+            transition={{ delay: 1.0 }}
           >
-            tap to skip
-          </motion.div>
+            skip →
+          </motion.button>
         </motion.div>
       )}
     </AnimatePresence>
