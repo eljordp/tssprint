@@ -32,10 +32,10 @@ export interface PricingConfig {
 
 export const defaultPricing: PricingConfig = {
   basePrices: [
-    { maxQty: 50, price: 0.55 },
-    { maxQty: 100, price: 0.45 },
-    { maxQty: 250, price: 0.38 },
-    { maxQty: 500, price: 0.32 },
+    { maxQty: 50, price: 0.85 },
+    { maxQty: 100, price: 0.55 },
+    { maxQty: 250, price: 0.42 },
+    { maxQty: 500, price: 0.34 },
     { maxQty: 1000, price: 0.28 },
     { maxQty: Infinity, price: 0.25 },
   ],
@@ -56,28 +56,28 @@ export const defaultPricing: PricingConfig = {
     { name: 'Embossed/UV', multiplier: 2.0 },
   ],
   stickerAddOns: [
-    { name: 'Gloss', type: 'flat', value: 0.08 },
-    { name: 'Holo', type: 'flat', value: 0.20 },
-    { name: 'UV', type: 'flat', value: 0.35 },
+    { name: 'Gloss', type: 'flat', value: 0.10 },
+    { name: 'Holo', type: 'flat', value: 0.30 },
+    { name: 'UV', type: 'flat', value: 0.45 },
     { name: 'Paper', type: 'flat', value: 0.05 },
-    { name: 'Embossed', type: 'flat', value: 0.45 },
-    { name: 'Design Assist', type: 'flat', value: 40.00 },
-    { name: 'Rush (2-day)', type: 'flat', value: 25.00 },
+    { name: 'Embossed', type: 'flat', value: 0.55 },
+    { name: 'Design Assist', type: 'flat', value: 75.00 },
+    { name: 'Rush (2-day)', type: 'flat', value: 65.00 },
   ],
   products: [
     // 0: Mylar Packaging
     { name: 'Mylar Packaging', items: [
-      { size: 'Eighths (3"×5")', quantities: [{ qty: 100, price: 0.90 }, { qty: 250, price: 0.85 }, { qty: 500, price: 0.80 }, { qty: 1000, price: 0.75 }, { qty: 2500, price: 0.70 }] },
-      { size: 'Quarters (4"×6")', quantities: [{ qty: 100, price: 1.00 }, { qty: 250, price: 0.97 }, { qty: 500, price: 0.90 }, { qty: 1000, price: 0.87 }, { qty: 2500, price: 0.72 }] },
-      { size: 'Ounce Bags (5"×8")', quantities: [{ qty: 100, price: 2.00 }, { qty: 250, price: 1.95 }, { qty: 500, price: 1.85 }, { qty: 1000, price: 1.80 }, { qty: 2500, price: 1.75 }] },
-      { size: 'Half Pound (10"×12")', quantities: [{ qty: 50, price: 7.50 }, { qty: 100, price: 7.00 }, { qty: 250, price: 6.50 }, { qty: 500, price: 6.00 }] },
-      { size: 'Pound Bags (14"×16")', quantities: [{ qty: 50, price: 10.00 }, { qty: 100, price: 9.00 }, { qty: 250, price: 8.00 }, { qty: 500, price: 7.50 }] },
-      { size: '2oz Jar Labels', quantities: [{ qty: 100, price: 2.00 }, { qty: 250, price: 1.95 }, { qty: 500, price: 1.90 }, { qty: 1000, price: 1.85 }, { qty: 2500, price: 1.80 }] },
+      { size: 'Eighths (3"×5")', quantities: [{ qty: 100, price: 1.35 }, { qty: 250, price: 1.25 }, { qty: 500, price: 1.15 }, { qty: 1000, price: 1.05 }, { qty: 2500, price: 0.95 }] },
+      { size: 'Quarters (4"×6")', quantities: [{ qty: 100, price: 1.50 }, { qty: 250, price: 1.40 }, { qty: 500, price: 1.30 }, { qty: 1000, price: 1.20 }, { qty: 2500, price: 1.05 }] },
+      { size: 'Ounce Bags (5"×8")', quantities: [{ qty: 100, price: 2.75 }, { qty: 250, price: 2.60 }, { qty: 500, price: 2.45 }, { qty: 1000, price: 2.30 }, { qty: 2500, price: 2.15 }] },
+      { size: 'Half Pound (10"×12")', quantities: [{ qty: 50, price: 9.50 }, { qty: 100, price: 9.00 }, { qty: 250, price: 8.25 }, { qty: 500, price: 7.75 }] },
+      { size: 'Pound Bags (14"×16")', quantities: [{ qty: 50, price: 12.50 }, { qty: 100, price: 11.50 }, { qty: 250, price: 10.50 }, { qty: 500, price: 9.75 }] },
+      { size: '2oz Jar Labels', quantities: [{ qty: 100, price: 1.25 }, { qty: 250, price: 1.10 }, { qty: 500, price: 0.95 }, { qty: 1000, price: 0.85 }, { qty: 2500, price: 0.75 }] },
     ], addOns: [
-      { name: 'Holographic Upgrade', type: 'flat', value: 0.30 },
-      { name: 'Direct Print', type: 'flat', value: 0.40 },
-      { name: 'Window Cutout', type: 'flat', value: 0.20 },
-      { name: 'Foil Finish', type: 'flat', value: 0.20 },
+      { name: 'Holographic Upgrade', type: 'flat', value: 0.40 },
+      { name: 'Direct Print', type: 'flat', value: 0.50 },
+      { name: 'Window Cutout', type: 'flat', value: 0.30 },
+      { name: 'Foil Finish', type: 'flat', value: 0.30 },
     ]},
     // 1: Event Displays
     { name: 'Event Displays', items: [
