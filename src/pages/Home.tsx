@@ -1,8 +1,6 @@
 import Hero from '@/components/home/Hero'
 import TrustedBy from '@/components/home/TrustedBy'
 import ProductCategories from '@/components/home/ProductCategories'
-import ProductShowcase from '@/components/home/ProductShowcase'
-import HowItWorks from '@/components/home/HowItWorks'
 import ProjectGallery from '@/components/home/ProjectGallery'
 import ServicesOverview from '@/components/home/ServicesOverview'
 import SamplePackCTA from '@/components/home/SamplePackCTA'
@@ -17,8 +15,6 @@ export default function Home() {
     <>
       <Hero />
       <ProductCategories />
-      <ProductShowcase />
-      <HowItWorks />
       <TrustedBy />
       <ProjectGallery />
       <SamplePackCTA />
