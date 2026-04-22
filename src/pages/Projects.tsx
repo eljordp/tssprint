@@ -10,6 +10,13 @@ import safewayTruck from '@/assets/projects/safeway-truck.jpeg'
 import tecEquipment from '@/assets/projects/tec-equipment-truck.jpeg'
 import elevated from '@/assets/projects/elevated925-storefront.jpg'
 import eventBooth from '@/assets/projects/event-booth-sticker-smith.jpeg'
+import featherFlags from '@/assets/projects/feather-flags.jpg'
+import plu2oDispensary from '@/assets/projects/plu2o-dispensary.jpg'
+import weddingFloor2 from '@/assets/projects/wedding-vinyl-floor-2.jpeg'
+import weddingFloor3 from '@/assets/projects/wedding-vinyl-floor-3.jpeg'
+import culturalDanceFloor from '@/assets/projects/cultural-dance-floor-2.jpeg'
+import weddingDisplay from '@/assets/projects/wedding-display-signage-1.jpeg'
+import safewayInstall from '@/assets/projects/safeway-install.jpeg'
 
 const categories = ['All', 'Vehicle Graphics', 'Business Signage', 'Stickers', 'Business Print', 'Mylar Packaging', 'Events'] as const
 
@@ -23,6 +30,13 @@ const projects = [
   { image: tecEquipment, title: 'TEC Equipment', category: 'Vehicle Graphics' },
   { image: elevated, title: 'Elevated 925 Storefront', category: 'Business Signage' },
   { image: eventBooth, title: 'Event Booth Setup', category: 'Events' },
+  { image: featherFlags, title: 'Custom Feather Flags', category: 'Events' },
+  { image: plu2oDispensary, title: 'Plu2o Dispensary Signage', category: 'Business Signage' },
+  { image: weddingFloor2, title: 'Wedding Floor Graphics', category: 'Events' },
+  { image: weddingFloor3, title: 'Custom Floor Decal', category: 'Events' },
+  { image: culturalDanceFloor, title: 'Cultural Event Floor Vinyl', category: 'Events' },
+  { image: weddingDisplay, title: 'Wedding Display Signage', category: 'Events' },
+  { image: safewayInstall, title: 'Safeway In-Store Install', category: 'Business Signage' },
 ]
 
 export default function Projects() {
