@@ -282,10 +282,21 @@ function startPrinterSound(refStore: React.MutableRefObject<Array<() => void>>) 
     if (ctx.state === 'suspended') ctx.resume().catch(() => {})
 
     const masterGain = ctx.createGain()
-    masterGain.gain.value = 0.12
+    masterGain.gain.value = 0.14
     masterGain.connect(ctx.destination)
 
-    // Base whirring motor — low saw wave filtered low
+    // Pre-build noise buffer (reused for clicks, hiss, whoosh)
+    const noiseBuffer = ctx.createBuffer(1, ctx.sampleRate * 1.2, ctx.sampleRate)
+    const noiseData = noiseBuffer.getChannelData(0)
+    for (let i = 0; i < noiseData.length; i++) noiseData[i] = Math.random() * 2 - 1
+
+    const clickBuffer = ctx.createBuffer(1, ctx.sampleRate * 0.04, ctx.sampleRate)
+    const clickData = clickBuffer.getChannelData(0)
+    for (let i = 0; i < clickData.length; i++) {
+      clickData[i] = (Math.random() * 2 - 1) * (1 - i / clickData.length)
+    }
+
+    // --- Layer 1: Low motor drone (throbbing) ---
     const motor = ctx.createOscillator()
     motor.type = 'sawtooth'
     motor.frequency.value = 78
@@ -303,7 +314,7 @@ function startPrinterSound(refStore: React.MutableRefObject<Array<() => void>>) 
 
     const motorGain = ctx.createGain()
     motorGain.gain.value = 0
-    motorGain.gain.linearRampToValueAtTime(0.35, ctx.currentTime + 0.15)
+    motorGain.gain.linearRampToValueAtTime(0.3, ctx.currentTime + 0.2)
 
     motor.connect(motorFilter)
     motorFilter.connect(motorGain)
@@ -311,32 +322,116 @@ function startPrinterSound(refStore: React.MutableRefObject<Array<() => void>>) 
     motor.start()
     motorLfo.start()
 
-    // Pre-build click noise buffer once, reuse it (avoids per-tick GC pressure)
-    const clickBuffer = ctx.createBuffer(1, ctx.sampleRate * 0.04, ctx.sampleRate)
-    const clickData = clickBuffer.getChannelData(0)
-    for (let i = 0; i < clickData.length; i++) {
-      clickData[i] = (Math.random() * 2 - 1) * (1 - i / clickData.length)
+    // --- Layer 2: High servo whine (modulated pitch, like real inkjet carriage) ---
+    const servo = ctx.createOscillator()
+    servo.type = 'triangle'
+    servo.frequency.value = 720
+    const servoLfo = ctx.createOscillator()
+    servoLfo.type = 'sine'
+    servoLfo.frequency.value = 0.77 // syncs loosely with 1.3s nozzle cycle
+    const servoLfoGain = ctx.createGain()
+    servoLfoGain.gain.value = 180
+    servoLfo.connect(servoLfoGain)
+    servoLfoGain.connect(servo.frequency)
+
+    const servoFilter = ctx.createBiquadFilter()
+    servoFilter.type = 'bandpass'
+    servoFilter.frequency.value = 900
+    servoFilter.Q.value = 4
+
+    const servoGain = ctx.createGain()
+    servoGain.gain.value = 0
+    servoGain.gain.linearRampToValueAtTime(0.05, ctx.currentTime + 0.4)
+
+    servo.connect(servoFilter)
+    servoFilter.connect(servoGain)
+    servoGain.connect(masterGain)
+    servo.start()
+    servoLfo.start()
+
+    // --- Layer 3: Opening thud (head engaging) ---
+    {
+      const now = ctx.currentTime + 0.05
+      const thud = ctx.createOscillator()
+      thud.type = 'sine'
+      thud.frequency.setValueAtTime(120, now)
+      thud.frequency.exponentialRampToValueAtTime(40, now + 0.22)
+      const thudGain = ctx.createGain()
+      thudGain.gain.setValueAtTime(0, now)
+      thudGain.gain.linearRampToValueAtTime(0.55, now + 0.01)
+      thudGain.gain.exponentialRampToValueAtTime(0.001, now + 0.25)
+      thud.connect(thudGain)
+      thudGain.connect(masterGain)
+      thud.start(now)
+      thud.stop(now + 0.3)
     }
 
-    // Carriage click track — short noise bursts at nozzle oscillation rate
+    // --- Layer 4: Paper feed hiss (soft whoosh at start) ---
+    {
+      const now = ctx.currentTime + 0.15
+      const src = ctx.createBufferSource()
+      src.buffer = noiseBuffer
+      const hpf = ctx.createBiquadFilter()
+      hpf.type = 'bandpass'
+      hpf.frequency.value = 3500
+      hpf.Q.value = 0.7
+      const hissGain = ctx.createGain()
+      hissGain.gain.setValueAtTime(0, now)
+      hissGain.gain.linearRampToValueAtTime(0.22, now + 0.08)
+      hissGain.gain.exponentialRampToValueAtTime(0.001, now + 0.6)
+      src.connect(hpf)
+      hpf.connect(hissGain)
+      hissGain.connect(masterGain)
+      src.start(now)
+      src.stop(now + 0.7)
+    }
+
+    // --- Layer 5: Carriage clicks with varied pitch (not monotone) ---
+    let clickTick = 0
     const clickInterval = setInterval(() => {
       const now = ctx.currentTime
       const src = ctx.createBufferSource()
       src.buffer = clickBuffer
       const clickFilter = ctx.createBiquadFilter()
       clickFilter.type = 'highpass'
-      clickFilter.frequency.value = 2000
+      // Alternate high/low pitch clicks + occasional deeper "clack"
+      const variant = clickTick % 5
+      clickFilter.frequency.value =
+        variant === 0 ? 1200 : variant === 2 ? 3200 : variant === 4 ? 900 : 2200
       const clickGain = ctx.createGain()
-      clickGain.gain.setValueAtTime(0.4, now)
-      clickGain.gain.exponentialRampToValueAtTime(0.001, now + 0.04)
+      const amp = variant === 4 ? 0.5 : 0.35
+      clickGain.gain.setValueAtTime(amp, now)
+      clickGain.gain.exponentialRampToValueAtTime(0.001, now + 0.05)
       src.connect(clickFilter)
       clickFilter.connect(clickGain)
       clickGain.connect(masterGain)
       src.start(now)
-      src.stop(now + 0.05)
+      src.stop(now + 0.06)
+      clickTick++
     }, 230)
 
-    // Final beep at end
+    // --- Layer 6: Paper ejection whoosh at end ---
+    const ejectTimer = setTimeout(() => {
+      const now = ctx.currentTime
+      const src = ctx.createBufferSource()
+      src.buffer = noiseBuffer
+      const ejFilter = ctx.createBiquadFilter()
+      ejFilter.type = 'bandpass'
+      ejFilter.frequency.setValueAtTime(2000, now)
+      ejFilter.frequency.linearRampToValueAtTime(600, now + 0.35)
+      ejFilter.Q.value = 1.2
+      const ejGain = ctx.createGain()
+      ejGain.gain.setValueAtTime(0, now)
+      ejGain.gain.linearRampToValueAtTime(0.32, now + 0.06)
+      ejGain.gain.exponentialRampToValueAtTime(0.001, now + 0.4)
+      src.connect(ejFilter)
+      ejFilter.connect(ejGain)
+      ejGain.connect(masterGain)
+      src.start(now)
+      src.stop(now + 0.45)
+    }, (DURATION - 0.9) * 1000)
+
+    // --- Layer 7: Final confirmation beeps ---
     const beepTimer = setTimeout(() => {
       const now = ctx.currentTime
       ;[0, 0.18].forEach((offset) => {
@@ -345,25 +440,31 @@ function startPrinterSound(refStore: React.MutableRefObject<Array<() => void>>) 
         beep.frequency.value = 1320
         const beepGain = ctx.createGain()
         beepGain.gain.setValueAtTime(0, now + offset)
-        beepGain.gain.linearRampToValueAtTime(0.25, now + offset + 0.01)
+        beepGain.gain.linearRampToValueAtTime(0.28, now + offset + 0.01)
         beepGain.gain.exponentialRampToValueAtTime(0.001, now + offset + 0.12)
         beep.connect(beepGain)
         beepGain.connect(masterGain)
         beep.start(now + offset)
         beep.stop(now + offset + 0.15)
       })
-    }, (DURATION - 0.5) * 1000)
+    }, (DURATION - 0.4) * 1000)
 
     refStore.current.push(() => {
       clearInterval(clickInterval)
       clearTimeout(beepTimer)
+      clearTimeout(ejectTimer)
       try {
-        motorGain.gain.cancelScheduledValues(ctx.currentTime)
-        motorGain.gain.setValueAtTime(motorGain.gain.value, ctx.currentTime)
-        motorGain.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + 0.25)
+        const t = ctx.currentTime
+        ;[motorGain, servoGain].forEach((g) => {
+          g.gain.cancelScheduledValues(t)
+          g.gain.setValueAtTime(g.gain.value, t)
+          g.gain.exponentialRampToValueAtTime(0.0001, t + 0.25)
+        })
         setTimeout(() => {
           motor.stop()
           motorLfo.stop()
+          servo.stop()
+          servoLfo.stop()
           ctx.close()
         }, 300)
       } catch {
