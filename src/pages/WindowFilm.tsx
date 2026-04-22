@@ -2,6 +2,7 @@ import { motion } from 'framer-motion'
 import { Film, CheckCircle, Clock, Shield, Wrench, Zap } from 'lucide-react'
 import ProductOrder from '@/components/ProductOrder'
 import EstimateForm from '@/components/EstimateForm'
+import SqFtEstimator from '@/components/SqFtEstimator'
 
 const features = [
   'Frosted Privacy Film',
@@ -75,6 +76,22 @@ export default function WindowFilm() {
           </motion.div>
 
           <ProductOrder categoryNames={['Frosted & Decorative', 'Solar & UV Protection', 'Security Film', 'Automotive Window Tint']} />
+        </div>
+      </section>
+      <section className="py-10 md:py-14 border-t border-border/50">
+        <div className="section-container max-w-2xl">
+          <SqFtEstimator
+            service="Window Film & Tint"
+            title="Window Film Quick Estimate"
+            subtitle="Not sure what your tint job costs? Get a ballpark in seconds."
+            tiers={[
+              { maxSqFt: 25, price: 200, label: 'Small (up to 25 sq ft) — Standard Frosted' },
+              { maxSqFt: 50, price: 400, label: 'Medium (25–50 sq ft) — Standard Frosted' },
+              { maxSqFt: 100, price: 600, label: 'Large (50–100 sq ft) — Standard Frosted' },
+              { maxSqFt: 150, price: 1000, label: '100–150 sq ft — Medium tint / Solar' },
+              { maxSqFt: 300, price: 1800, label: '150–300 sq ft — Medium tint / Solar' },
+            ]}
+          />
         </div>
       </section>
       <section className="py-12 md:py-20 border-t border-border/50">

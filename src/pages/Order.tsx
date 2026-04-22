@@ -369,6 +369,19 @@ export default function Order() {
                   <><ShoppingCart size={18} /> Add to Cart</>
                 )}
               </button>
+              {effectiveQty >= 2000 && (
+                <a
+                  href={`/contact?service=Bulk+Sticker+Order&qty=${effectiveQty}&size=${encodeURIComponent(size)}&material=${encodeURIComponent(material)}`}
+                  className="block mt-3 rounded-xl border border-primary/30 bg-primary/5 hover:bg-primary/10 transition-colors p-3 text-center"
+                >
+                  <p className="text-xs font-bold uppercase tracking-widest text-primary mb-1">
+                    Bulk quote available
+                  </p>
+                  <p className="text-[11px] text-muted-foreground leading-relaxed">
+                    {effectiveQty.toLocaleString()}+ pieces? We'll beat this price — request a custom quote →
+                  </p>
+                </a>
+              )}
               <p className="text-[11px] text-muted-foreground text-center mt-3 leading-relaxed">
                 Digital proof within 24 hours. Nothing prints until you approve.
               </p>

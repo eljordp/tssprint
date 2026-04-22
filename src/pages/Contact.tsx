@@ -1,4 +1,5 @@
-import { useState, type FormEvent } from 'react'
+import { useState, useEffect, type FormEvent } from 'react'
+import { useSearchParams } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import { Send, Mail, Phone, MapPin, Loader2 } from 'lucide-react'
 import { contactSchema, type ContactFormErrors } from '@/lib/validation'
@@ -7,10 +8,31 @@ import { sendContactEmail } from '@/lib/email'
 import { toast } from 'sonner'
 
 export default function Contact() {
+  const [searchParams] = useSearchParams()
   const [submitted, setSubmitted] = useState(false)
   const [loading, setLoading] = useState(false)
   const [errors, setErrors] = useState<ContactFormErrors>({})
   const [formData, setFormData] = useState({ name: '', email: '', phone: '', service: '', message: '' })
+
+  // Prefill from query params — lets other pages hand off context
+  // (e.g. /contact?service=Bulk+Sticker+Order&qty=2500&size=3"+x+3"&material=Holographic)
+  useEffect(() => {
+    const service = searchParams.get('service')
+    const qty = searchParams.get('qty')
+    const size = searchParams.get('size')
+    const material = searchParams.get('material')
+    if (!service && !qty && !size && !material) return
+    const parts: string[] = []
+    if (qty) parts.push(`Quantity: ${qty}`)
+    if (size) parts.push(`Size: ${size}`)
+    if (material) parts.push(`Material: ${material}`)
+    const prefillMsg = parts.length ? `Hi! I'd like a quote for:\n${parts.join('\n')}\n\n` : ''
+    setFormData((prev) => ({
+      ...prev,
+      service: service || prev.service,
+      message: prefillMsg || prev.message,
+    }))
+  }, [searchParams])
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault()

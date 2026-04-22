@@ -2,6 +2,14 @@ import { motion } from 'framer-motion'
 import { Store, CheckCircle, Clock, Shield, Wrench, Zap } from 'lucide-react'
 import ProductOrder from '@/components/ProductOrder'
 import EstimateForm from '@/components/EstimateForm'
+import SqFtEstimator from '@/components/SqFtEstimator'
+import PortfolioStrip from '@/components/PortfolioStrip'
+import atlasPizza from '@/assets/projects/atlas-pizza-signage.jpeg'
+import elevated925 from '@/assets/projects/elevated925-storefront.jpg'
+import plu2o from '@/assets/projects/plu2o-dispensary.jpg'
+import barbershop from '@/assets/projects/curated-barbershop.jpeg'
+import safewayInstall from '@/assets/projects/safeway-install.jpeg'
+import weddingSignage from '@/assets/projects/wedding-display-signage-1.jpeg'
 
 const features = [
   'Storefront & Building Signs',
@@ -74,6 +82,38 @@ export default function BusinessSignage() {
           </motion.div>
 
           <ProductOrder categoryNames={['Storefront Graphics', 'A-Frame Signs', 'Retractable Banners', 'Wall Graphics']} />
+        </div>
+      </section>
+      <section className="py-12 md:py-20 border-t border-border/50">
+        <div className="section-container">
+          <PortfolioStrip
+            title="Signage We've Installed"
+            subtitle="Storefronts, dispensaries, barbershops, weddings — real installs across the Bay."
+            projects={[
+              { src: atlasPizza, alt: 'Atlas Pizza storefront signage', caption: 'Atlas Pizza' },
+              { src: elevated925, alt: 'Elevated 925 storefront', caption: 'Elevated 925' },
+              { src: plu2o, alt: 'Plu2o dispensary signage', caption: 'Plu2o Dispensary' },
+              { src: barbershop, alt: 'Curated barbershop', caption: 'Curated Barbershop' },
+              { src: safewayInstall, alt: 'Safeway install', caption: 'Safeway install' },
+              { src: weddingSignage, alt: 'Wedding display signage', caption: 'Wedding event signage' },
+            ]}
+          />
+        </div>
+      </section>
+      <section className="py-10 md:py-14 border-t border-border/50">
+        <div className="section-container max-w-2xl">
+          <SqFtEstimator
+            service="Business Signage"
+            title="Signage Quick Estimate"
+            subtitle="Approximate your storefront or wall dimensions for a starting price."
+            tiers={[
+              { maxSqFt: 10, price: 150, label: 'Up to 10 sq ft — Vinyl Lettering Small' },
+              { maxSqFt: 25, price: 375, label: '10–25 sq ft — Printed Graphics Small' },
+              { maxSqFt: 50, price: 600, label: '25–50 sq ft — Printed Graphics Medium' },
+              { maxSqFt: 100, price: 1000, label: '50–100 sq ft — Printed Graphics Large' },
+              { maxSqFt: 150, price: 1400, label: '100–150 sq ft — Full Wall Install' },
+            ]}
+          />
         </div>
       </section>
       <section className="py-12 md:py-20 border-t border-border/50">

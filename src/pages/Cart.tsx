@@ -1,7 +1,10 @@
+import { useState, type FormEvent } from 'react'
 import { Link } from 'react-router-dom'
-import { motion } from 'framer-motion'
-import { Trash2, Plus, Minus, ShoppingBag, AlertCircle } from 'lucide-react'
+import { motion, AnimatePresence } from 'framer-motion'
+import { Trash2, Plus, Minus, ShoppingBag, AlertCircle, Mail, Check, Loader2 } from 'lucide-react'
 import { useCart } from '@/context/CartContext'
+import { supabase } from '@/lib/supabase'
+import { sendContactEmail } from '@/lib/email'
 
 const MIN_ORDER = 35
 
@@ -9,6 +12,46 @@ export default function Cart() {
   const { items, removeItem, updateQuantity, total } = useCart()
   const belowMin = total > 0 && total < MIN_ORDER
   const shortfall = +(MIN_ORDER - total).toFixed(2)
+
+  const [quoteOpen, setQuoteOpen] = useState(false)
+  const [quoteEmail, setQuoteEmail] = useState('')
+  const [quoteName, setQuoteName] = useState('')
+  const [quoteStatus, setQuoteStatus] = useState<'idle' | 'sending' | 'sent' | 'error'>('idle')
+
+  const buildQuoteMessage = () => {
+    const lines = items.map((i) => {
+      const lineTotal = (i.price * i.quantity).toFixed(2)
+      return `• ${i.name} — ${i.option} · ${i.size} — $${lineTotal}`
+    })
+    lines.push('')
+    lines.push(`Cart total: $${total.toFixed(2)}`)
+    return lines.join('\n')
+  }
+
+  const handleQuote = async (e: FormEvent) => {
+    e.preventDefault()
+    if (!quoteEmail || !quoteName) return
+    setQuoteStatus('sending')
+    const message = `Hold this quote for me, please.\n\n${buildQuoteMessage()}`
+    try {
+      await supabase.from('contact_submissions').insert({
+        name: quoteName,
+        email: quoteEmail,
+        service: 'Cart Quote Hold',
+        message,
+      })
+      sendContactEmail({
+        name: quoteName,
+        email: quoteEmail,
+        service: 'Cart Quote Hold',
+        message,
+      })
+      setQuoteStatus('sent')
+    } catch {
+      setQuoteStatus('error')
+    }
+  }
+
   if (items.length === 0) {
     return (
       <section className="py-16 md:py-24">
@@ -57,7 +100,7 @@ export default function Cart() {
             </div>
           </div>
         )}
-        <div className="bg-card border border-border rounded-2xl p-6 flex flex-col sm:flex-row items-center justify-between gap-4">
+        <div className="bg-card border border-border rounded-2xl p-6 flex flex-col sm:flex-row items-center justify-between gap-4 mb-4">
           <div className="text-2xl font-black">Total: <span className="text-primary">${total.toFixed(2)}</span></div>
           {belowMin ? (
             <button
@@ -69,6 +112,86 @@ export default function Cart() {
           ) : (
             <Link to="/checkout" className="btn-primary">Proceed to Checkout</Link>
           )}
+        </div>
+
+        {/* Save-as-quote — email this cart for later */}
+        <div className="bg-card/50 border border-border/70 rounded-2xl overflow-hidden">
+          <button
+            onClick={() => setQuoteOpen(!quoteOpen)}
+            className="w-full flex items-center justify-between gap-3 px-6 py-4 text-left hover:bg-white/[0.02] transition-colors"
+          >
+            <div className="flex items-center gap-3">
+              <div className="w-9 h-9 rounded-lg bg-primary/10 border border-primary/20 flex items-center justify-center">
+                <Mail size={16} className="text-primary" />
+              </div>
+              <div>
+                <p className="font-bold text-sm">Email this quote to me</p>
+                <p className="text-xs text-muted-foreground">Hold the price, decide later — we'll follow up within 24 hrs.</p>
+              </div>
+            </div>
+            <span className="text-xs text-muted-foreground font-mono">{quoteOpen ? '−' : '+'}</span>
+          </button>
+          <AnimatePresence>
+            {quoteOpen && (
+              <motion.div
+                initial={{ height: 0, opacity: 0 }}
+                animate={{ height: 'auto', opacity: 1 }}
+                exit={{ height: 0, opacity: 0 }}
+                transition={{ duration: 0.2 }}
+                className="overflow-hidden"
+              >
+                <div className="px-6 pb-6 border-t border-border/50 pt-4">
+                  {quoteStatus === 'sent' ? (
+                    <div className="flex items-center gap-3 text-sm">
+                      <div className="w-9 h-9 rounded-lg bg-green-500/15 border border-green-500/30 flex items-center justify-center">
+                        <Check size={16} className="text-green-400" />
+                      </div>
+                      <div>
+                        <p className="font-bold text-green-400">Quote sent to {quoteEmail}</p>
+                        <p className="text-xs text-muted-foreground">Check your inbox — we saved your cart and will follow up.</p>
+                      </div>
+                    </div>
+                  ) : (
+                    <form onSubmit={handleQuote} className="space-y-3">
+                      <div className="grid sm:grid-cols-2 gap-3">
+                        <input
+                          value={quoteName}
+                          onChange={(e) => setQuoteName(e.target.value)}
+                          required
+                          className="input-base"
+                          placeholder="Your name"
+                        />
+                        <input
+                          type="email"
+                          value={quoteEmail}
+                          onChange={(e) => setQuoteEmail(e.target.value)}
+                          required
+                          className="input-base"
+                          placeholder="you@email.com"
+                        />
+                      </div>
+                      <button
+                        type="submit"
+                        disabled={quoteStatus === 'sending' || !quoteName || !quoteEmail}
+                        className="btn-primary w-full justify-center disabled:opacity-50 disabled:cursor-not-allowed"
+                      >
+                        {quoteStatus === 'sending' ? (
+                          <><Loader2 size={14} className="animate-spin" /> Sending…</>
+                        ) : (
+                          <><Mail size={14} /> Send my quote</>
+                        )}
+                      </button>
+                      {quoteStatus === 'error' && (
+                        <p className="text-xs text-destructive text-center">
+                          Couldn't send — try again or email thestickersmith@gmail.com.
+                        </p>
+                      )}
+                    </form>
+                  )}
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
         </div>
       </div>
     </section>

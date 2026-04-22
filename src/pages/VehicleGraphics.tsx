@@ -2,6 +2,13 @@ import { motion } from 'framer-motion'
 import { Car, CheckCircle, Clock, Shield, Wrench, Zap } from 'lucide-react'
 import ProductOrder from '@/components/ProductOrder'
 import EstimateForm from '@/components/EstimateForm'
+import PortfolioStrip from '@/components/PortfolioStrip'
+import albertsonsVan from '@/assets/projects/albertsons-van.jpeg'
+import bhogalTruck from '@/assets/projects/bhogal-construction.jpeg'
+import procareFleet from '@/assets/projects/procare-fleet.jpeg'
+import safewayTruck from '@/assets/projects/safeway-truck.jpeg'
+import tecTruck from '@/assets/projects/tec-equipment-truck.jpeg'
+import safewayInstall from '@/assets/projects/safeway-install.jpeg'
 
 const features = [
   'Full Vehicle Wraps',
@@ -74,6 +81,22 @@ export default function VehicleGraphics() {
           </motion.div>
 
           <ProductOrder categoryNames={['Decals & Lettering', 'Full Wraps', 'Partial Wraps']} />
+        </div>
+      </section>
+      <section className="py-12 md:py-20 border-t border-border/50">
+        <div className="section-container">
+          <PortfolioStrip
+            title="Vehicle Wraps We've Done"
+            subtitle="Real jobs, real clients. Bay Area fleets and single vehicles."
+            projects={[
+              { src: albertsonsVan, alt: 'Albertsons fleet van wrap', caption: 'Albertsons fleet' },
+              { src: bhogalTruck, alt: 'Bhogal Construction truck wrap', caption: 'Bhogal Construction' },
+              { src: procareFleet, alt: 'ProCare fleet branding', caption: 'ProCare fleet' },
+              { src: safewayTruck, alt: 'Safeway truck wrap', caption: 'Safeway' },
+              { src: tecTruck, alt: 'TEC Equipment truck', caption: 'TEC Equipment' },
+              { src: safewayInstall, alt: 'Safeway installation', caption: 'Install day' },
+            ]}
+          />
         </div>
       </section>
       <section className="py-12 md:py-20 border-t border-border/50">
