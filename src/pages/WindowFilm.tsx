@@ -3,6 +3,13 @@ import { Film, CheckCircle, Clock, Shield, Wrench, Zap } from 'lucide-react'
 import ProductOrder from '@/components/ProductOrder'
 import EstimateForm from '@/components/EstimateForm'
 import SqFtEstimator from '@/components/SqFtEstimator'
+import PortfolioStrip from '@/components/PortfolioStrip'
+import windowFrosted from '@/assets/projects/window-frosted-office.jpg'
+import windowAutoTint from '@/assets/projects/window-auto-tint.jpg'
+import windowStorefront from '@/assets/projects/window-storefront-vinyl.jpg'
+import windowDecorative from '@/assets/projects/window-decorative-pattern.jpg'
+import windowInstall from '@/assets/projects/window-install-squeegee.jpg'
+import windowSecurity from '@/assets/projects/window-security-film.jpg'
 
 const features = [
   'Frosted Privacy Film',
@@ -76,6 +83,22 @@ export default function WindowFilm() {
           </motion.div>
 
           <ProductOrder categoryNames={['Frosted & Decorative', 'Solar & UV Protection', 'Security Film', 'Automotive Window Tint']} />
+        </div>
+      </section>
+      <section className="py-12 md:py-20 border-t border-border/50">
+        <div className="section-container">
+          <PortfolioStrip
+            title="Film + Tint Jobs"
+            subtitle="Frosted privacy, auto tint, storefront vinyl, security film."
+            projects={[
+              { src: windowFrosted, alt: 'Office frosted film', caption: 'Office frosted film' },
+              { src: windowStorefront, alt: 'Storefront vinyl graphics', caption: 'Storefront vinyl' },
+              { src: windowAutoTint, alt: 'Auto tint install', caption: 'Auto tint install' },
+              { src: windowDecorative, alt: 'Decorative pattern', caption: 'Decorative pattern' },
+              { src: windowInstall, alt: 'Squeegee install', caption: 'Pro install' },
+              { src: windowSecurity, alt: 'Security film', caption: 'Security film' },
+            ]}
+          />
         </div>
       </section>
       <section className="py-10 md:py-14 border-t border-border/50">

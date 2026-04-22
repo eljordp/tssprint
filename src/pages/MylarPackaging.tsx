@@ -4,6 +4,13 @@ import { Upload, X, Package, Sparkles, Box, ShoppingCart, Check } from 'lucide-r
 import { useCart } from '@/context/CartContext'
 import { getPricing, type ProductCategory, type AddOn } from '@/lib/pricing'
 import EstimateForm from '@/components/EstimateForm'
+import PortfolioStrip from '@/components/PortfolioStrip'
+import mylarBlack from '@/assets/projects/mylar-black-pouches.jpg'
+import mylarGold from '@/assets/projects/mylar-gold-foil.jpg'
+import mylarCannabis from '@/assets/projects/mylar-cannabis-style.jpg'
+import mylarFood from '@/assets/projects/mylar-food-packaging.jpg'
+import mylarDetail from '@/assets/projects/mylar-pouch-detail.jpg'
+import mylarProduction from '@/assets/projects/mylar-production-line.jpg'
 
 type MockupType = 'pouch' | 'foil' | 'jar'
 
@@ -362,6 +369,22 @@ export default function MylarPackaging() {
               </div>
             </motion.div>
           </div>
+        </div>
+      </section>
+      <section className="py-12 md:py-20 border-t border-border/50">
+        <div className="section-container">
+          <PortfolioStrip
+            title="Custom Mylar We've Printed"
+            subtitle="Matte, foil, holographic — food, cannabis, retail."
+            projects={[
+              { src: mylarBlack, alt: 'Matte black mylar pouches', caption: 'Matte black trio' },
+              { src: mylarGold, alt: 'Gold foil mylar pouches', caption: 'Gold foil stamping' },
+              { src: mylarCannabis, alt: 'Cannabis-style mylar bags', caption: 'Premium cannabis packaging' },
+              { src: mylarFood, alt: 'Food-grade mylar bags', caption: 'Food packaging' },
+              { src: mylarDetail, alt: 'Mylar pouch detail shot', caption: 'Zipper + seal detail' },
+              { src: mylarProduction, alt: 'Mylar production line', caption: 'Production run' },
+            ]}
+          />
         </div>
       </section>
       <section className="py-12 md:py-20 border-t border-border/50">

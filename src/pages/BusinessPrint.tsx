@@ -2,6 +2,13 @@ import { motion } from 'framer-motion'
 import { Printer, CheckCircle, Clock, Shield, Layers, Zap } from 'lucide-react'
 import ProductOrder from '@/components/ProductOrder'
 import EstimateForm from '@/components/EstimateForm'
+import PortfolioStrip from '@/components/PortfolioStrip'
+import bizCardsLuxury from '@/assets/projects/business-cards-luxury.jpg'
+import bizCardsFoil from '@/assets/projects/business-cards-foil.jpg'
+import flyers from '@/assets/projects/flyers-full-color.jpg'
+import postcards from '@/assets/projects/postcards-set.jpg'
+import letterpress from '@/assets/projects/letterpress-detail.jpg'
+import pressroom from '@/assets/projects/print-pressroom.jpg'
 
 const features = [
   'Business Cards',
@@ -74,6 +81,22 @@ export default function BusinessPrint() {
           </motion.div>
 
           <ProductOrder categoryNames={['Business Cards', 'Flyers & Door Hangers', 'Postcards', 'Vehicle Magnets']} />
+        </div>
+      </section>
+      <section className="py-12 md:py-20 border-t border-border/50">
+        <div className="section-container">
+          <PortfolioStrip
+            title="Print Work We're Proud Of"
+            subtitle="Business cards with foil, soft-touch flyers, full-color postcards."
+            projects={[
+              { src: bizCardsLuxury, alt: 'Premium black business cards', caption: 'Matte black + foil' },
+              { src: bizCardsFoil, alt: 'Specialty finish cards', caption: 'Specialty finishes' },
+              { src: flyers, alt: 'Full color flyers', caption: 'Full-color flyers' },
+              { src: postcards, alt: 'Postcards', caption: 'Postcards' },
+              { src: letterpress, alt: 'Letterpress detail', caption: 'Letterpress texture' },
+              { src: pressroom, alt: 'Print shop', caption: 'Fresh off the press' },
+            ]}
+          />
         </div>
       </section>
       <section className="py-12 md:py-20 border-t border-border/50">
