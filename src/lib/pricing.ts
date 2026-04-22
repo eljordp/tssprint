@@ -72,7 +72,7 @@ export const defaultPricing: PricingConfig = {
       { size: 'Ounce Bags (5"×8")', quantities: [{ qty: 100, price: 2.75 }, { qty: 250, price: 2.60 }, { qty: 500, price: 2.45 }, { qty: 1000, price: 2.30 }, { qty: 2500, price: 2.15 }] },
       { size: 'Half Pound (10"×12")', quantities: [{ qty: 50, price: 9.50 }, { qty: 100, price: 9.00 }, { qty: 250, price: 8.25 }, { qty: 500, price: 7.75 }] },
       { size: 'Pound Bags (14"×16")', quantities: [{ qty: 50, price: 12.50 }, { qty: 100, price: 11.50 }, { qty: 250, price: 10.50 }, { qty: 500, price: 9.75 }] },
-      { size: '2oz Jar Labels', quantities: [{ qty: 100, price: 1.25 }, { qty: 250, price: 1.10 }, { qty: 500, price: 0.95 }, { qty: 1000, price: 0.85 }, { qty: 2500, price: 0.75 }] },
+      { size: '2oz Jar + Custom Label', quantities: [{ qty: 100, price: 3.50 }, { qty: 250, price: 3.25 }, { qty: 500, price: 3.00 }, { qty: 1000, price: 2.85 }, { qty: 2500, price: 2.70 }] },
     ], addOns: [
       { name: 'Holographic Upgrade', type: 'flat', value: 0.40 },
       { name: 'Direct Print', type: 'flat', value: 0.50 },
