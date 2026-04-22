@@ -1,5 +1,6 @@
 import { useEffect, useState, useRef } from 'react'
 import { AnimatePresence, motion } from 'framer-motion'
+import { Printer } from 'lucide-react'
 
 const SESSION_KEY = 'tss_intro_played'
 const DURATION = 4.6
@@ -9,17 +10,21 @@ const HEAD_TRAVEL_S = DURATION - 0.8
 const HEAD_EASE: [number, number, number, number] = [0.2, 0.1, 0.8, 0.9]
 const STATUS_MESSAGES = ['CALIBRATING', 'LOADING INK', 'PRINTING', 'CURING']
 
+type Phase = 'hidden' | 'gate' | 'playing'
+
 const prefersReducedMotion = () =>
   typeof window !== 'undefined' &&
   window.matchMedia('(prefers-reduced-motion: reduce)').matches
 
 export default function PrinterIntro() {
-  const [show, setShow] = useState(false)
+  const [phase, setPhase] = useState<Phase>('hidden')
   const [vh, setVh] = useState(() => (typeof window !== 'undefined' ? window.innerHeight : 800))
   const [statusIdx, setStatusIdx] = useState(0)
   const [showCropMarks, setShowCropMarks] = useState(false)
   const audioStoppers = useRef<Array<() => void>>([])
+  const timersRef = useRef<Array<number>>([])
 
+  // Decide on mount whether to show the gate
   useEffect(() => {
     if (typeof window === 'undefined') return
     if (sessionStorage.getItem(SESSION_KEY)) return
@@ -28,39 +33,49 @@ export default function PrinterIntro() {
       return
     }
     sessionStorage.setItem(SESSION_KEY, '1')
-    setShow(true)
-    setVh(window.innerHeight)
+    setPhase('gate')
     document.body.style.overflow = 'hidden'
+  }, [])
 
-    // Rotate status messages across the duration
+  // When transitioning to playing, kick off timers + audio
+  useEffect(() => {
+    if (phase !== 'playing') return
+    setVh(window.innerHeight)
+
     const statusStep = (DURATION * 1000) / STATUS_MESSAGES.length
-    const statusTimers = STATUS_MESSAGES.map((_, i) =>
-      setTimeout(() => setStatusIdx(i), i * statusStep),
+    STATUS_MESSAGES.forEach((_, i) => {
+      timersRef.current.push(window.setTimeout(() => setStatusIdx(i), i * statusStep))
+    })
+    timersRef.current.push(
+      window.setTimeout(() => setShowCropMarks(true), (DURATION - 0.6) * 1000),
+    )
+    timersRef.current.push(
+      window.setTimeout(() => {
+        setPhase('hidden')
+        document.body.style.overflow = ''
+        stopAllSound(audioStoppers)
+      }, DURATION * 1000),
     )
 
-    // Show crop marks near the end
-    const cropTimer = setTimeout(() => setShowCropMarks(true), (DURATION - 0.6) * 1000)
-
-    // Start synthesized printer sound (fails silently if autoplay blocked)
     startPrinterSound(audioStoppers)
 
-    const t = setTimeout(() => {
-      setShow(false)
-      document.body.style.overflow = ''
-      stopAllSound(audioStoppers)
-    }, DURATION * 1000)
-
     return () => {
-      clearTimeout(t)
-      clearTimeout(cropTimer)
-      statusTimers.forEach(clearTimeout)
+      timersRef.current.forEach((id) => clearTimeout(id))
+      timersRef.current = []
       document.body.style.overflow = ''
       stopAllSound(audioStoppers)
     }
-  }, [])
+  }, [phase])
 
-  const skip = () => {
-    setShow(false)
+  const startIntro = () => {
+    // This runs inside the click handler — AudioContext will be allowed
+    setPhase('playing')
+  }
+
+  const skipEverything = () => {
+    timersRef.current.forEach((id) => clearTimeout(id))
+    timersRef.current = []
+    setPhase('hidden')
     document.body.style.overflow = ''
     stopAllSound(audioStoppers)
   }
@@ -85,9 +100,70 @@ export default function PrinterIntro() {
 
   return (
     <AnimatePresence>
-      {show && (
+      {phase === 'gate' && (
         <motion.div
-          onClick={skip}
+          key="gate"
+          className="fixed inset-0 z-[9999] bg-neutral-950 flex items-center justify-center px-6"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          transition={{ duration: 0.3 }}
+        >
+          {/* Ambient grid backdrop */}
+          <div
+            className="absolute inset-0 opacity-[0.04] pointer-events-none"
+            style={{
+              backgroundImage:
+                'linear-gradient(#fff 1px, transparent 1px), linear-gradient(90deg, #fff 1px, transparent 1px)',
+              backgroundSize: '60px 60px',
+            }}
+          />
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.1, duration: 0.4, ease: 'easeOut' }}
+            className="relative text-center max-w-md"
+          >
+            <div className="flex items-center justify-center gap-2 mb-6">
+              <div className="w-1.5 h-1.5 rounded-full bg-cyan-400 shadow-[0_0_6px_rgba(34,211,238,0.8)]" />
+              <div className="w-1.5 h-1.5 rounded-full bg-pink-500 shadow-[0_0_6px_rgba(236,72,153,0.8)]" />
+              <div className="w-1.5 h-1.5 rounded-full bg-yellow-400 shadow-[0_0_6px_rgba(250,204,21,0.8)]" />
+              <div className="w-1.5 h-1.5 rounded-full bg-neutral-800 border border-neutral-600" />
+              <span className="ml-2 text-[10px] text-neutral-500 font-mono tracking-widest uppercase">
+                ready
+              </span>
+            </div>
+            <h2 className="text-3xl md:text-4xl font-black text-white mb-8 tracking-tight">
+              Press <span className="text-gradient">Print</span>
+            </h2>
+            <button
+              onClick={startIntro}
+              className="group inline-flex items-center gap-3 bg-gradient-to-b from-neutral-100 to-neutral-300 hover:from-white hover:to-neutral-200 text-neutral-900 font-black text-lg px-10 py-5 rounded-full shadow-[0_0_40px_rgba(34,211,238,0.25)] transition-all hover:scale-[1.03] active:scale-95"
+            >
+              <Printer size={22} strokeWidth={2.5} />
+              PRINT
+              <motion.span
+                className="w-1.5 h-1.5 rounded-full bg-cyan-500"
+                animate={{ opacity: [1, 0.2, 1] }}
+                transition={{ duration: 1.1, repeat: Infinity }}
+              />
+            </button>
+            <div className="mt-8">
+              <button
+                onClick={skipEverything}
+                className="text-xs text-neutral-600 hover:text-neutral-400 font-mono tracking-widest uppercase transition-colors"
+              >
+                skip intro →
+              </button>
+            </div>
+          </motion.div>
+        </motion.div>
+      )}
+
+      {phase === 'playing' && (
+        <motion.div
+          key="playing"
+          onClick={skipEverything}
           className="fixed inset-0 z-[9999] cursor-pointer"
           initial={{ opacity: 1 }}
           exit={{ opacity: 0 }}

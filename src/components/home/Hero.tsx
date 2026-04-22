@@ -2,7 +2,7 @@ import { Link } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import { ArrowRight, Clock, MapPin, Shield } from 'lucide-react'
 
-import stickerGroup from '@/assets/stickers/sticker-group.png'
+import heroPrinter from '@/assets/hero-printer.jpg'
 
 
 export default function Hero() {
@@ -17,22 +17,25 @@ export default function Hero() {
       {/* Content */}
       <div className="section-container relative z-10 w-full">
         <div className="grid lg:grid-cols-[1.2fr_0.8fr] gap-6 lg:gap-12 items-center">
-          {/* Sticker showcase — shows above text on mobile, right side on desktop */}
+          {/* Printer hero visual — shows above text on mobile, right side on desktop */}
           <motion.div
-            initial={{ opacity: 0, scale: 0.9 }}
+            initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
             transition={{ duration: 0.8, delay: 0.2 }}
             className="relative order-1 lg:order-2"
           >
-            <div className="relative w-full aspect-square max-w-[260px] sm:max-w-sm lg:max-w-md mx-auto">
-              <motion.div
-                animate={{ y: [0, -8, 0] }}
-                transition={{ duration: 4, repeat: Infinity, ease: 'easeInOut' }}
-                className="absolute inset-0 flex items-center justify-center z-20"
-              >
-                <img src={stickerGroup} alt="Custom sticker collection" className="w-full h-auto drop-shadow-2xl" />
-              </motion.div>
-              <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-48 h-48 lg:w-64 lg:h-64 bg-primary/10 rounded-full blur-3xl" />
+            <div className="relative w-full aspect-square max-w-[300px] sm:max-w-sm lg:max-w-md mx-auto">
+              <div className="relative rounded-3xl overflow-hidden shadow-2xl border border-white/10 ring-1 ring-primary/10">
+                <img
+                  src={heroPrinter}
+                  alt="Large-format printer mid-job"
+                  className="w-full h-full object-cover"
+                />
+                {/* Subtle cyan rim glow */}
+                <div className="absolute inset-0 pointer-events-none bg-gradient-to-tr from-primary/10 via-transparent to-transparent" />
+              </div>
+              {/* Ambient glow behind */}
+              <div className="absolute inset-0 -z-10 top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[110%] h-[110%] bg-primary/10 rounded-full blur-3xl" />
             </div>
           </motion.div>
 
