@@ -51,36 +51,51 @@ const faqCategories = [
   },
 ]
 
-export default function FAQ() {
+// Hand-picked top questions for the compact home variant
+const TOP_QUESTIONS = [
+  { question: 'How do I place an order?', answer: 'Browse our products, customize your options (size, material, quantity), and add to cart. At checkout, fill out your info and pay via PayPal. You\'ll receive an order confirmation immediately.' },
+  { question: 'What is your proof process?', answer: 'Every order includes a free digital proof within 24 hours. You\'ll see exactly how your stickers, signs, or prints will look before we produce them. We won\'t print until you approve.' },
+  { question: 'How fast can I get my order?', answer: 'Standard production is 3-5 business days + shipping. Express production (1-2 days) is available for most products. Bay Area customers can arrange local pickup.' },
+  { question: 'What services do you offer beyond stickers?', answer: 'We\'re full-service: custom stickers & labels, vehicle wraps & graphics, business signage, event displays (tents, flags, banners), business print (cards, flyers), window film & tint, and mylar packaging.' },
+]
+
+type FAQProps = { compact?: boolean }
+
+export default function FAQ({ compact = false }: FAQProps) {
   const [activeCategory, setActiveCategory] = useState(0)
   const [openIndex, setOpenIndex] = useState<number | null>(null)
 
-  const activeFaqs = faqCategories[activeCategory].faqs
+  const activeFaqs = compact ? TOP_QUESTIONS : faqCategories[activeCategory].faqs
 
   return (
     <section id="faq" className="py-16 md:py-24">
       <div className="section-container max-w-4xl">
         <motion.div initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} className="text-center mb-10">
-          <h2 className="text-3xl md:text-5xl font-black mb-4">Frequently Asked Questions</h2>
-          <p className="text-muted-foreground text-lg">Everything you need to know — no question left unanswered</p>
+          <h2 className="text-3xl md:text-5xl font-black mb-4">
+            {compact ? 'Common Questions' : 'Frequently Asked Questions'}
+          </h2>
+          <p className="text-muted-foreground text-lg">
+            {compact ? 'Quick answers — ask us anything else' : 'Everything you need to know — no question left unanswered'}
+          </p>
         </motion.div>
 
-        {/* Category Tabs */}
-        <div className="flex flex-wrap gap-2 justify-center mb-8">
-          {faqCategories.map((cat, i) => (
-            <button
-              key={cat.title}
-              onClick={() => { setActiveCategory(i); setOpenIndex(null) }}
-              className={`px-4 py-2 rounded-full text-sm font-semibold transition-all ${
-                activeCategory === i
-                  ? 'bg-primary text-white'
-                  : 'bg-card border border-border text-muted-foreground hover:text-foreground hover:border-primary/30'
-              }`}
-            >
-              {cat.title}
-            </button>
-          ))}
-        </div>
+        {!compact && (
+          <div className="flex flex-wrap gap-2 justify-center mb-8">
+            {faqCategories.map((cat, i) => (
+              <button
+                key={cat.title}
+                onClick={() => { setActiveCategory(i); setOpenIndex(null) }}
+                className={`px-4 py-2 rounded-full text-sm font-semibold transition-all ${
+                  activeCategory === i
+                    ? 'bg-primary text-white'
+                    : 'bg-card border border-border text-muted-foreground hover:text-foreground hover:border-primary/30'
+                }`}
+              >
+                {cat.title}
+              </button>
+            ))}
+          </div>
+        )}
 
         <div className="space-y-3">
           {activeFaqs.map((faq, index) => (

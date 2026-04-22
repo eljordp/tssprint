@@ -3,11 +3,9 @@ import TrustedBy from '@/components/home/TrustedBy'
 import ProductCategories from '@/components/home/ProductCategories'
 import ProjectGallery from '@/components/home/ProjectGallery'
 import ServicesOverview from '@/components/home/ServicesOverview'
-import SamplePackCTA from '@/components/home/SamplePackCTA'
 import Reviews from '@/components/home/Reviews'
 import FAQ from '@/components/home/FAQ'
-import PromoSection from '@/components/home/PromoSection'
-import ReferralProgram from '@/components/home/ReferralProgram'
+import SavingsAndRewards from '@/components/home/SavingsAndRewards'
 import QuickContact from '@/components/home/QuickContact'
 
 export default function Home() {
@@ -17,12 +15,10 @@ export default function Home() {
       <ProductCategories />
       <TrustedBy />
       <ProjectGallery />
-      <SamplePackCTA />
       <ServicesOverview />
-      <PromoSection />
-      <ReferralProgram />
-      <FAQ />
       <Reviews />
+      <SavingsAndRewards />
+      <FAQ compact />
       <QuickContact />
     </>
   )
