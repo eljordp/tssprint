@@ -2,8 +2,11 @@ import { useEffect, useState, useRef } from 'react'
 import { AnimatePresence, motion } from 'framer-motion'
 
 const SESSION_KEY = 'tss_intro_played'
-const DURATION = 2.9
-const HEAD_TRAVEL_S = DURATION - 0.6
+const DURATION = 4.6
+const HEAD_TRAVEL_S = DURATION - 0.8
+// Gentle ease in/out but mostly steady middle — real large-format printers
+// scan at near-constant speed, they don't whip through the middle
+const HEAD_EASE: [number, number, number, number] = [0.2, 0.1, 0.8, 0.9]
 const STATUS_MESSAGES = ['CALIBRATING', 'LOADING INK', 'PRINTING', 'CURING']
 
 const prefersReducedMotion = () =>
@@ -168,7 +171,7 @@ export default function PrinterIntro() {
             initial={{ top: headStart }}
             animate={{ top: headEnd }}
             exit={{ top: vh, opacity: 0 }}
-            transition={{ duration: HEAD_TRAVEL_S, ease: [0.65, 0.05, 0.36, 1], delay: 0.3 }}
+            transition={{ duration: HEAD_TRAVEL_S, ease: HEAD_EASE, delay: 0.3 }}
           >
             {/* Scan lines — lightweight, GPU-paintable */}
             <div
@@ -209,7 +212,7 @@ export default function PrinterIntro() {
             exit={{ top: -HEAD_H, opacity: [1, 1, 0] }}
             transition={{
               duration: HEAD_TRAVEL_S,
-              ease: [0.65, 0.05, 0.36, 1],
+              ease: HEAD_EASE,
               delay: 0.3,
             }}
           >
@@ -219,7 +222,7 @@ export default function PrinterIntro() {
               <motion.div
                 className="absolute top-1 bottom-1 w-16 bg-gradient-to-b from-neutral-600 via-neutral-800 to-neutral-900 border border-neutral-900 rounded-sm shadow-lg"
                 animate={{ x: ['5%', '80%', '5%'] }}
-                transition={{ duration: 0.8, repeat: Infinity, ease: 'easeInOut' }}
+                transition={{ duration: 1.3, repeat: Infinity, ease: 'easeInOut' }}
                 style={{ left: 0 }}
               >
                 <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-6 h-1 bg-cyan-400 shadow-[0_0_12px_rgba(34,211,238,0.9)]" />
@@ -331,7 +334,7 @@ function startPrinterSound(refStore: React.MutableRefObject<Array<() => void>>) 
       clickGain.connect(masterGain)
       src.start(now)
       src.stop(now + 0.05)
-    }, 180)
+    }, 230)
 
     // Final beep at end
     const beepTimer = setTimeout(() => {
