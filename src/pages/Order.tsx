@@ -1,6 +1,6 @@
 import { useState, useMemo, useRef } from 'react'
 import { motion } from 'framer-motion'
-import { ShoppingCart, Sparkles, FileUp, Check, Clock, MapPin, Shield, Zap, Palette, Droplets, Sticker as StickerIcon, CheckCircle } from 'lucide-react'
+import { ShoppingCart, Sparkles, FileUp, Check, Clock, MapPin, Shield, Zap, Palette, Droplets, Sticker as StickerIcon } from 'lucide-react'
 import { useCart } from '@/context/CartContext'
 import { getPricing, getBasePrice, getMaterialMultiplier, getSizeMultiplier } from '@/lib/pricing'
 import PortfolioStrip from '@/components/PortfolioStrip'
@@ -10,15 +10,6 @@ import stkLaptop from '@/assets/projects/stickers-on-laptop.jpg'
 import stkSheet from '@/assets/projects/stickers-sheet.jpg'
 import stkRoll from '@/assets/projects/stickers-roll.jpg'
 import stkMatte from '@/assets/projects/stickers-matte-detail.jpg'
-
-const stickerFeatures = [
-  'Die-Cut & Kiss-Cut',
-  'Sheets & Rolls',
-  'Custom Shapes + Sizes',
-  'Matte, Gloss, Clear, Holographic',
-  'Paper, Embossed & UV Finish',
-  'Weatherproof + UV-Resistant',
-]
 
 const stickerSpecs = [
   { icon: Droplets, label: 'Material', value: 'Premium 3M & Avery cast vinyl' },
@@ -204,48 +195,9 @@ export default function Order() {
         </motion.div>
       </div>
 
-      {/* What We Offer + Specs */}
       <section className="py-8 md:py-12">
         <div className="section-container">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            className="max-w-5xl mx-auto bg-card border border-border rounded-2xl p-8 md:p-10 mb-6"
-          >
-            <h2 className="text-2xl font-black mb-6">What We Offer</h2>
-            <div className="grid sm:grid-cols-2 gap-4">
-              {stickerFeatures.map((feature) => (
-                <div key={feature} className="flex items-center gap-3">
-                  <CheckCircle className="w-5 h-5 text-primary shrink-0" />
-                  <span className="text-foreground">{feature}</span>
-                </div>
-              ))}
-            </div>
-          </motion.div>
-
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ delay: 0.1 }}
-            className="max-w-5xl mx-auto grid grid-cols-2 md:grid-cols-4 gap-4"
-          >
-            {stickerSpecs.map((s) => (
-              <div key={s.label} className="bg-card border border-border rounded-xl p-4 text-center">
-                <s.icon className="w-6 h-6 text-primary mx-auto mb-2" />
-                <p className="text-xs text-muted-foreground uppercase tracking-wider mb-1">{s.label}</p>
-                <p className="text-sm font-semibold leading-snug">{s.value}</p>
-              </div>
-            ))}
-          </motion.div>
-        </div>
-      </section>
-
-      <section className="py-6 md:py-10">
-        <div className="section-container">
-          <h2 className="text-2xl md:text-3xl font-black text-center mb-8">Build your order</h2>
-          {/* 4-column configurator */}
+          {/* 4-column configurator — first thing after the hero */}
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
@@ -564,6 +516,21 @@ export default function Order() {
             </div>
           </motion.div>
 
+          {/* Specs grid — trust signal, small, under the cart not blocking it */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            className="max-w-6xl mx-auto mt-10 grid grid-cols-2 md:grid-cols-4 gap-3"
+          >
+            {stickerSpecs.map((s) => (
+              <div key={s.label} className="bg-card/60 border border-border rounded-xl p-4">
+                <s.icon className="w-5 h-5 text-primary mb-2" />
+                <p className="text-[10px] text-muted-foreground uppercase tracking-wider mb-0.5">{s.label}</p>
+                <p className="text-xs font-semibold leading-snug">{s.value}</p>
+              </div>
+            ))}
+          </motion.div>
         </div>
       </section>
 
