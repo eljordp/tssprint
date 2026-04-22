@@ -1,14 +1,21 @@
 import { motion } from 'framer-motion'
 import { Link } from 'react-router-dom'
-import { ArrowRight, Car, Tent, Printer, Store, Film, Package } from 'lucide-react'
+import { ArrowRight } from 'lucide-react'
+
+import vehicleGraphics from '@/assets/services/vehicle-graphics.jpg'
+import eventDisplays from '@/assets/services/event-displays.jpg'
+import businessPrint from '@/assets/services/business-print.jpg'
+import businessSignage from '@/assets/services/business-signage.jpg'
+import windowFilm from '@/assets/services/window-film.jpg'
+import mylarPackaging from '@/assets/services/mylar-packaging.jpg'
 
 const services = [
-  { icon: Car, title: 'Vehicle Graphics', description: 'Full wraps, partial wraps, fleet branding, and door/spot graphics.', href: '/services/vehicle-graphics' },
-  { icon: Tent, title: 'Event Displays', description: 'Custom tents, feather flags, table covers, retractable banners.', href: '/services/event-displays' },
-  { icon: Printer, title: 'Business Print', description: 'Business cards, flyers, brochures, marketing collateral.', href: '/services/business-print' },
-  { icon: Store, title: 'Business Signage', description: 'Storefront signs, wall graphics, A-frames, retractable banners.', href: '/services/business-signage' },
-  { icon: Film, title: 'Window Film & Tint', description: 'Frosted film, solar film, security film, decorative graphics.', href: '/services/window-film' },
-  { icon: Package, title: 'Mylar Packaging', description: 'Custom branded mylar bags for products, edibles, and retail.', href: '/services/mylar-packaging' },
+  { image: vehicleGraphics, title: 'Vehicle Graphics', description: 'Full wraps, partial wraps, fleet branding, and door/spot graphics.', href: '/services/vehicle-graphics' },
+  { image: eventDisplays, title: 'Event Displays', description: 'Custom tents, feather flags, table covers, retractable banners.', href: '/services/event-displays' },
+  { image: businessPrint, title: 'Business Print', description: 'Business cards, flyers, brochures, marketing collateral.', href: '/services/business-print' },
+  { image: businessSignage, title: 'Business Signage', description: 'Storefront signs, wall graphics, A-frames, retractable banners.', href: '/services/business-signage' },
+  { image: windowFilm, title: 'Window Film & Tint', description: 'Frosted film, solar film, security film, decorative graphics.', href: '/services/window-film' },
+  { image: mylarPackaging, title: 'Mylar Packaging', description: 'Custom branded mylar bags for products, edibles, and retail.', href: '/services/mylar-packaging' },
 ]
 
 export default function Services() {
@@ -25,13 +32,16 @@ export default function Services() {
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6 max-w-6xl mx-auto">
             {services.map((service, index) => (
               <motion.div key={service.title} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: index * 0.08 }}>
-                <Link to={service.href} className="group block bg-card border border-border rounded-2xl p-6 hover:border-primary/30 transition-all duration-300 h-full">
-                  <div className="w-14 h-14 rounded-2xl bg-primary/10 flex items-center justify-center mb-4 group-hover:bg-primary/20 transition-colors">
-                    <service.icon className="w-7 h-7 text-primary" />
+                <Link to={service.href} className="group block bg-card border border-border rounded-2xl overflow-hidden hover:border-primary/30 transition-all duration-300 h-full">
+                  <div className="relative aspect-[16/10] overflow-hidden">
+                    <img src={service.image} alt={service.title} loading="lazy" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+                    <div className="absolute inset-0 bg-gradient-to-t from-card via-card/20 to-transparent" />
                   </div>
-                  <h3 className="font-bold text-lg mb-2">{service.title}</h3>
-                  <p className="text-muted-foreground text-sm mb-4">{service.description}</p>
-                  <div className="flex items-center gap-1 text-primary text-sm font-bold group-hover:gap-2 transition-all">Learn More<ArrowRight size={14} /></div>
+                  <div className="p-6">
+                    <h3 className="font-bold text-lg mb-2">{service.title}</h3>
+                    <p className="text-muted-foreground text-sm mb-4">{service.description}</p>
+                    <div className="flex items-center gap-1 text-primary text-sm font-bold group-hover:gap-2 transition-all">Learn More<ArrowRight size={14} /></div>
+                  </div>
                 </Link>
               </motion.div>
             ))}

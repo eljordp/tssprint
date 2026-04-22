@@ -1,14 +1,21 @@
 import { motion } from 'framer-motion'
 import { Link } from 'react-router-dom'
-import { ArrowRight, Car, Tent, Printer, Store, Film, Package } from 'lucide-react'
+import { ArrowRight } from 'lucide-react'
+
+import vehicleGraphics from '@/assets/services/vehicle-graphics.jpg'
+import eventDisplays from '@/assets/services/event-displays.jpg'
+import businessPrint from '@/assets/services/business-print.jpg'
+import businessSignage from '@/assets/services/business-signage.jpg'
+import windowFilm from '@/assets/services/window-film.jpg'
+import mylarPackaging from '@/assets/services/mylar-packaging.jpg'
 
 const services = [
-  { icon: Car, title: 'Vehicle Graphics', description: 'Wraps, fleet branding & door graphics', href: '/services/vehicle-graphics' },
-  { icon: Tent, title: 'Event Displays', description: 'Tents, flags, banners & displays', href: '/services/event-displays' },
-  { icon: Printer, title: 'Business Print', description: 'Cards, flyers & marketing materials', href: '/services/business-print' },
-  { icon: Store, title: 'Business Signage', description: 'Storefront, wall graphics & A-frames', href: '/services/business-signage' },
-  { icon: Film, title: 'Window Film', description: 'Frosted, solar, security & graphics', href: '/services/window-film' },
-  { icon: Package, title: 'Mylar Packaging', description: 'Custom branded packaging bags', href: '/services/mylar-packaging' },
+  { image: vehicleGraphics, title: 'Vehicle Graphics', description: 'Wraps, fleet branding & door graphics', href: '/services/vehicle-graphics' },
+  { image: eventDisplays, title: 'Event Displays', description: 'Tents, flags, banners & displays', href: '/services/event-displays' },
+  { image: businessPrint, title: 'Business Print', description: 'Cards, flyers & marketing materials', href: '/services/business-print' },
+  { image: businessSignage, title: 'Business Signage', description: 'Storefront, wall graphics & A-frames', href: '/services/business-signage' },
+  { image: windowFilm, title: 'Window Film', description: 'Frosted, solar, security & graphics', href: '/services/window-film' },
+  { image: mylarPackaging, title: 'Mylar Packaging', description: 'Custom branded packaging bags', href: '/services/mylar-packaging' },
 ]
 
 export default function ServicesOverview() {
@@ -22,12 +29,15 @@ export default function ServicesOverview() {
         <div className="grid grid-cols-2 md:grid-cols-3 gap-4 md:gap-6 mb-12">
           {services.map((service, index) => (
             <motion.div key={service.title} initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.4, delay: index * 0.08 }}>
-              <Link to={service.href} className="group block bg-card border border-border rounded-2xl p-5 md:p-6 text-center hover:border-primary/30 transition-all duration-300">
-                <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center mx-auto mb-3 group-hover:bg-primary/20 transition-colors">
-                  <service.icon className="w-6 h-6 text-primary" />
+              <Link to={service.href} className="group block bg-card border border-border rounded-2xl overflow-hidden hover:border-primary/30 transition-all duration-300">
+                <div className="relative aspect-[4/3] overflow-hidden">
+                  <img src={service.image} alt={service.title} loading="lazy" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+                  <div className="absolute inset-0 bg-gradient-to-t from-card via-card/30 to-transparent" />
                 </div>
-                <h3 className="font-bold text-sm md:text-base mb-1">{service.title}</h3>
-                <p className="text-muted-foreground text-xs md:text-sm">{service.description}</p>
+                <div className="p-4 md:p-5 text-center">
+                  <h3 className="font-bold text-sm md:text-base mb-1">{service.title}</h3>
+                  <p className="text-muted-foreground text-xs md:text-sm">{service.description}</p>
+                </div>
               </Link>
             </motion.div>
           ))}
