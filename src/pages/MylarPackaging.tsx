@@ -5,12 +5,16 @@ import { useCart } from '@/context/CartContext'
 import { getPricing, type ProductCategory, type AddOn } from '@/lib/pricing'
 import EstimateForm from '@/components/EstimateForm'
 import PortfolioStrip from '@/components/PortfolioStrip'
+import ArtworkMockup from '@/components/ArtworkMockup'
 import mylarBlack from '@/assets/projects/mylar-black-pouches.jpg'
 import mylarGold from '@/assets/projects/mylar-gold-foil.jpg'
 import mylarCannabis from '@/assets/projects/mylar-cannabis-style.jpg'
 import mylarFood from '@/assets/projects/mylar-food-packaging.jpg'
 import mylarDetail from '@/assets/projects/mylar-pouch-detail.jpg'
 import mylarProduction from '@/assets/projects/mylar-production-line.jpg'
+import mylarEighthBlank from '@/assets/mockups/mylar-eighth-blank.jpg'
+import mylarQuarterBlank from '@/assets/mockups/mylar-quarter-blank.jpg'
+import mylarJarBlank from '@/assets/mockups/mylar-jar-blank.jpg'
 
 type MockupType = 'pouch' | 'foil' | 'jar'
 
@@ -369,6 +373,35 @@ export default function MylarPackaging() {
               </div>
             </motion.div>
           </div>
+        </div>
+      </section>
+      <section className="py-12 md:py-20 border-t border-border/50">
+        <div className="section-container">
+          <ArtworkMockup
+            service="Mylar"
+            title="See your art on a real bag"
+            subtitle="Upload your design — preview it on a matte black pouch or jar with studio lighting."
+            scenes={[
+              {
+                key: 'eighth',
+                label: 'Eighth Pouch',
+                base: mylarEighthBlank,
+                slot: { left: 32, top: 24, width: 36, height: 52 },
+              },
+              {
+                key: 'quarter',
+                label: 'Quarter Pouch',
+                base: mylarQuarterBlank,
+                slot: { left: 30, top: 22, width: 40, height: 56 },
+              },
+              {
+                key: 'jar',
+                label: '2oz Jar',
+                base: mylarJarBlank,
+                slot: { left: 32, top: 38, width: 36, height: 30 },
+              },
+            ]}
+          />
         </div>
       </section>
       <section className="py-12 md:py-20 border-t border-border/50">
