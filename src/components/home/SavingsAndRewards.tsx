@@ -14,7 +14,8 @@ export default function SavingsAndRewards() {
         c.active &&
         (!c.expiresAt || new Date(c.expiresAt) > new Date()) &&
         !isReferralCode(c.code) &&
-        !c.code.startsWith('THANKS'),
+        !c.code.startsWith('THANKS') &&
+        c.code !== 'AUTO10', // silent auto-apply — don't advertise
     )
     .slice(0, 2)
 

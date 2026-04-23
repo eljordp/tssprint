@@ -32,12 +32,12 @@ export interface PricingConfig {
 
 export const defaultPricing: PricingConfig = {
   basePrices: [
-    { maxQty: 50, price: 0.85 },
-    { maxQty: 100, price: 0.55 },
-    { maxQty: 250, price: 0.42 },
-    { maxQty: 500, price: 0.34 },
-    { maxQty: 1000, price: 0.28 },
-    { maxQty: Infinity, price: 0.25 },
+    { maxQty: 50, price: 0.95 },
+    { maxQty: 100, price: 0.62 },
+    { maxQty: 250, price: 0.47 },
+    { maxQty: 500, price: 0.38 },
+    { maxQty: 1000, price: 0.31 },
+    { maxQty: Infinity, price: 0.28 },
   ],
   sizeMultipliers: [
     { name: '2" x 2"', multiplier: 1.0 },

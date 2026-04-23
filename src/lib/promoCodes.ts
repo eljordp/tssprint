@@ -17,6 +17,18 @@ const USED_CODES_KEY = 'tss-used-codes'
 
 const defaultCodes: PromoCode[] = [
   {
+    code: 'AUTO10',
+    type: 'percent',
+    value: 10,
+    label: 'First Order Discount — Auto-Applied',
+    category: 'first_time',
+    minOrder: 35,
+    maxUses: 0,
+    uses: 0,
+    active: true,
+    createdAt: new Date().toISOString(),
+  },
+  {
     code: 'WELCOME15',
     type: 'percent',
     value: 15,
@@ -42,17 +54,30 @@ const defaultCodes: PromoCode[] = [
   },
 ]
 
+export const AUTO_DISCOUNT_CODE = 'AUTO10'
+export const FIRST_VISIT_KEY = 'tss_first_visit_seen'
+export const AUTO_APPLIED_KEY = 'tss_auto_discount_applied'
+
 export function getPromoCodes(): PromoCode[] {
   const saved = localStorage.getItem(STORAGE_KEY)
   if (saved) {
     let codes: PromoCode[] = JSON.parse(saved)
+    let dirty = false
     // Clean up: remove deprecated FAMILY20, fix old $25 minimums
-    const hadFamily = codes.some(c => c.code === 'FAMILY20')
-    if (hadFamily) {
+    if (codes.some(c => c.code === 'FAMILY20')) {
       codes = codes.filter(c => c.code !== 'FAMILY20')
       codes = codes.map(c => c.code === 'WELCOME15' && c.minOrder === 25 ? { ...c, minOrder: 50 } : c)
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(codes))
+      dirty = true
     }
+    // Inject AUTO10 if missing (migration for existing users)
+    if (!codes.some(c => c.code === 'AUTO10')) {
+      const auto = defaultCodes.find(c => c.code === 'AUTO10')
+      if (auto) {
+        codes = [auto, ...codes]
+        dirty = true
+      }
+    }
+    if (dirty) localStorage.setItem(STORAGE_KEY, JSON.stringify(codes))
     return codes
   }
   localStorage.setItem(STORAGE_KEY, JSON.stringify(defaultCodes))

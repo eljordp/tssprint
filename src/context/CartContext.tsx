@@ -2,7 +2,7 @@ import { createContext, useContext, useState, useEffect, useCallback, type React
 import { motion, AnimatePresence } from 'framer-motion'
 import { X, ShoppingBag, Mail } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
-import { validatePromoCode, applyPromoCode, type PromoResult } from '@/lib/promoCodes'
+import { validatePromoCode, applyPromoCode, type PromoResult, AUTO_DISCOUNT_CODE, AUTO_APPLIED_KEY } from '@/lib/promoCodes'
 
 interface CartItem {
   id: string
@@ -264,6 +264,21 @@ export function CartProvider({ children }: { children: ReactNode }) {
       }
     }
   }, [total, promoCode])
+
+  // Auto-apply first-order discount for first-time buyers
+  useEffect(() => {
+    if (items.length === 0) return
+    if (promoCode) return // user already has a code applied
+    const hasOrdered = localStorage.getItem('tss_order_completed') === 'true'
+    if (hasOrdered) return
+    const result = validatePromoCode(AUTO_DISCOUNT_CODE, total)
+    if (result.valid && result.code && result.discount !== undefined) {
+      setPromoCode(result.code.code)
+      setPromoDiscount(result.discount)
+      setPromoLabel(`${result.code.value}% off`)
+      localStorage.setItem(AUTO_APPLIED_KEY, 'true')
+    }
+  }, [items.length, total, promoCode])
 
   const applyPromo = (code: string): PromoResult => {
     const result = validatePromoCode(code, total)

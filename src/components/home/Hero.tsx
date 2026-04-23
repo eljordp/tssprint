@@ -1,6 +1,7 @@
 import { Link } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import { ArrowRight, Clock, MapPin, Shield } from 'lucide-react'
+import FirstOrderChip from '@/components/FirstOrderChip'
 
 import heroPrinter from '@/assets/hero-printer.jpg'
 
@@ -41,6 +42,9 @@ export default function Hero() {
 
           {/* Text */}
           <div className="order-2 lg:order-1 text-center lg:text-left">
+            <div className="mb-4 flex justify-center lg:justify-start">
+              <FirstOrderChip />
+            </div>
             <motion.h1 initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6, delay: 0.3 }} className="text-[2.25rem] leading-[1.05] sm:text-5xl md:text-6xl lg:text-7xl font-black mb-4 md:mb-6 tracking-tight">
               <span className="text-gradient">Bay Area's</span>
               <br />

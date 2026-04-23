@@ -1,7 +1,7 @@
 import { useState, type FormEvent } from 'react'
 import { Link } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Trash2, Plus, Minus, AlertCircle, Mail, Check, Loader2, ArrowRight } from 'lucide-react'
+import { Trash2, Plus, Minus, AlertCircle, Mail, Check, Loader2, ArrowRight, Sparkles } from 'lucide-react'
 import { useCart } from '@/context/CartContext'
 import { supabase } from '@/lib/supabase'
 import { sendContactEmail } from '@/lib/email'
@@ -10,9 +10,11 @@ import emptyCartImage from '@/assets/pages/cart-empty-stickers.jpg'
 const MIN_ORDER = 35
 
 export default function Cart() {
-  const { items, removeItem, updateQuantity, total } = useCart()
+  const { items, removeItem, updateQuantity, total, promoCode, promoDiscount, promoLabel } = useCart()
   const belowMin = total > 0 && total < MIN_ORDER
   const shortfall = +(MIN_ORDER - total).toFixed(2)
+  const isAutoApplied = promoCode === 'AUTO10'
+  const discountedTotal = +(total - promoDiscount).toFixed(2)
 
   const [quoteOpen, setQuoteOpen] = useState(false)
   const [quoteEmail, setQuoteEmail] = useState('')
@@ -111,8 +113,42 @@ export default function Cart() {
             </div>
           </div>
         )}
+        {/* Auto-applied first-order discount */}
+        {isAutoApplied && !belowMin && (
+          <motion.div
+            initial={{ opacity: 0, y: 10, scale: 0.98 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            transition={{ type: 'spring', stiffness: 200, damping: 18 }}
+            className="mb-4 bg-gradient-to-r from-primary/20 via-primary/10 to-transparent border border-primary/30 rounded-2xl p-4 flex items-center gap-3"
+          >
+            <div className="w-10 h-10 rounded-xl bg-primary/20 border border-primary/30 flex items-center justify-center shrink-0">
+              <Sparkles size={18} className="text-primary" />
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="font-bold text-sm text-primary">First-order discount applied · {promoLabel}</p>
+              <p className="text-xs text-muted-foreground">
+                Saved ${promoDiscount.toFixed(2)} automatically — no code needed.
+              </p>
+            </div>
+            <p className="font-black text-primary tabular-nums shrink-0">−${promoDiscount.toFixed(2)}</p>
+          </motion.div>
+        )}
+
         <div className="bg-card border border-border rounded-2xl p-6 flex flex-col sm:flex-row items-center justify-between gap-4 mb-4">
-          <div className="text-2xl font-black">Total: <span className="text-primary">${total.toFixed(2)}</span></div>
+          <div>
+            {promoDiscount > 0 ? (
+              <div>
+                <div className="flex items-baseline gap-2">
+                  <span className="text-2xl font-black">Total:</span>
+                  <span className="text-2xl font-black text-primary">${discountedTotal.toFixed(2)}</span>
+                  <span className="text-sm text-muted-foreground line-through">${total.toFixed(2)}</span>
+                </div>
+                <p className="text-xs text-primary mt-1">You saved ${promoDiscount.toFixed(2)}</p>
+              </div>
+            ) : (
+              <div className="text-2xl font-black">Total: <span className="text-primary">${total.toFixed(2)}</span></div>
+            )}
+          </div>
           {belowMin ? (
             <button
               disabled

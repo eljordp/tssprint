@@ -409,6 +409,8 @@ export default function Checkout() {
                         }
 
                         clearCart()
+                        // Mark that this visitor has completed an order — no more auto-discount
+                        localStorage.setItem('tss_order_completed', 'true')
                         // Send order confirmation emails
                         sendOrderEmail({
                           orderId: details.id!,
