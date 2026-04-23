@@ -17,6 +17,22 @@ import weddingFloor3 from '@/assets/projects/wedding-vinyl-floor-3.jpeg'
 import culturalDanceFloor from '@/assets/projects/cultural-dance-floor-2.jpeg'
 import weddingDisplay from '@/assets/projects/wedding-display-signage-1.jpeg'
 import safewayInstall from '@/assets/projects/safeway-install.jpeg'
+// Sticker work
+import stkDieCut from '@/assets/projects/stickers-die-cut-stack.jpg'
+import stkHolo from '@/assets/projects/stickers-holographic.jpg'
+import stkLaptop from '@/assets/projects/stickers-on-laptop.jpg'
+import stkSheet from '@/assets/projects/stickers-sheet.jpg'
+import stkRoll from '@/assets/projects/stickers-roll.jpg'
+// Mylar + packaging
+import mylarBlack from '@/assets/projects/mylar-black-pouches.jpg'
+import mylarGold from '@/assets/projects/mylar-gold-foil.jpg'
+import mylarCannabis from '@/assets/projects/mylar-cannabis-style.jpg'
+import mylarFood from '@/assets/projects/mylar-food-packaging.jpg'
+// Business print
+import bizCards from '@/assets/projects/business-cards-luxury.jpg'
+import bizCardsFoil from '@/assets/projects/business-cards-foil.jpg'
+import flyers from '@/assets/projects/flyers-full-color.jpg'
+import postcards from '@/assets/projects/postcards-set.jpg'
 
 const categories = ['All', 'Vehicle Graphics', 'Business Signage', 'Stickers', 'Business Print', 'Mylar Packaging', 'Events'] as const
 
@@ -37,6 +53,22 @@ const projects = [
   { image: culturalDanceFloor, title: 'Cultural Event Floor Vinyl', category: 'Events' },
   { image: weddingDisplay, title: 'Wedding Display Signage', category: 'Events' },
   { image: safewayInstall, title: 'Safeway In-Store Install', category: 'Business Signage' },
+  // Stickers
+  { image: stkDieCut, title: 'Die-Cut Vinyl Stickers', category: 'Stickers' },
+  { image: stkHolo, title: 'Holographic Stickers', category: 'Stickers' },
+  { image: stkLaptop, title: 'Sticker Collection', category: 'Stickers' },
+  { image: stkSheet, title: 'Kiss-Cut Sticker Sheets', category: 'Stickers' },
+  { image: stkRoll, title: 'Stickers on Roll', category: 'Stickers' },
+  // Mylar
+  { image: mylarBlack, title: 'Matte Black Mylar Pouches', category: 'Mylar Packaging' },
+  { image: mylarGold, title: 'Gold Foil Mylar', category: 'Mylar Packaging' },
+  { image: mylarCannabis, title: 'Cannabis Packaging', category: 'Mylar Packaging' },
+  { image: mylarFood, title: 'Food-Grade Mylar Bags', category: 'Mylar Packaging' },
+  // Business Print
+  { image: bizCards, title: 'Premium Business Cards', category: 'Business Print' },
+  { image: bizCardsFoil, title: 'Specialty Finish Cards', category: 'Business Print' },
+  { image: flyers, title: 'Full-Color Flyers', category: 'Business Print' },
+  { image: postcards, title: 'Custom Postcards', category: 'Business Print' },
 ]
 
 export default function Projects() {
