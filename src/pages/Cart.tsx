@@ -1,10 +1,11 @@
 import { useState, type FormEvent } from 'react'
 import { Link } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Trash2, Plus, Minus, ShoppingBag, AlertCircle, Mail, Check, Loader2 } from 'lucide-react'
+import { Trash2, Plus, Minus, AlertCircle, Mail, Check, Loader2, ArrowRight } from 'lucide-react'
 import { useCart } from '@/context/CartContext'
 import { supabase } from '@/lib/supabase'
 import { sendContactEmail } from '@/lib/email'
+import emptyCartImage from '@/assets/pages/cart-empty-stickers.jpg'
 
 const MIN_ORDER = 35
 
@@ -55,11 +56,21 @@ export default function Cart() {
   if (items.length === 0) {
     return (
       <section className="py-16 md:py-24">
-        <div className="section-container text-center">
-          <ShoppingBag size={64} className="mx-auto text-muted-foreground mb-6" />
-          <h1 className="text-3xl font-black mb-4">Your Cart is Empty</h1>
-          <p className="text-muted-foreground mb-8">Start by ordering some custom stickers!</p>
-          <Link to="/stickers" className="btn-primary">Make Custom Stickers</Link>
+        <div className="section-container max-w-lg text-center">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="relative mb-8 rounded-3xl overflow-hidden border border-white/10 shadow-2xl aspect-square max-w-sm mx-auto"
+          >
+            <img src={emptyCartImage} alt="Custom stickers" className="w-full h-full object-cover" />
+            <div className="absolute inset-0 bg-gradient-to-t from-background/80 via-transparent to-transparent" />
+          </motion.div>
+          <h1 className="text-3xl md:text-4xl font-black mb-3">Nothing in here yet.</h1>
+          <p className="text-muted-foreground mb-8">Start with stickers — or pick a service and we'll take it from a brief.</p>
+          <div className="flex flex-col sm:flex-row gap-3 justify-center">
+            <Link to="/stickers" className="btn-primary">Make Custom Stickers</Link>
+            <Link to="/services" className="btn-secondary">Browse Services <ArrowRight size={16} /></Link>
+          </div>
         </div>
       </section>
     )

@@ -1,6 +1,7 @@
 import { Link, useLocation } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import { CheckCircle, Package, Mail } from 'lucide-react'
+import printingNow from '@/assets/pages/confirm-printing.jpg'
 
 export default function OrderConfirmation() {
   const location = useLocation()
@@ -21,13 +22,26 @@ export default function OrderConfirmation() {
   return (
     <section className="py-16 md:py-24">
       <div className="section-container max-w-2xl text-center">
+        {/* Hero image — your job is printing now */}
         <motion.div
-          initial={{ scale: 0 }}
-          animate={{ scale: 1 }}
-          transition={{ type: 'spring', stiffness: 200, damping: 15 }}
-          className="mb-6"
+          initial={{ opacity: 0, scale: 0.95 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ duration: 0.5 }}
+          className="relative mb-8 rounded-3xl overflow-hidden border border-white/10 shadow-2xl aspect-[16/9] max-w-lg mx-auto"
         >
-          <CheckCircle size={80} className="mx-auto text-green-400" />
+          <img src={printingNow} alt="Your order is being printed" className="w-full h-full object-cover" />
+          <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
+          <motion.div
+            initial={{ scale: 0 }}
+            animate={{ scale: 1 }}
+            transition={{ type: 'spring', stiffness: 200, damping: 15, delay: 0.3 }}
+            className="absolute top-4 right-4 w-12 h-12 rounded-full bg-green-500/90 backdrop-blur-sm flex items-center justify-center shadow-lg"
+          >
+            <CheckCircle size={24} className="text-white" strokeWidth={2.5} />
+          </motion.div>
+          <div className="absolute bottom-4 left-4 right-4">
+            <p className="text-xs text-white/70 font-mono tracking-widest uppercase">Now Printing</p>
+          </div>
         </motion.div>
 
         <motion.h1
@@ -45,7 +59,7 @@ export default function OrderConfirmation() {
           transition={{ delay: 0.3 }}
           className="text-lg text-muted-foreground mb-8"
         >
-          Thank you, {payerName}! Your payment has been processed.
+          Thank you, {payerName}! Your payment went through and your job is in the queue.
         </motion.p>
 
         <motion.div
