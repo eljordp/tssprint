@@ -21,6 +21,8 @@ import OrderConfirmation from '@/pages/OrderConfirmation'
 import Contact from '@/pages/Contact'
 import About from '@/pages/About'
 import Projects from '@/pages/Projects'
+import CaseStudies from '@/pages/CaseStudies'
+import CaseStudyDetail from '@/pages/CaseStudyDetail'
 import Referral from '@/pages/Referral'
 import Account from '@/pages/Account'
 import Admin from '@/pages/Admin'
@@ -62,6 +64,8 @@ export default function App() {
             <Route path="/contact" element={<Contact />} />
             <Route path="/about" element={<About />} />
             <Route path="/projects" element={<Projects />} />
+            <Route path="/case-studies" element={<CaseStudies />} />
+            <Route path="/case-studies/:slug" element={<CaseStudyDetail />} />
             <Route path="/referral" element={<Referral />} />
             <Route path="/account" element={<Account />} />
             <Route path="/admin" element={<Admin />} />

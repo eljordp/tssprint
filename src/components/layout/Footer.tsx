@@ -20,6 +20,7 @@ const footerLinks = {
     { label: 'Get a Quote', href: '/contact' },
     { label: 'About Us', href: '/about' },
     { label: 'Our Projects', href: '/projects' },
+    { label: 'Case Studies', href: '/case-studies' },
     { label: 'Contact', href: '/contact' },
     { label: 'Referral Program', href: '/referral' },
   ],

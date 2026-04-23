@@ -1,5 +1,8 @@
 import { useState } from 'react'
+import { Link } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
+import { ArrowRight } from 'lucide-react'
+import { caseStudies } from '@/lib/caseStudies'
 
 import albertsonsVan from '@/assets/projects/albertsons-van.jpeg'
 import atlasPizza from '@/assets/projects/atlas-pizza-signage.jpeg'
@@ -83,8 +86,48 @@ export default function Projects() {
           <p className="text-white/80 text-lg">A look at some of our recent work</p>
         </motion.div>
       </div>
+      {/* Featured case studies */}
+      <section className="py-8 md:py-12 border-b border-border/50">
+        <div className="section-container max-w-6xl">
+          <div className="flex items-end justify-between mb-6 flex-wrap gap-3">
+            <div>
+              <p className="text-primary font-bold text-xs uppercase tracking-widest mb-1.5">Featured Case Studies</p>
+              <h2 className="text-xl md:text-3xl font-black">The full story behind the work</h2>
+            </div>
+            <Link to="/case-studies" className="inline-flex items-center gap-1 text-sm font-bold text-primary hover:gap-2 transition-all">
+              See all <ArrowRight size={14} />
+            </Link>
+          </div>
+          <div className="grid md:grid-cols-3 gap-4">
+            {caseStudies.map((study) => (
+              <Link
+                key={study.slug}
+                to={`/case-studies/${study.slug}`}
+                className="group relative aspect-[4/3] rounded-2xl overflow-hidden border border-border hover:border-primary/40 transition-all"
+              >
+                <img src={study.thumbnail} alt={study.client} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/40 to-transparent" />
+                <div className="absolute top-3 left-3 px-2.5 py-1 rounded-full bg-black/60 backdrop-blur-sm border border-white/10 text-[9px] font-bold uppercase tracking-widest text-white/80">
+                  {study.category}
+                </div>
+                <div className="absolute inset-x-4 bottom-4">
+                  <p className="text-[10px] font-mono uppercase tracking-widest text-white/60 mb-1">{study.client}</p>
+                  <p className="text-sm md:text-base font-black text-white leading-tight group-hover:text-primary transition-colors">
+                    {study.title}
+                  </p>
+                </div>
+              </Link>
+            ))}
+          </div>
+        </div>
+      </section>
+
       <section className="py-8 md:py-16">
         <div className="section-container">
+          <div className="text-center mb-6">
+            <h2 className="text-xl md:text-2xl font-black mb-1">Project Gallery</h2>
+            <p className="text-sm text-muted-foreground">Filter by category to see what's been through the shop.</p>
+          </div>
           <div className="flex flex-wrap justify-center gap-2 mb-8">
             {categories.map((cat) => (
               <button
