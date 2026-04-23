@@ -6,6 +6,7 @@ import { contactSchema, type ContactFormErrors } from '@/lib/validation'
 import { supabase } from '@/lib/supabase'
 import { sendContactEmail } from '@/lib/email'
 import { toast } from 'sonner'
+import contactPrinter from '@/assets/pages/contact-printer.jpg'
 
 export default function Contact() {
   const [searchParams] = useSearchParams()
@@ -83,10 +84,15 @@ export default function Contact() {
 
   return (
     <>
-      <div className="-mt-16 md:-mt-18 pt-24 md:pt-32 pb-10 md:pb-14" style={{ backgroundColor: 'hsl(199 89% 64%)' }}>
-        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="text-center section-container">
+      <div className="relative -mt-16 md:-mt-18 pt-24 md:pt-32 pb-12 md:pb-16 overflow-hidden">
+        <div className="absolute inset-0">
+          <img src={contactPrinter} alt="The Sticker Smith print shop" className="w-full h-full object-cover" />
+          <div className="absolute inset-0 bg-gradient-to-b from-black/50 via-black/70 to-background" />
+        </div>
+        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="relative text-center section-container z-10">
+          <p className="text-primary font-bold text-xs uppercase tracking-widest mb-3">Custom Quote</p>
           <h1 className="text-4xl md:text-6xl font-black mb-4 text-white">Get a Free Quote</h1>
-          <p className="text-white/80 text-lg">Tell us about your project and we'll get back to you within 24 hours</p>
+          <p className="text-white/80 text-lg">Tell us about your project and we'll get back within 24 hours.</p>
         </motion.div>
       </div>
       <section className="py-8 md:py-16">

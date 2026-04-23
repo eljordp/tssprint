@@ -1,14 +1,22 @@
 import { motion } from 'framer-motion'
 import { Link } from 'react-router-dom'
 import { ArrowRight, Car, Building2, Tent, Printer, Film, Package, Star, Clock, FileCheck, MapPin, Shield, Zap, CheckCircle, Heart } from 'lucide-react'
+import aboutCraft from '@/assets/pages/about-craft.jpg'
+import aboutShop from '@/assets/pages/about-shop.jpg'
+import svcVehicle from '@/assets/services/vehicle-graphics.jpg'
+import svcSignage from '@/assets/services/business-signage.jpg'
+import svcEvent from '@/assets/services/event-displays.jpg'
+import svcPrint from '@/assets/services/business-print.jpg'
+import svcFilm from '@/assets/services/window-film.jpg'
+import svcMylar from '@/assets/services/mylar-packaging.jpg'
 
 const services = [
-  { icon: Car, title: 'Vehicle Graphics', description: 'Full and partial wraps, fleet branding, door and spot graphics.' },
-  { icon: Building2, title: 'Business Signage', description: 'Storefront signs, wall graphics, A-frames, retractable banners.' },
-  { icon: Tent, title: 'Event Displays', description: 'Custom tents, feather flags, table covers, retractable banners.' },
-  { icon: Printer, title: 'Business Print', description: 'Business cards, flyers, brochures, and marketing collateral.' },
-  { icon: Film, title: 'Window Film', description: 'Frosted film, solar film, security film, decorative graphics.' },
-  { icon: Package, title: 'Custom Packaging', description: 'Branded mylar bags, labels, stickers, and product packaging.' },
+  { icon: Car, title: 'Vehicle Graphics', description: 'Full and partial wraps, fleet branding, door and spot graphics.', image: svcVehicle, href: '/services/vehicle-graphics' },
+  { icon: Building2, title: 'Business Signage', description: 'Storefront signs, wall graphics, A-frames, retractable banners.', image: svcSignage, href: '/services/business-signage' },
+  { icon: Tent, title: 'Event Displays', description: 'Custom tents, feather flags, table covers, retractable banners.', image: svcEvent, href: '/services/event-displays' },
+  { icon: Printer, title: 'Business Print', description: 'Business cards, flyers, brochures, and marketing collateral.', image: svcPrint, href: '/services/business-print' },
+  { icon: Film, title: 'Window Film', description: 'Frosted film, solar film, security film, decorative graphics.', image: svcFilm, href: '/services/window-film' },
+  { icon: Package, title: 'Custom Packaging', description: 'Branded mylar bags, labels, stickers, and product packaging.', image: svcMylar, href: '/mylar' },
 ]
 
 const stats = [
@@ -34,31 +42,45 @@ const fadeUp = {
 export default function About() {
   return (
     <>
-      {/* Hero Banner */}
-      <div className="-mt-16 md:-mt-18 pt-24 md:pt-32 pb-10 md:pb-14" style={{ backgroundColor: 'hsl(199 89% 64%)' }}>
-        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="text-center section-container">
-          <h1 className="text-4xl md:text-6xl font-black mb-4 text-white">About Us</h1>
-          <p className="text-white/80 text-lg max-w-2xl mx-auto">Bay Area's trusted sticker and print company since day one</p>
+      {/* Hero Banner — with shop photo backdrop */}
+      <div className="relative -mt-16 md:-mt-18 pt-24 md:pt-32 pb-12 md:pb-16 overflow-hidden">
+        <div className="absolute inset-0">
+          <img src={aboutShop} alt="The Sticker Smith print shop" className="w-full h-full object-cover" />
+          <div className="absolute inset-0 bg-gradient-to-b from-black/50 via-black/70 to-background" />
+        </div>
+        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="relative text-center section-container z-10">
+          <p className="text-primary font-bold text-xs uppercase tracking-widest mb-3">About The Sticker Smith</p>
+          <h1 className="text-4xl md:text-6xl font-black mb-4 text-white">Made in the Bay Area.</h1>
+          <p className="text-white/80 text-lg max-w-2xl mx-auto">A print and branding studio built on craft, speed, and relationships.</p>
         </motion.div>
       </div>
 
-      {/* Our Story */}
+      {/* Our Story — side-by-side photo */}
       <section className="py-12 md:py-20">
         <div className="section-container">
-          <motion.div {...fadeUp} className="max-w-3xl mx-auto text-center">
-            <h2 className="text-3xl md:text-5xl font-black mb-8">Our Story</h2>
-            <div className="space-y-8 text-muted-foreground text-lg leading-relaxed text-left">
-              <p>
-                The Sticker Smith started with a simple idea: Bay Area businesses and creators deserve better print. Not the overpriced, slow-turnaround, take-it-or-leave-it experience you get from big box shops. Real print work, done right, from people who actually care about the finished product.
-              </p>
-              <p>
-                We built our reputation one job at a time — wrapping vans for local fleets, printing stickers for independent brands, producing signage for storefronts across the East Bay. Every project taught us something new, and every client pushed us to get better. That is how you grow a print business: by showing up and delivering.
-              </p>
-              <p>
-                Today we work with everyone from solo creators ordering their first 100 stickers to companies like Safeway and Albertsons running full fleet graphics programs. The scale changes, but the approach never does. We treat every job like our name is on it — because it is.
-              </p>
-            </div>
-          </motion.div>
+          <div className="grid md:grid-cols-[1fr_1.1fr] gap-10 md:gap-14 items-center max-w-6xl mx-auto">
+            <motion.div {...fadeUp} className="relative order-2 md:order-1">
+              <div className="relative rounded-3xl overflow-hidden shadow-2xl border border-white/10 aspect-[4/5]">
+                <img src={aboutCraft} alt="Hands working at a large-format printer" className="w-full h-full object-cover" />
+                <div className="absolute inset-0 bg-gradient-to-tr from-primary/10 via-transparent to-transparent" />
+              </div>
+              <div className="absolute -inset-4 -z-10 bg-primary/10 rounded-full blur-3xl" />
+            </motion.div>
+            <motion.div {...fadeUp} className="order-1 md:order-2">
+              <h2 className="text-3xl md:text-5xl font-black mb-8">Our Story</h2>
+              <div className="space-y-6 text-muted-foreground text-lg leading-relaxed">
+                <p>
+                  The Sticker Smith started with a simple idea: Bay Area businesses and creators deserve better print. Not the overpriced, slow-turnaround, take-it-or-leave-it experience you get from big box shops. Real print work, done right, from people who actually care about the finished product.
+                </p>
+                <p>
+                  We built our reputation one job at a time — wrapping vans for local fleets, printing stickers for independent brands, producing signage for storefronts across the East Bay. Every project taught us something new, and every client pushed us to get better.
+                </p>
+                <p>
+                  Today we work with everyone from solo creators ordering their first 100 stickers to companies like Safeway and Albertsons running full fleet graphics programs. The scale changes, but the approach never does.
+                </p>
+              </div>
+            </motion.div>
+          </div>
         </div>
       </section>
 
@@ -76,13 +98,23 @@ export default function About() {
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true, margin: '-40px' }}
                 transition={{ delay: index * 0.06 }}
-                className="bg-background border border-border rounded-2xl p-6 md:p-8 group hover:border-primary/30 transition-all duration-300"
               >
-                <div className="w-14 h-14 rounded-2xl bg-primary/10 flex items-center justify-center mb-6 group-hover:bg-primary/20 transition-colors">
-                  <service.icon className="w-7 h-7 text-primary" />
-                </div>
-                <h3 className="font-bold text-lg mb-3">{service.title}</h3>
-                <p className="text-muted-foreground text-sm leading-relaxed">{service.description}</p>
+                <Link
+                  to={service.href}
+                  className="group block bg-background border border-border rounded-2xl overflow-hidden hover:border-primary/40 transition-all duration-300 h-full"
+                >
+                  <div className="relative aspect-[16/10] overflow-hidden">
+                    <img src={service.image} alt={service.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+                    <div className="absolute inset-0 bg-gradient-to-t from-background via-background/30 to-transparent" />
+                    <div className="absolute top-3 left-3 w-10 h-10 rounded-xl bg-black/60 backdrop-blur-sm border border-white/10 flex items-center justify-center">
+                      <service.icon className="w-5 h-5 text-primary" />
+                    </div>
+                  </div>
+                  <div className="p-5">
+                    <h3 className="font-bold text-lg mb-2">{service.title}</h3>
+                    <p className="text-muted-foreground text-sm leading-relaxed">{service.description}</p>
+                  </div>
+                </Link>
               </motion.div>
             ))}
           </div>

@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { motion } from 'framer-motion'
 import { Users, Gift, Share2, Copy, Check, DollarSign, ArrowRight, TrendingUp } from 'lucide-react'
 import { registerReferrer, findReferrerByEmail, getReferralShareUrl, type Referrer } from '@/lib/referralRewards'
+import referralHero from '@/assets/pages/referral-hero.jpg'
 
 export default function Referral() {
   const [name, setName] = useState('')
@@ -51,19 +52,43 @@ export default function Referral() {
 
   return (
     <section className="py-16 md:py-24">
-      <div className="section-container max-w-5xl">
-        {/* Hero */}
-        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="text-center mb-16">
-          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary/10 border border-primary/20 text-primary text-sm font-bold mb-6">
-            <Gift size={16} /> Referral Program
-          </div>
-          <h1 className="text-4xl md:text-6xl font-black mb-4">
-            Share & Earn
-          </h1>
-          <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
-            Get your own unique code. When someone uses it to place an order, <strong className="text-foreground">they save 10%</strong> and <strong className="text-foreground">you earn 5% commission</strong> on the sale.
-          </p>
-        </motion.div>
+      <div className="section-container max-w-6xl">
+        {/* Hero — 2 column with image */}
+        <div className="grid md:grid-cols-[1.2fr_1fr] gap-10 md:gap-14 items-center mb-16">
+          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
+            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary/10 border border-primary/20 text-primary text-sm font-bold mb-6">
+              <Gift size={16} /> Referral Program
+            </div>
+            <h1 className="text-4xl md:text-6xl font-black mb-4">
+              Share & Earn
+            </h1>
+            <p className="text-xl text-muted-foreground">
+              Get your unique code. When someone uses it to order, <strong className="text-foreground">they save 10%</strong> and <strong className="text-foreground">you earn 5% commission</strong> on every sale. No cap.
+            </p>
+            <div className="grid grid-cols-2 gap-4 mt-8 max-w-md">
+              <div className="bg-card/60 border border-border rounded-xl p-4 text-center">
+                <p className="text-3xl font-black text-primary">10%</p>
+                <p className="text-xs text-muted-foreground uppercase tracking-widest font-bold mt-1">they save</p>
+              </div>
+              <div className="bg-card/60 border border-border rounded-xl p-4 text-center">
+                <p className="text-3xl font-black text-primary">5%</p>
+                <p className="text-xs text-muted-foreground uppercase tracking-widest font-bold mt-1">you earn</p>
+              </div>
+            </div>
+          </motion.div>
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ delay: 0.2 }}
+            className="relative order-first md:order-last"
+          >
+            <div className="relative rounded-3xl overflow-hidden shadow-2xl border border-white/10 aspect-square max-w-md mx-auto">
+              <img src={referralHero} alt="Share your referral code" className="w-full h-full object-cover" />
+              <div className="absolute inset-0 bg-gradient-to-tr from-primary/10 via-transparent to-transparent" />
+            </div>
+            <div className="absolute -inset-6 -z-10 bg-primary/10 rounded-full blur-3xl" />
+          </motion.div>
+        </div>
 
         {/* How It Works */}
         <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-16">
