@@ -561,19 +561,19 @@ export default function Order() {
                 key: 'laptop',
                 label: 'Laptop',
                 base: stickerLaptopBlank,
-                slot: { left: 32, top: 28, width: 42, height: 35 },
+                slot: { left: 29, top: 36, width: 42, height: 28 },
               },
               {
                 key: 'bottle',
                 label: 'Water Bottle',
                 base: stickerBottleBlank,
-                slot: { left: 36, top: 30, width: 30, height: 38 },
+                slot: { left: 33, top: 27, width: 30, height: 42 },
               },
               {
                 key: 'window',
                 label: 'Car Window',
                 base: stickerWindowBlank,
-                slot: { left: 35, top: 30, width: 35, height: 35 },
+                slot: { left: 56, top: 40, width: 18, height: 12 },
               },
               {
                 key: 'tote',

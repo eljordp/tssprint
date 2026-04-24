@@ -98,19 +98,19 @@ export default function BusinessPrint() {
                 key: 'cards',
                 label: 'Business Card',
                 base: cardsBlank,
-                slot: { left: 38, top: 45, width: 30, height: 25 },
+                slot: { left: 32, top: 40, width: 36, height: 20 },
               },
               {
                 key: 'flyer',
                 label: 'Flyer',
                 base: flyerBlank,
-                slot: { left: 28, top: 18, width: 44, height: 62 },
+                slot: { left: 30, top: 25, width: 40, height: 53 },
               },
               {
                 key: 'postcard',
                 label: 'Postcard',
                 base: postcardBlank,
-                slot: { left: 22, top: 30, width: 55, height: 38 },
+                slot: { left: 25, top: 38, width: 50, height: 27 },
               },
             ]}
           />

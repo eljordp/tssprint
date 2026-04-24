@@ -111,7 +111,7 @@ export default function BusinessSignage() {
                 key: 'aframe',
                 label: 'A-Frame',
                 base: aFrameBlank,
-                slot: { left: 30, top: 22, width: 42, height: 50 },
+                slot: { left: 31, top: 23, width: 36, height: 52 },
               },
             ]}
           />

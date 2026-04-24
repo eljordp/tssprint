@@ -398,7 +398,7 @@ export default function MylarPackaging() {
                 key: 'jar',
                 label: '2oz Jar',
                 base: mylarJarBlank,
-                slot: { left: 32, top: 38, width: 36, height: 30 },
+                slot: { left: 34, top: 46, width: 28, height: 26 },
               },
             ]}
           />

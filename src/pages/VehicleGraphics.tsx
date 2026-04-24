@@ -99,7 +99,7 @@ export default function VehicleGraphics() {
                 key: 'van',
                 label: 'Ford Transit Van',
                 base: vanBlank,
-                slot: { left: 33, top: 37, width: 45, height: 22 },
+                slot: { left: 30, top: 35, width: 48, height: 25 },
               },
               {
                 key: 'sedan',
@@ -111,13 +111,13 @@ export default function VehicleGraphics() {
                 key: 'box',
                 label: 'Box Truck',
                 base: boxTruckBlank,
-                slot: { left: 30, top: 28, width: 55, height: 35 },
+                slot: { left: 31, top: 26, width: 50, height: 32 },
               },
               {
                 key: 'sprinter',
                 label: 'Work Van',
                 base: workVanBlank,
-                slot: { left: 28, top: 35, width: 50, height: 28 },
+                slot: { left: 30, top: 32, width: 48, height: 25 },
               },
             ]}
           />
