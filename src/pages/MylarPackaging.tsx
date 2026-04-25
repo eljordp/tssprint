@@ -5,18 +5,15 @@ import { useCart } from '@/context/CartContext'
 import { getPricing, type ProductCategory, type AddOn } from '@/lib/pricing'
 import PageHero from '@/components/PageHero'
 import EstimateForm from '@/components/EstimateForm'
+import StudioMockup from '@/components/StudioMockup'
 import mylarHero from '@/assets/services/mylar-packaging.jpg'
 import PortfolioStrip from '@/components/PortfolioStrip'
-import ArtworkMockup from '@/components/ArtworkMockup'
 import mylarBlack from '@/assets/projects/mylar-black-pouches.jpg'
 import mylarGold from '@/assets/projects/mylar-gold-foil.jpg'
 import mylarCannabis from '@/assets/projects/mylar-cannabis-style.jpg'
 import mylarFood from '@/assets/projects/mylar-food-packaging.jpg'
 import mylarDetail from '@/assets/projects/mylar-pouch-detail.jpg'
 import mylarProduction from '@/assets/projects/mylar-production-line.jpg'
-import mylarEighthBlank from '@/assets/mockups/mylar-eighth-blank.jpg'
-import mylarQuarterBlank from '@/assets/mockups/mylar-quarter-blank.jpg'
-import mylarJarBlank from '@/assets/mockups/mylar-jar-blank.jpg'
 
 type MockupType = 'pouch' | 'foil' | 'jar'
 
@@ -380,29 +377,14 @@ export default function MylarPackaging() {
       </section>
       <section className="py-12 md:py-20 border-t border-border/50">
         <div className="section-container">
-          <ArtworkMockup
+          <StudioMockup
             service="Mylar"
-            title="See your art on a real bag"
-            subtitle="Upload your design — preview it on a matte black pouch or jar with studio lighting."
+            title="See your art on the bag"
+            subtitle="Upload your design — preview it as a stand-up pouch or jar wrap label."
             scenes={[
-              {
-                key: 'eighth',
-                label: 'Eighth Pouch',
-                base: mylarEighthBlank,
-                slot: { left: 32, top: 24, width: 36, height: 52 },
-              },
-              {
-                key: 'quarter',
-                label: 'Quarter Pouch',
-                base: mylarQuarterBlank,
-                slot: { left: 30, top: 22, width: 40, height: 56 },
-              },
-              {
-                key: 'jar',
-                label: '2oz Jar',
-                base: mylarJarBlank,
-                slot: { left: 34, top: 46, width: 28, height: 26 },
-              },
+              { key: 'eighth', label: 'Eighth Pouch', shape: 'mylar-pouch' },
+              { key: 'quarter', label: 'Quarter Pouch', shape: 'mylar-pouch' },
+              { key: 'jar', label: '2oz Jar', shape: 'mylar-jar' },
             ]}
           />
         </div>

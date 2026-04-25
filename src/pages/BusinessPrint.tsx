@@ -4,7 +4,7 @@ import PageHero from '@/components/PageHero'
 import ProductOrder from '@/components/ProductOrder'
 import EstimateForm from '@/components/EstimateForm'
 import PortfolioStrip from '@/components/PortfolioStrip'
-import ArtworkMockup from '@/components/ArtworkMockup'
+import StudioMockup from '@/components/StudioMockup'
 import businessPrintHero from '@/assets/services/business-print.jpg'
 import bizCardsLuxury from '@/assets/projects/business-cards-luxury.jpg'
 import bizCardsFoil from '@/assets/projects/business-cards-foil.jpg'
@@ -12,9 +12,6 @@ import flyers from '@/assets/projects/flyers-full-color.jpg'
 import postcards from '@/assets/projects/postcards-set.jpg'
 import letterpress from '@/assets/projects/letterpress-detail.jpg'
 import pressroom from '@/assets/projects/print-pressroom.jpg'
-import cardsBlank from '@/assets/mockups/print-cards-blank.jpg'
-import flyerBlank from '@/assets/mockups/print-flyer-blank.jpg'
-import postcardBlank from '@/assets/mockups/print-postcard-blank.jpg'
 
 const features = [
   'Business Cards',
@@ -96,29 +93,14 @@ export default function BusinessPrint() {
       </section>
       <section className="py-12 md:py-20 border-t border-border/50">
         <div className="section-container">
-          <ArtworkMockup
+          <StudioMockup
             service="Business Print"
             title="Preview your design on paper"
-            subtitle="Upload your artwork — see it on the exact product."
+            subtitle="Upload your artwork — see it rendered on the exact product."
             scenes={[
-              {
-                key: 'cards',
-                label: 'Business Card',
-                base: cardsBlank,
-                slot: { left: 32, top: 40, width: 36, height: 20 },
-              },
-              {
-                key: 'flyer',
-                label: 'Flyer',
-                base: flyerBlank,
-                slot: { left: 30, top: 25, width: 40, height: 53 },
-              },
-              {
-                key: 'postcard',
-                label: 'Postcard',
-                base: postcardBlank,
-                slot: { left: 25, top: 38, width: 50, height: 27 },
-              },
+              { key: 'card', label: 'Business Card', shape: 'business-card' },
+              { key: 'flyer', label: 'Flyer', shape: 'flyer' },
+              { key: 'postcard', label: 'Postcard', shape: 'postcard' },
             ]}
           />
         </div>
