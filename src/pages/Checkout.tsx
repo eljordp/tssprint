@@ -12,6 +12,7 @@ import { isReferralCode, processReferralConversion } from '@/lib/referralRewards
 import { sendOrderEmail } from '@/lib/email'
 import { getAnalyticsIdentity, trackCheckoutStarted, trackPaymentCapture } from '@/lib/analytics'
 import { toast } from 'sonner'
+import { MIN_ORDER_SUBTOTAL } from '@/lib/stickerPricing'
 
 const PAYPAL_CLIENT_ID = import.meta.env.VITE_PAYPAL_CLIENT_ID
 
@@ -48,7 +49,7 @@ export default function Checkout() {
   const finalTotal = Math.max(0, +(total - promoDiscount).toFixed(2))
 
   useEffect(() => {
-    if (checkoutStartedTracked.current || items.length === 0) return
+    if (checkoutStartedTracked.current || items.length === 0 || total < MIN_ORDER_SUBTOTAL) return
     checkoutStartedTracked.current = true
     trackCheckoutStarted({
       items,
@@ -66,6 +67,18 @@ export default function Checkout() {
           <h1 className="text-3xl font-black mb-4">Nothing to Checkout</h1>
           <p className="text-muted-foreground mb-8">Your cart is empty.</p>
           <Link to="/stickers" className="btn-primary">Make Custom Stickers</Link>
+        </div>
+      </section>
+    )
+  }
+
+  if (total < MIN_ORDER_SUBTOTAL) {
+    return (
+      <section className="py-16 md:py-24">
+        <div className="section-container text-center">
+          <h1 className="text-3xl font-black mb-4">${MIN_ORDER_SUBTOTAL} minimum before discounts</h1>
+          <p className="text-muted-foreground mb-8">Add ${(MIN_ORDER_SUBTOTAL - total).toFixed(2)} to your cart subtotal to check out.</p>
+          <Link to="/cart" className="btn-primary">Return to Cart</Link>
         </div>
       </section>
     )

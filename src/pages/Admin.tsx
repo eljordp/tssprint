@@ -1230,7 +1230,7 @@ function PricingTab() {
     }
   }
 
-  const tierLabels = ['1–50', '51–100', '101–250', '251–500', '501–1000', '1000+']
+  const tierLabels = ['50', '100', '250', '500', '1000', '2500+']
   const activeProduct = categoryTabs.find(t => t.id === activeTab)
 
   return (
@@ -1265,7 +1265,7 @@ function PricingTab() {
           {getSubTab('stickers') === 'pricing' && (
             <div className="bg-card border border-border rounded-2xl p-6">
               <h3 className="font-bold mb-1">Base Price Per Sticker</h3>
-              <p className="text-sm text-muted-foreground mb-4">Price per unit at each quantity tier</p>
+              <p className="text-sm text-muted-foreground mb-4">Price per unit at each preset quantity. Custom order totals increase smoothly between presets; the final rate applies at 2,500 pieces and above.</p>
               <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
                 {config.basePrices.map((tier, i) => (
                   <PriceInput key={i} label={`${tierLabels[i]} pcs`} value={tier.price} onChange={v => updateTierPrice(i, v)} />

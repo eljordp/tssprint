@@ -6,8 +6,7 @@ import { useCart } from '@/context/CartContext'
 import { submitContactRequest } from '@/lib/contactSubmit'
 import RestoreCartWidget from '@/components/cart/RestoreCartWidget'
 import emptyCartImage from '@/assets/pages/cart-empty-stickers.jpg'
-
-const MIN_ORDER = 35
+import { MIN_ORDER_SUBTOTAL as MIN_ORDER } from '@/lib/stickerPricing'
 
 export default function Cart() {
   const { items, removeItem, updateQuantity, total, promoCode, promoDiscount, promoLabel } = useCart()
@@ -154,10 +153,10 @@ export default function Cart() {
             <AlertCircle size={20} className="text-yellow-400 shrink-0 mt-0.5" />
             <div className="text-sm">
               <p className="font-bold text-yellow-400">
-                ${MIN_ORDER} minimum order
+                ${MIN_ORDER} minimum before discounts
               </p>
               <p className="text-muted-foreground">
-                Add ${shortfall.toFixed(2)} more to check out. Bumping quantities or adding a sample pack is an easy way there.
+                Add ${shortfall.toFixed(2)} to your subtotal to check out. Increase a quantity or add another item.
               </p>
             </div>
           </div>

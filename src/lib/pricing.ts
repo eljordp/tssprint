@@ -1,4 +1,6 @@
 import { supabase } from './supabase'
+import { defaultStickerBasePrices } from './stickerPricing'
+export { getBasePrice } from './stickerPricing'
 
 const STORAGE_KEY = 'tss-pricing'
 const STORE_PRICING_ID = 'storefront'
@@ -34,14 +36,7 @@ export interface PricingConfig {
 }
 
 export const defaultPricing: PricingConfig = {
-  basePrices: [
-    { maxQty: 50, price: 0.95 },
-    { maxQty: 100, price: 0.62 },
-    { maxQty: 250, price: 0.47 },
-    { maxQty: 500, price: 0.38 },
-    { maxQty: 1000, price: 0.31 },
-    { maxQty: Infinity, price: 0.28 },
-  ],
+  basePrices: defaultStickerBasePrices,
   sizeMultipliers: [
     // Square / Die-Cut / Kiss-Cut / Square sticker presets
     { name: '2" x 2"', multiplier: 1.0 },
@@ -379,13 +374,6 @@ export async function savePricing(config: PricingConfig) {
     }, { onConflict: 'id' })
 
   if (error) throw error
-}
-
-export function getBasePrice(quantity: number, config: PricingConfig): number {
-  for (const tier of config.basePrices) {
-    if (quantity <= tier.maxQty) return tier.price
-  }
-  return config.basePrices[config.basePrices.length - 1].price
 }
 
 export function getMaterialMultiplier(material: string, config: PricingConfig): number {

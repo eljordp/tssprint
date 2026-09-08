@@ -5,6 +5,7 @@ import { ShoppingCart, Sparkles, FileUp, Check, Clock, MapPin, Shield, Zap, Pale
 import { useCart } from '@/context/CartContext'
 import { supabase } from '@/lib/supabase'
 import { getPricing, loadPricing, getBasePrice, getMaterialMultiplier, getSizeMultiplier } from '@/lib/pricing'
+import { STICKER_QUANTITIES, MIN_STICKER_QUANTITY, MIN_ORDER_SUBTOTAL, isValidStickerQuantity, getStickerPrice, formatPriceAdjustment } from '@/lib/stickerPricing'
 import { cities } from '@/lib/cities'
 import { projects } from '@/lib/projects'
 import PageHero from '@/components/PageHero'
@@ -83,8 +84,8 @@ function formatSizeForShape(size: string, shape: string): string {
   return size
 }
 
-const qtyOptions = [50, 100, 250, 500, 1000, 2500]
-const MIN_QTY = 50
+const qtyOptions = STICKER_QUANTITIES
+const MIN_QTY = MIN_STICKER_QUANTITY
 const stickerFormats = [
   { value: 'handheld', label: 'Individual', cartLabel: 'Individual stickers', icon: Hand },
   { value: 'sheet', label: 'Sheets', cartLabel: 'Sticker sheets', icon: PanelsTopLeft },
@@ -279,7 +280,7 @@ export default function Order() {
     if (product.includes('sample')) setMaterial('Holographic')
 
     const qtyParam = Number(params.get('qty'))
-    if (Number.isFinite(qtyParam) && qtyParam >= MIN_QTY) {
+    if (isValidStickerQuantity(qtyParam)) {
       if (qtyOptions.includes(qtyParam)) {
         setQuantity(qtyParam)
         setCustomQty('')
@@ -289,21 +290,23 @@ export default function Order() {
     }
   }, [queryString])
 
-  const effectiveQty = customQty ? (parseInt(customQty) || 50) : quantity
-  const basePrice = getBasePrice(effectiveQty, pricingConfig)
+  const requestedQty = customQty ? Number(customQty) : quantity
+  const quantityValid = isValidStickerQuantity(requestedQty)
+  const effectiveQty = quantityValid ? requestedQty : MIN_QTY
   const matMult = getMaterialMultiplier(material, pricingConfig)
   const sizeMult = getSizeMultiplier(size, pricingConfig)
-  const stickerSubtotal = +(basePrice * matMult * sizeMult * effectiveQty).toFixed(2)
+  const priceBreakdown = getStickerPrice(effectiveQty, pricingConfig, sizeMult, matMult)
+  const stickerSubtotal = priceBreakdown.subtotal
   const addonsTotal = (rushAddon ? ADDON_RUSH.price : 0) + (designAddon ? ADDON_DESIGN.price : 0)
   const totalPrice = +(stickerSubtotal + addonsTotal).toFixed(2)
-  const perUnit = +(basePrice * matMult * sizeMult).toFixed(3)
+  const perUnit = stickerSubtotal / effectiveQty
 
   const refPerUnit = getBasePrice(50, pricingConfig) * matMult * sizeMult
   const getDiscount = (qty: number) => {
     const pu = getBasePrice(qty, pricingConfig) * matMult * sizeMult
     return Math.round((1 - pu / refPerUnit) * 100)
   }
-  const getQtyTotal = (qty: number) => +(getBasePrice(qty, pricingConfig) * matMult * sizeMult * qty).toFixed(0)
+  const getQtyTotal = (qty: number) => getStickerPrice(qty, pricingConfig, sizeMult, matMult).subtotal.toFixed(2)
 
   const materialLabel = materialData.find(m => m.value === material)?.label || material
   const shapeLabel = shapeData.find(s => s.value === shape)?.name || shape
@@ -388,7 +391,7 @@ export default function Order() {
   }, [artworkUrl])
 
   const handleAddToCart = () => {
-    if (effectiveQty < MIN_QTY) return
+    if (!quantityValid) return
     if (!artworkIntent) {
       setArtworkChoiceError('Choose how you will provide artwork before adding this order.')
       return
@@ -519,6 +522,7 @@ export default function Order() {
             {/* Quantity */}
             <div>
               <h3 className="text-sm font-black uppercase tracking-wider mb-3">Quantity</h3>
+              <p className="text-xs text-muted-foreground mb-3">Prices include your selected size and material. Bulk savings are per sticker compared with {MIN_QTY} pieces; add-ons and cart discounts are shown separately.</p>
               <div className="space-y-2">
                 {qtyOptions.map(q => {
                   const total = getQtyTotal(q)
@@ -539,7 +543,7 @@ export default function Order() {
                         <span className="font-bold">${total}</span>
                         {disc > 0 && (
                           <span className={`text-xs font-semibold ${isActive ? 'text-white/70' : 'text-green-400'}`}>
-                            -{disc}%
+                            Save {disc}%/ea
                           </span>
                         )}
                       </span>
@@ -547,24 +551,28 @@ export default function Order() {
                   )
                 })}
                 {/* Custom quantity */}
-                <div className={`rounded-xl border transition-all ${customQty ? (effectiveQty < MIN_QTY ? 'border-yellow-500/40 bg-yellow-500/5' : 'border-primary bg-primary/10') : 'border-border'}`}>
+                <div className={`rounded-xl border transition-all ${customQty ? (!quantityValid ? 'border-yellow-500/40 bg-yellow-500/5' : 'border-primary bg-primary/10') : 'border-border'}`}>
                   <p className="text-xs text-muted-foreground text-center pt-3 pb-1.5">Custom quantity · min {MIN_QTY}</p>
                   <div className="flex items-center gap-2 px-3 pb-3">
                     <input
                       type="number"
                       min={MIN_QTY}
+                      step={1}
+                      aria-label="Custom sticker quantity"
+                      aria-invalid={!quantityValid}
+                      aria-describedby={!quantityValid ? 'quantity-error' : undefined}
                       placeholder={`Enter qty (${MIN_QTY}+)`}
                       value={customQty}
                       onChange={e => setCustomQty(e.target.value)}
                       className="flex-1 bg-muted rounded-lg px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/20"
                     />
                     <span className="text-sm font-bold">
-                      ${customQty ? getQtyTotal(parseInt(customQty) || MIN_QTY) : getQtyTotal(quantity)}
+                      {quantityValid ? `$${getQtyTotal(effectiveQty)}` : '—'}
                     </span>
                   </div>
-                  {customQty && effectiveQty < MIN_QTY && (
-                    <p className="text-[11px] text-yellow-500 px-3 pb-3 -mt-1">
-                      Minimum {MIN_QTY} pieces per order.
+                  {!quantityValid && (
+                    <p id="quantity-error" className="text-[11px] text-yellow-500 px-3 pb-3 -mt-1">
+                      Enter a whole number of {MIN_QTY} pieces or more.
                     </p>
                   )}
                 </div>
@@ -725,28 +733,28 @@ export default function Order() {
                 Order Summary
               </h3>
               <div className="text-center mb-4">
-                <p className="text-xl font-black">{effectiveQty} stickers</p>
+                <p className="text-xl font-black">{quantityValid ? `${effectiveQty} stickers` : 'Choose a valid quantity'}</p>
                 <p className="text-sm text-muted-foreground">{shapeLabel} &middot; {formatSizeForShape(size, shape)}</p>
                 <p className="text-sm text-muted-foreground">{materialLabel}</p>
                 <p className="text-sm text-primary">{formatLabel}</p>
               </div>
 
               {/* Price breakdown */}
-              <div className="border-t border-border/60 pt-4 space-y-1.5 text-xs">
+              {quantityValid && <div className="border-t border-border/60 pt-4 space-y-1.5 text-xs">
                 <div className="flex justify-between text-muted-foreground">
-                  <span>{effectiveQty} × ${basePrice.toFixed(2)} base</span>
-                  <span className="tabular-nums">${(basePrice * effectiveQty).toFixed(2)}</span>
+                  <span>{effectiveQty} stickers · base price</span>
+                  <span className="tabular-nums">${priceBreakdown.baseTotal.toFixed(2)}</span>
                 </div>
                 {sizeMult !== 1 && (
                   <div className="flex justify-between text-muted-foreground">
-                    <span>{formatSizeForShape(size, shape)} size (×{sizeMult.toFixed(1)})</span>
-                    <span className="tabular-nums">+${(basePrice * effectiveQty * (sizeMult - 1)).toFixed(2)}</span>
+                    <span>{formatSizeForShape(size, shape)} size adjustment</span>
+                    <span className="tabular-nums">{formatPriceAdjustment(priceBreakdown.sizeAdjustment)}</span>
                   </div>
                 )}
                 {matMult !== 1 && (
                   <div className="flex justify-between text-muted-foreground">
-                    <span>{materialLabel} (×{matMult.toFixed(1)})</span>
-                    <span className="tabular-nums">+${(basePrice * effectiveQty * sizeMult * (matMult - 1)).toFixed(2)}</span>
+                    <span>{materialLabel} {matMult < 1 ? 'savings' : 'upgrade'}</span>
+                    <span className="tabular-nums">{formatPriceAdjustment(priceBreakdown.materialAdjustment)}</span>
                   </div>
                 )}
                 <div className="flex justify-between pt-1 border-t border-border/40 mt-1">
@@ -765,7 +773,7 @@ export default function Order() {
                     <span className="tabular-nums">+${ADDON_DESIGN.price}</span>
                   </div>
                 )}
-              </div>
+              </div>}
 
               {/* Rush toggle inline */}
               <button
@@ -784,17 +792,18 @@ export default function Order() {
               </button>
 
               <div className="border-t border-border pt-4 mt-4 text-center">
-                <p className="text-xs font-bold text-primary uppercase tracking-wider mb-1">Total</p>
-                <p className="text-4xl font-black">${totalPrice.toFixed(2)}</p>
-                <p className="text-xs text-primary mt-1.5">&asymp; ${perUnit.toFixed(3)}/ea</p>
+                <p className="text-xs font-bold text-primary uppercase tracking-wider mb-1">Total before cart discounts</p>
+                <p className="text-4xl font-black">{quantityValid ? `$${totalPrice.toFixed(2)}` : '—'}</p>
+                {quantityValid && <p className="text-xs text-primary mt-1.5">Stickers &asymp; ${perUnit.toFixed(3)}/ea · excludes add-ons</p>}
+                <p className="text-xs text-muted-foreground mt-2">${MIN_ORDER_SUBTOTAL} cart minimum before discounts.</p>
               </div>
               <button
                 onClick={handleAddToCart}
-                disabled={effectiveQty < MIN_QTY || (Boolean(artworkFile) && artworkStatus !== 'uploaded')}
+                disabled={!quantityValid || (Boolean(artworkFile) && artworkStatus !== 'uploaded')}
                 className={`btn-primary w-full mt-5 ${added ? 'bg-green-600' : ''} disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:!transform-none`}
               >
-                {effectiveQty < MIN_QTY ? (
-                  <>Minimum {MIN_QTY} to add</>
+                {!quantityValid ? (
+                  <>Enter a whole quantity of {MIN_QTY}+</>
                 ) : artworkFile && artworkStatus === 'uploading' ? (
                   <>Saving artwork...</>
                 ) : artworkFile && artworkStatus === 'error' ? (
