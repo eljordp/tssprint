@@ -1,4 +1,4 @@
-import { useEffect } from 'react'
+import { useModalFocus } from '@/hooks/useModalFocus'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Link } from 'react-router-dom'
 import { X, ArrowRight } from 'lucide-react'
@@ -10,18 +10,7 @@ type Props = {
 }
 
 export default function ProjectModal({ project, onClose }: Props) {
-  useEffect(() => {
-    if (!project) return
-    const onKey = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') onClose()
-    }
-    document.body.style.overflow = 'hidden'
-    window.addEventListener('keydown', onKey)
-    return () => {
-      document.body.style.overflow = ''
-      window.removeEventListener('keydown', onKey)
-    }
-  }, [project, onClose])
+  const modalRef = useModalFocus(Boolean(project), onClose)
 
   return (
     <AnimatePresence>
@@ -39,6 +28,7 @@ export default function ProjectModal({ project, onClose }: Props) {
             animate={{ scale: 1, y: 0 }}
             exit={{ scale: 0.96, y: 12 }}
             transition={{ duration: 0.25, ease: [0.16, 1, 0.3, 1] }}
+            ref={modalRef} tabIndex={-1} role="dialog" aria-modal="true" aria-labelledby="project-dialog-title"
             className="relative w-full max-w-5xl max-h-[90vh] overflow-y-auto rounded-2xl bg-background border border-border shadow-2xl"
             onClick={(e) => e.stopPropagation()}
           >
@@ -74,7 +64,7 @@ export default function ProjectModal({ project, onClose }: Props) {
                     {project.client}
                   </p>
                 )}
-                <h3 className="text-2xl md:text-3xl font-black leading-tight mb-4">{project.title}</h3>
+                <h3 id="project-dialog-title" className="text-2xl md:text-3xl font-black leading-tight mb-4">{project.title}</h3>
 
                 <p className="text-sm md:text-base text-muted-foreground leading-relaxed mb-5">
                   {project.description}
@@ -113,7 +103,7 @@ export default function ProjectModal({ project, onClose }: Props) {
                     </Link>
                   )}
                   <Link
-                    to="/contact"
+                    to={`/contact?service=${encodeURIComponent(project.category)}&project=${encodeURIComponent(project.title)}`}
                     onClick={onClose}
                     className="btn-primary text-sm px-4 py-2.5 inline-flex items-center justify-center gap-1.5"
                   >

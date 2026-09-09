@@ -1,8 +1,11 @@
-import { createContext, useContext, useState, useEffect, useCallback, type ReactNode } from 'react'
+import { createContext, useContext, useState, useEffect, useCallback, useRef, type ReactNode } from 'react'
 import { validatePromoCode, applyPromoCode, type PromoResult, AUTO_DISCOUNT_CODE, AUTO_APPLIED_KEY } from '@/lib/promoCodes'
-import { getAnalyticsIdentity } from '@/lib/analytics'
+import { getAnalyticsIdentity, trackAddToCart, trackCartEvent, shouldSuppressAnalytics } from '@/lib/analytics'
+import { cartRequest, getCartCredentials, resetCartCredentials } from '@/lib/cartSession'
 
-interface CartItem {
+export interface CartItem {
+  pieceCount?: number
+  configuration?: { shape: string; material: string; size: string; pieces: number; format: 'handheld' | 'sheet' | 'roll'; rush: boolean; design: boolean }
   id: string
   name: string
   size: string
@@ -28,11 +31,18 @@ export interface SavedCartLookup {
   items: CartItem[]
   totalPrice: number
   savedAt: Date
+  sourceToken?: string
 }
 
 interface CartContextType {
   items: CartItem[]
   addItem: (item: CartItem) => 'added' | 'pending'
+  replaceItem: (id: string, item: CartItem) => void
+  syncStatus: 'idle' | 'saving' | 'saved' | 'error'
+  retrySync: () => void
+  emailCart: (email: string) => Promise<void>
+  restoreFromToken: (token: string) => Promise<SavedCartLookup>
+  setCartStage: (stage: 'checkout' | 'payment_issue') => void
   removeItem: (id: string) => void
   updateQuantity: (id: string, quantity: number) => void
   clearCart: () => void
@@ -41,7 +51,6 @@ interface CartContextType {
   totalItems: number
   cartEmail: string | null
   setCartEmail: (email: string | null) => void
-  lookupSavedCart: (email: string) => Promise<SavedCartLookup | null>
   restoreCart: (saved: SavedCartLookup, email: string) => void
   // Promo code
   promoCode: string | null
@@ -54,15 +63,21 @@ interface CartContextType {
 
 const CartContext = createContext<CartContextType | undefined>(undefined)
 
-async function getSupabaseClient() {
-  return (await import('@/lib/supabase')).supabase
-}
-
 export function CartProvider({ children }: { children: ReactNode }) {
   const [items, setItems] = useState<CartItem[]>(() => {
-    const saved = localStorage.getItem('tss-cart')
-    return saved ? JSON.parse(saved) : []
+    try {
+      const saved = JSON.parse(localStorage.getItem('tss-cart') || '[]')
+      return Array.isArray(saved) ? saved.filter(item => item && typeof item.id === 'string' && Number.isFinite(item.price) && Number.isSafeInteger(item.quantity) && item.quantity > 0) : []
+    } catch { return [] }
   })
+  const [syncStatus, setSyncStatus] = useState<'idle' | 'saving' | 'saved' | 'error'>('idle')
+  const [syncAttempt, setSyncAttempt] = useState(0)
+  const [stage, setCartStage] = useState<'checkout' | 'payment_issue' | undefined>()
+  const syncQueue = useRef(Promise.resolve())
+  const restoreSource = useRef<string | undefined>(undefined)
+  const latestItems = useRef(items)
+  useEffect(() => { latestItems.current = items }, [items])
+  const retrySync = () => setSyncAttempt(attempt => attempt + 1)
   const [cartEmail, setCartEmailState] = useState<string | null>(() => localStorage.getItem('tss-cart-email'))
 
   const setCartEmail = useCallback((email: string | null) => {
@@ -76,56 +91,49 @@ export function CartProvider({ children }: { children: ReactNode }) {
 
   // Sync to localStorage
   useEffect(() => {
-    localStorage.setItem('tss-cart', JSON.stringify(items))
+    try { localStorage.setItem('tss-cart', JSON.stringify(items)) } catch { /* memory cart remains usable */ }
   }, [items])
 
-  // Sync cart session to Supabase — track every cart, email-optional.
-  // Email is captured separately (modal or checkout) and added to the row if/when available.
-  const syncSession = useCallback(async (currentItems: CartItem[], email: string | null) => {
-    if (currentItems.length === 0) return
-    const supabase = await getSupabaseClient()
-    const identity = getAnalyticsIdentity()
-
-    const sessionId = localStorage.getItem('tss-cart-session-id')
-    const totalPrice = currentItems.reduce((sum, i) => {
-      const addOnTotal = i.addOns?.reduce((a, b) => a + b.price, 0) || 0
-      return sum + (i.price + addOnTotal) * i.quantity
-    }, 0)
-
-    if (sessionId) {
-      const { error } = await supabase.from('cart_sessions').update({
-        email,
-        items: currentItems,
-        total_price: totalPrice,
-        visitor_id: identity.visitorId,
-        session_id: identity.sessionId,
-        attribution: identity.attribution,
-        updated_at: new Date().toISOString(),
-      }).eq('id', sessionId)
-      if (error) console.error('[cart_sessions] update failed:', error)
-    } else {
-      const { data, error } = await supabase.from('cart_sessions').insert({
-        email,
-        items: currentItems,
-        total_price: totalPrice,
-        visitor_id: identity.visitorId,
-        session_id: identity.sessionId,
-        attribution: identity.attribution,
-      }).select('id').single()
-      if (error) {
-        console.error('[cart_sessions] insert failed:', error)
-        return
+  const syncSession = useCallback((currentItems: CartItem[], email: string | null, currentStage?: string) => {
+    const credentials = getCartCredentials()
+    const payload = { ...credentials, items: currentItems, email, stage: currentStage, identity: getAnalyticsIdentity(), isTest: shouldSuppressAnalytics(), sourceToken: restoreSource.current }
+    const operation = syncQueue.current.catch(() => undefined).then(async () => {
+      setSyncStatus('saving')
+      for (let attempt = 0; attempt < 3; attempt++) {
+        try { await cartRequest('sync', payload); if (restoreSource.current === payload.sourceToken) restoreSource.current = undefined; setSyncStatus('saved'); return }
+        catch (error) {
+          if (attempt === 2) { setSyncStatus('error'); throw error }
+          await new Promise(resolve => window.setTimeout(resolve, 500 * 2 ** attempt))
+        }
       }
-      if (data?.id) localStorage.setItem('tss-cart-session-id', data.id)
-    }
+    })
+    syncQueue.current = operation.catch(() => undefined)
+    return operation
   }, [])
 
-  // Sync whenever items or email change — email no longer gates tracking
   useEffect(() => {
-    if (items.length > 0) {
-      syncSession(items, cartEmail)
-    }
-  }, [items, cartEmail, syncSession])
+    if (!items.length && !localStorage.getItem('tss-cart-credentials-v2')) return
+    const timer = window.setTimeout(() => { void syncSession(items, cartEmail, stage).catch(() => undefined) }, 400)
+    return () => window.clearTimeout(timer)
+  }, [items, cartEmail, stage, syncAttempt, syncSession])
+
+  useEffect(() => {
+    const retry = () => setSyncAttempt(attempt => attempt + 1)
+    window.addEventListener('online', retry)
+    return () => window.removeEventListener('online', retry)
+  }, [])
+
+  const emailCart = async (email: string) => {
+    const normalized = email.trim().toLowerCase()
+    await syncSession(latestItems.current, normalized, stage)
+    setCartEmail(normalized)
+    await cartRequest('email', { ...getCartCredentials(), email: normalized })
+  }
+
+  const restoreFromToken = useCallback(async (token: string): Promise<SavedCartLookup> => {
+    const saved = await cartRequest('restore', { token })
+    return { items: saved.items, totalPrice: saved.total_price, savedAt: new Date(saved.updated_at), sourceToken: token }
+  }, [])
 
   const doAddItem = (item: CartItem) => {
     setItems(prev => {
@@ -139,13 +147,25 @@ export function CartProvider({ children }: { children: ReactNode }) {
 
   const addItem = (item: CartItem): 'added' | 'pending' => {
     doAddItem(item)
+    trackAddToCart({ item, value: (item.price + (item.addOns?.reduce((sum, addon) => sum + addon.price, 0) || 0)) * item.quantity })
     return 'added'
   }
 
-  const removeItem = (id: string) => setItems(prev => prev.filter(i => i.id !== id))
+  const removeItem = (id: string) => {
+    const item = items.find(item => item.id === id)
+    if (item) trackCartEvent('remove_from_cart', [item])
+    setItems(prev => prev.filter(i => i.id !== id))
+  }
+  const replaceItem = (id: string, item: CartItem) => {
+    setItems(prev => prev.map(existing => existing.id === id ? { ...item, quantity: existing.quantity } : existing))
+    trackCartEvent('cart_item_updated', [item])
+  }
 
   const updateQuantity = (id: string, quantity: number) => {
+    if (!Number.isSafeInteger(quantity)) return
     if (quantity <= 0) { removeItem(id); return }
+    const previous = items.find(item => item.id === id)
+    if (previous && quantity !== previous.quantity) trackCartEvent(quantity > previous.quantity ? 'add_to_cart' : 'remove_from_cart', [{ ...previous, quantity: Math.abs(quantity - previous.quantity) }])
     setItems(prev => prev.map(i => i.id === id ? { ...i, quantity } : i))
   }
 
@@ -156,39 +176,19 @@ export function CartProvider({ children }: { children: ReactNode }) {
     setPromoLabel(null)
   }
 
-  const lookupSavedCart = useCallback(async (email: string): Promise<SavedCartLookup | null> => {
-    const trimmed = email.trim()
-    if (!trimmed) return null
-    const supabase = await getSupabaseClient()
-    const { data, error } = await supabase.rpc('get_saved_cart', { p_email: trimmed })
-    if (error) {
-      console.error('[cart restore] lookup failed:', error)
-      return null
-    }
-    const row = Array.isArray(data) ? data[0] : data
-    if (!row || !row.items || row.items.length === 0) return null
-    return {
-      items: row.items as CartItem[],
-      totalPrice: Number(row.total_price) || 0,
-      savedAt: new Date(row.updated_at || row.created_at),
-    }
-  }, [])
-
   const restoreCart = useCallback((saved: SavedCartLookup, email: string) => {
-    // Drop the existing session id so the next sync creates a fresh row tied to this restore.
-    // (We don't want to clobber the saved row — it stays as-is until the user adds/changes items.)
-    localStorage.removeItem('tss-cart-session-id')
+    resetCartCredentials()
+    restoreSource.current = saved.sourceToken
     setItems(saved.items)
-    setCartEmail(email)
+    setCartEmail(email || null)
+    trackCartEvent('cart_restored', saved.items)
   }, [setCartEmail])
 
   const markConverted = async () => {
-    const sessionId = localStorage.getItem('tss-cart-session-id')
-    if (!sessionId) return
-    const supabase = await getSupabaseClient()
-    const { error } = await supabase.from('cart_sessions').update({ converted: true }).eq('id', sessionId)
-    if (error) console.error('[cart_sessions] mark converted failed:', error)
-    localStorage.removeItem('tss-cart-session-id')
+    // Payment endpoints own the paid state. A browser callback cannot declare it.
+    resetCartCredentials()
+    restoreSource.current = undefined
+    setCartStage(undefined)
   }
 
   const total = items.reduce((sum, i) => {
@@ -260,9 +260,9 @@ export function CartProvider({ children }: { children: ReactNode }) {
 
   return (
     <CartContext.Provider value={{
-      items, addItem, removeItem, updateQuantity, clearCart, markConverted,
+      items, addItem, replaceItem, removeItem, updateQuantity, clearCart, markConverted,
       total, totalItems, cartEmail, setCartEmail,
-      lookupSavedCart, restoreCart,
+      restoreCart, restoreFromToken, emailCart, syncStatus, retrySync, setCartStage,
       promoCode, promoDiscount, promoLabel,
       applyPromo, removePromo, finalizePromo,
     }}>

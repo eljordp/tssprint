@@ -3,6 +3,7 @@ import { Sticker, MessageSquare } from 'lucide-react'
 
 // Routes where the sticky mobile bar competes with a primary on-page CTA — hide it there
 const HIDE_ON = new Set([
+  '/stickers',
   '/cart',
   '/checkout',
   '/contact',

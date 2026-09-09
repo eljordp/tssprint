@@ -1,3 +1,4 @@
+import { markCartPaid } from '../../server/cart-api.js'
 import {
   getCompletedCapture,
   normalizeCheckout,
@@ -31,6 +32,13 @@ export default async function handler(req, res) {
         status: capture?.status,
       })
     }
+
+    const completed = getCompletedCapture(capture)
+    if (completed.amount?.currency_code !== 'USD' || Math.round(Number(completed.amount?.value) * 100) !== Math.round(checkout.total * 100)) {
+      return sendJson(res, 409, { error: 'Payment was received but its total does not match this checkout. Contact the shop with your payment ID.', orderID: capture.id || orderID })
+    }
+    try { await markCartPaid(body.cartSession, 'paypal', capture.id || orderID, checkout) }
+    catch (error) { console.error('[cart-conversion] PayPal linkage failed', { orderID, message: error.message }) }
 
     const saved = await saveCapturedOrder(capture.id || orderID, checkout, capture)
 

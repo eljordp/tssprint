@@ -1,3 +1,4 @@
+import { markCartPaid } from '../cart-api.js'
 import { normalizeCheckout } from '../paypal-api.js'
 import {
   getSquareConnection,
@@ -77,6 +78,12 @@ export default async function handler(req, res) {
         status: payment?.status || null,
       })
     }
+
+    if (payment.amount_money?.currency !== 'USD' || Number(payment.amount_money?.amount) !== Math.round(checkout.total * 100)) {
+      return sendJson(res, 409, { error: 'Payment was received but its total does not match this checkout. Contact the shop with your payment ID.', paymentId: payment.id })
+    }
+    try { await markCartPaid(body.cartSession, 'square', payment.id, checkout) }
+    catch (error) { console.error('[cart-conversion] Square linkage failed', { paymentId: payment.id, message: error.message }) }
 
     let orderSaved = false
     let orderSaveIssue = ''

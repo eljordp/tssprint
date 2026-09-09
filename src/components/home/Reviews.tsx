@@ -92,7 +92,6 @@ export default function Reviews() {
   const prev = () => { setCurrent(c => Math.max(0, c - 1)); setAutoplay(false) }
   const next = () => { setCurrent(c => Math.min(maxIndex, c + 1)); setAutoplay(false) }
 
-  const avgRating = (reviews.reduce((s, r) => s + r.rating, 0) / reviews.length).toFixed(1)
 
   return (
     <section className="py-16 md:py-24 bg-card/30">
@@ -110,7 +109,7 @@ export default function Reviews() {
             ))}
           </div>
           <h2 className="text-3xl md:text-5xl font-black mb-3">
-            {avgRating} Stars on Google
+            What Customers Say
           </h2>
           <p className="text-muted-foreground text-lg max-w-2xl mx-auto mb-4">
             Real reviews from real customers. See why businesses and creators trust The Sticker Smith.

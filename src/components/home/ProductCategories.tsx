@@ -32,9 +32,9 @@ const categories = [
     image: customLabelsCategory,
   },
   {
-    title: 'Sample Packs',
-    description: 'Compare finishes',
-    href: '/stickers?product=sample-pack#configure',
+    title: 'Material Samples',
+    description: 'Ask about availability',
+    href: '/contact?service=Sticker%20samples&message=I%20would%20like%20to%20compare%20your%20sticker%20materials.%20What%20samples%20are%20available%20and%20what%20do%20they%20cost%3F',
     image: samplePacksCategory,
   },
 ]

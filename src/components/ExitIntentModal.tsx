@@ -3,13 +3,13 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { X, Gift, Check, Loader2 } from 'lucide-react'
 import { submitContactRequest } from '@/lib/contactSubmit'
 import { useCart } from '@/context/CartContext'
-import { toast } from 'sonner'
+import { useModalFocus } from '@/hooks/useModalFocus'
 
 const DISMISSED_KEY = 'tss_exit_modal_dismissed'
 const SUBMITTED_KEY = 'tss_exit_modal_submitted'
 
 export default function ExitIntentModal() {
-  const { items, lookupSavedCart, restoreCart } = useCart()
+  const { items, setCartEmail } = useCart()
   const [show, setShow] = useState(false)
   const [email, setEmail] = useState('')
   const [status, setStatus] = useState<'idle' | 'sending' | 'sent' | 'error'>('idle')
@@ -47,6 +47,8 @@ export default function ExitIntentModal() {
     sessionStorage.setItem(DISMISSED_KEY, '1')
   }
 
+  const modalRef = useModalFocus(show, close)
+
   const onSubmit = async (e: FormEvent) => {
     e.preventDefault()
     if (!email) return
@@ -66,15 +68,7 @@ export default function ExitIntentModal() {
       localStorage.setItem(SUBMITTED_KEY, '1')
       setStatus('sent')
 
-      // If the visitor has no local cart, try to restore one from their email.
-      // Quiet by design — toast confirms success, silent if nothing to restore.
-      if (items.length === 0) {
-        const saved = await lookupSavedCart(email)
-        if (saved) {
-          restoreCart(saved, email)
-          toast.success(`We found your saved cart — ${saved.items.length} ${saved.items.length === 1 ? 'item' : 'items'}, ready when you are.`)
-        }
-      }
+      if (items.length > 0) setCartEmail(email.trim())
     } catch {
       setStatus('error')
     }
@@ -97,6 +91,7 @@ export default function ExitIntentModal() {
             exit={{ opacity: 0, scale: 0.96 }}
             transition={{ type: 'spring', stiffness: 200, damping: 20 }}
             onClick={(e) => e.stopPropagation()}
+            ref={modalRef} tabIndex={-1} role="dialog" aria-modal="true" aria-label="First order offer"
             className="relative bg-card border border-border rounded-3xl p-8 md:p-10 max-w-md w-full shadow-2xl"
           >
             <button
@@ -112,9 +107,9 @@ export default function ExitIntentModal() {
                 <div className="w-14 h-14 rounded-full bg-green-500/15 border border-green-500/30 flex items-center justify-center mx-auto mb-5">
                   <Check size={28} className="text-green-400" />
                 </div>
-                <h2 className="text-2xl font-black mb-3">Check your inbox.</h2>
+                <h2 className="text-2xl font-black mb-3">You’re on the list.</h2>
                 <p className="text-muted-foreground">
-                  We sent your first-order details to <strong className="text-foreground">{email}</strong>. Your 10% off is waiting whenever you're ready to order.
+                  Your signup is saved for <strong className="text-foreground">{email}</strong>. Eligible first orders receive 10% off automatically in the cart.
                 </p>
               </div>
             ) : (
@@ -134,6 +129,7 @@ export default function ExitIntentModal() {
                 <form onSubmit={onSubmit} className="space-y-3">
                   <input
                     type="email"
+                    aria-label="Email for print updates"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     required
@@ -153,7 +149,7 @@ export default function ExitIntentModal() {
                     )}
                   </button>
                   <p className="text-[11px] text-muted-foreground text-center">
-                    No spam. One email, you decide what's next.
+                    By signing up, you agree to receive print updates and offers. You can unsubscribe.
                   </p>
                   {status === 'error' && (
                     <p className="text-xs text-destructive text-center">

@@ -53,6 +53,7 @@ const ROUTE_TITLES = {
   '/services/window-film': 'Window Film, Tint & Graphics | The Sticker Smith',
   '/mylar': 'Custom Mylar Bags Hayward & Bay Area | The Sticker Smith',
   '/projects': 'Print Projects & Portfolio | The Sticker Smith',
+  '/order-help': 'Ordering, Proofs & Pickup | The Sticker Smith',
   '/about': 'About The Sticker Smith | Bay Area Print Studio',
   '/contact': 'Contact & Free Quote | The Sticker Smith',
   '/quote': 'Fast Print Quote | Stickers, Signs, Wraps & Event Displays',
@@ -67,7 +68,9 @@ const ROUTE_TITLES = {
   '/newark': 'Newark Retail Signage, Labels & Vehicle Graphics | The Sticker Smith',
 }
 
-const ROUTES = Object.keys(ROUTE_TITLES)
+const requestedRoutes = process.argv.slice(2)
+const ROUTES = requestedRoutes.length ? requestedRoutes : Object.keys(ROUTE_TITLES)
+for (const route of ROUTES) if (!ROUTE_TITLES[route]) throw new Error(`Unknown prerender route: ${route}`)
 
 function waitForHttp(url, expectedSignal, timeoutMs = 30000) {
   const start = Date.now()

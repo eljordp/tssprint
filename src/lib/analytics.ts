@@ -173,10 +173,10 @@ function logToSupabase(table: 'page_views' | 'click_events' | 'nav_events', row:
   void import('./supabase')
     .then(({ supabase }) => supabase.from(table).insert(row))
     .then(({ error }) => {
-      if (error && import.meta.env.DEV) console.warn(`[analytics] ${table} insert failed:`, error.message)
+      if (error) console.warn(`[analytics] ${table} logging unavailable`, { code: error.code })
     })
     .catch((error) => {
-      if (import.meta.env.DEV) console.warn(`[analytics] ${table} insert failed:`, error)
+      console.warn(`[analytics] ${table} logging unavailable`, { reason: error instanceof Error ? error.name : 'request_failed' })
     })
 }
 
@@ -192,7 +192,7 @@ function cleanProperties(properties: AnalyticsProperties) {
 
 const STAFF_OPTOUT_KEY = 'tss_analytics_optout'
 
-function shouldSuppressAnalytics() {
+export function shouldSuppressAnalytics() {
   if (typeof window === 'undefined') return false
 
   // Never record internal/staff areas — keeps owner-facing stats to real customers.
@@ -202,10 +202,15 @@ function shouldSuppressAnalytics() {
   } catch { /* localStorage unavailable — fall through */ }
 
   const params = new URLSearchParams(window.location.search)
+  if (params.has('prerender') || (window as unknown as { __prerender?: boolean }).__prerender) return true
   const source = params.get('utm_source')?.toLowerCase()
   const medium = params.get('utm_medium')?.toLowerCase()
 
-  return source === INTERNAL_VERIFICATION_SOURCE && medium === INTERNAL_VERIFICATION_MEDIUM
+  const internal = source === INTERNAL_VERIFICATION_SOURCE && medium === INTERNAL_VERIFICATION_MEDIUM
+  try {
+    if (internal) sessionStorage.setItem('tss_verification_session', '1')
+    return internal || sessionStorage.getItem('tss_verification_session') === '1'
+  } catch { return internal }
 }
 
 // Mark this browser as staff so the owner's own browsing never pollutes customer stats.
@@ -236,16 +241,18 @@ function initGa4() {
   // GA4 independently of script insertion so hydrated pages still send events.
   if (!window.__tssGa4Configured) {
     window.gtag('js', new Date())
-    window.gtag('config', GA4_MEASUREMENT_ID, { send_page_view: false })
+    window.gtag('config', GA4_MEASUREMENT_ID, { send_page_view: false, page_location: window.location.origin + window.location.pathname })
     window.__tssGa4Configured = true
   }
 }
 
 function sendGa4Event(name: string, params: Ga4Params = {}) {
+  if (shouldSuppressAnalytics()) return
   initGa4()
   if (!window.gtag || !GA4_MEASUREMENT_ID) return
   window.gtag('event', name, {
     ...params,
+    page_location: window.location.origin + window.location.pathname,
     send_to: GA4_MEASUREMENT_ID,
   })
 }
@@ -271,7 +278,7 @@ export function trackPageView(path: string) {
   // Vercel Analytics auto-tracks page views via route changes.
   sendGa4Event('page_view', {
     page_path: path,
-    page_location: window.location.href,
+    page_location: window.location.origin + window.location.pathname,
     page_title: document.title,
   })
 
@@ -366,6 +373,7 @@ export function trackCheckoutStarted({
     promo_code: promoCode || undefined,
     promo_discount: promoDiscount || undefined,
   })
+  logCartMilestone('begin_checkout')
   sendGa4Event('begin_checkout', {
     currency: 'USD',
     value,
@@ -395,11 +403,8 @@ export function trackAddToCart({
     value,
     currency: 'USD',
   })
-  sendGa4Event('add_to_cart', {
-    currency: 'USD',
-    value,
-    items: [gaItem],
-  })
+  sendGa4Event('add_to_cart', { currency: 'USD', value, items: [gaItem] })
+  logCartMilestone('add_to_cart')
 }
 
 export function trackPaymentCapture({
@@ -419,6 +424,8 @@ export function trackPaymentCapture({
   promoCode?: string | null
   promoDiscount?: number
 }) {
+  const purchaseKey = `tss-purchase-${provider}-${orderId}`
+  try { if (sessionStorage.getItem(purchaseKey)) return; sessionStorage.setItem(purchaseKey, 'true') } catch { /* transaction_id also identifies duplicate purchases */ }
   const gaItems = toGa4Items(items)
   trackEvent(`${provider}_capture`, {
     payment_provider: provider,
@@ -485,4 +492,16 @@ export function setupClickTracking() {
       trackEvent('quote_cta_click', properties)
     }
   })
+}
+
+function logCartMilestone(name: string) {
+  const identity = getAnalyticsIdentity()
+  logToSupabase('click_events', { path: window.location.pathname, element: name, event_type: name, visitor_id: identity.visitorId, session_id: identity.sessionId, attribution: identity.attribution })
+}
+
+export function trackCartEvent(name: string, items: AnalyticsCartItem[]) {
+  if (shouldSuppressAnalytics()) return
+  const value = +items.reduce((sum, item) => sum + (item.price + (item.addOns?.reduce((subtotal, addon) => subtotal + addon.price, 0) || 0)) * item.quantity, 0).toFixed(2)
+  sendGa4Event(name, { currency: 'USD', value, items: toGa4Items(items) })
+  logCartMilestone(name)
 }

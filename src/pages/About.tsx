@@ -21,7 +21,7 @@ const services = [
 
 const stats = [
   { value: '500+', label: 'Projects Completed', icon: CheckCircle },
-  { value: '5.0', label: 'Google Rating', icon: Star },
+  { value: 'Local', label: 'Hayward Print Shop', icon: Star },
   { value: '24hr', label: 'Digital Proofs', icon: Clock },
   { value: 'Bay Area', label: 'Local Business', icon: MapPin },
 ]

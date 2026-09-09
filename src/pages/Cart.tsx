@@ -1,15 +1,17 @@
-import { useState, type FormEvent } from 'react'
+import { useState, useEffect, useRef, type FormEvent } from 'react'
 import { Link } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Trash2, Plus, Minus, AlertCircle, Mail, Check, Loader2, ArrowRight, Sparkles } from 'lucide-react'
 import { useCart } from '@/context/CartContext'
-import { submitContactRequest } from '@/lib/contactSubmit'
+import { trackCartEvent } from '@/lib/analytics'
 import RestoreCartWidget from '@/components/cart/RestoreCartWidget'
 import emptyCartImage from '@/assets/pages/cart-empty-stickers.jpg'
 import { MIN_ORDER_SUBTOTAL as MIN_ORDER } from '@/lib/stickerPricing'
 
 export default function Cart() {
-  const { items, removeItem, updateQuantity, total, promoCode, promoDiscount, promoLabel } = useCart()
+  const { items, removeItem, updateQuantity, total, promoCode, promoDiscount, promoLabel, emailCart, syncStatus, retrySync } = useCart()
+  const viewed = useRef(false)
+  useEffect(() => { if (!viewed.current && items.length) { trackCartEvent('view_cart', items); viewed.current = true } }, [items])
   type CartLineItem = (typeof items)[number]
 
   const getItemAddOnTotal = (item: CartLineItem) =>
@@ -24,37 +26,14 @@ export default function Cart() {
 
   const [quoteOpen, setQuoteOpen] = useState(false)
   const [quoteEmail, setQuoteEmail] = useState('')
-  const [quoteName, setQuoteName] = useState('')
   const [quoteStatus, setQuoteStatus] = useState<'idle' | 'sending' | 'sent' | 'error'>('idle')
-
-  const buildQuoteMessage = () => {
-    const lines = items.map((i) => {
-      const lineTotal = getItemLineTotal(i).toFixed(2)
-      const addOnText = i.addOns?.length
-        ? ` · ${i.addOns.map(addOn => `${addOn.name} (+$${addOn.price.toFixed(2)})`).join(' · ')}`
-        : ''
-      return `• ${i.name} — ${i.option} · ${i.size}${addOnText} — $${lineTotal}`
-    })
-    lines.push('')
-    lines.push(`Cart total: $${total.toFixed(2)}`)
-    return lines.join('\n')
-  }
 
   const handleQuote = async (e: FormEvent) => {
     e.preventDefault()
-    if (!quoteEmail || !quoteName) return
+    if (!quoteEmail) return
     setQuoteStatus('sending')
-    const message = `Hold this quote for me, please.\n\n${buildQuoteMessage()}`
     try {
-      await submitContactRequest({
-        name: quoteName,
-        email: quoteEmail,
-        service: 'Cart Quote Hold',
-        message,
-        subject: `Cart quote hold from ${quoteName}`,
-        source: 'cart-quote-hold',
-        tags: ['cart-quote'],
-      })
+      await emailCart(quoteEmail)
       setQuoteStatus('sent')
     } catch {
       setQuoteStatus('error')
@@ -88,12 +67,16 @@ export default function Cart() {
     <section className="py-8 md:py-16">
       <div className="section-container max-w-4xl">
         <motion.h1 initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="text-3xl md:text-5xl font-black mb-8">Your Cart</motion.h1>
+        {syncStatus === 'error' && <div role="status" className="mb-4 rounded-xl border border-yellow-500/30 p-4 text-sm">Your items are saved in this browser. Online cart saving is temporarily unavailable. <button onClick={retrySync} className="text-primary font-bold">Retry saving</button></div>}
+        <RestoreCartWidget />
         <div className="space-y-4 mb-8">
           {items.map(item => (
             <div key={item.id} className="bg-card border border-border rounded-2xl p-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
               <div>
                 <h3 className="font-bold">{item.name}</h3>
+                {item.configuration && <Link className="inline-block mt-2 text-xs font-bold text-primary" to={`/stickers?edit=${encodeURIComponent(item.id)}#configure`}>Edit size, finish, quantity or artwork</Link>}
                 <p className="text-sm text-muted-foreground">{item.option} · {item.size}</p>
+                <p className="text-xs text-muted-foreground mt-1">{item.quantity} {item.quantity === 1 ? 'batch' : 'batches'}{item.pieceCount ? ` · ${item.pieceCount * item.quantity} pieces total` : ''}. Changing batches repeats this exact configuration.</p>
                 {item.addOns?.length ? (
                   <div className="mt-2 flex flex-wrap gap-2">
                     {item.addOns.map(addOn => (
@@ -120,16 +103,16 @@ export default function Cart() {
                   <button
                     type="button"
                     onClick={() => updateQuantity(item.id, item.quantity - 1)}
-                    aria-label={`Decrease quantity for ${item.name}`}
+                    aria-label={`Decrease batches for ${item.name}`}
                     className="w-8 h-8 rounded-lg border border-border flex items-center justify-center hover:border-primary/50 transition-colors"
                   >
                     <Minus size={14} />
                   </button>
-                  <span className="w-8 text-center font-bold">{item.quantity}</span>
+                  <span className="min-w-16 text-center font-bold text-xs">{item.quantity} {item.quantity === 1 ? 'batch' : 'batches'}</span>
                   <button
                     type="button"
                     onClick={() => updateQuantity(item.id, item.quantity + 1)}
-                    aria-label={`Increase quantity for ${item.name}`}
+                    aria-label={`Increase batches for ${item.name}`}
                     className="w-8 h-8 rounded-lg border border-border flex items-center justify-center hover:border-primary/50 transition-colors"
                   >
                     <Plus size={14} />
@@ -223,8 +206,8 @@ export default function Cart() {
                 <Mail size={16} className="text-primary" />
               </div>
               <div>
-                <p className="font-bold text-sm">Email this quote to me</p>
-                <p className="text-xs text-muted-foreground">Hold the price, decide later — the request goes into the follow-up queue.</p>
+                <p className="font-bold text-sm">Email my cart</p>
+                <p className="text-xs text-muted-foreground">Get a link to return to these items. Link valid for 7 days. Review your saved items and total before paying.</p>
               </div>
             </div>
             <span className="text-xs text-muted-foreground font-mono">{quoteOpen ? '−' : '+'}</span>
@@ -245,40 +228,32 @@ export default function Cart() {
                         <Check size={16} className="text-green-400" />
                       </div>
                       <div>
-                        <p className="font-bold text-green-400">Quote sent to {quoteEmail}</p>
-                        <p className="text-xs text-muted-foreground">Check your inbox — we saved your cart and will follow up.</p>
+                        <p className="font-bold text-green-400">Cart link requested for {quoteEmail}</p>
+                        <p className="text-xs text-muted-foreground">Your cart email was accepted for sending. Check your inbox and spam folder.</p>
                       </div>
                     </div>
                   ) : (
                     <form onSubmit={handleQuote} className="space-y-3">
                       <div className="grid sm:grid-cols-2 gap-3">
                         <input
-                          value={quoteName}
-                          onChange={(e) => setQuoteName(e.target.value)}
-                          required
-                          aria-label="Quote contact name"
-                          className="input-base"
-                          placeholder="Your name"
-                        />
-                        <input
                           type="email"
                           value={quoteEmail}
                           onChange={(e) => setQuoteEmail(e.target.value)}
                           required
-                          aria-label="Quote contact email"
+                          aria-label="Email for your cart link"
                           className="input-base"
                           placeholder="you@email.com"
                         />
                       </div>
                       <button
                         type="submit"
-                        disabled={quoteStatus === 'sending' || !quoteName || !quoteEmail}
+                        disabled={quoteStatus === 'sending' || !quoteEmail}
                         className="btn-primary w-full justify-center disabled:opacity-50 disabled:cursor-not-allowed"
                       >
                         {quoteStatus === 'sending' ? (
                           <><Loader2 size={14} className="animate-spin" /> Sending…</>
                         ) : (
-                          <><Mail size={14} /> Send my quote</>
+                          <><Mail size={14} /> Send my cart link</>
                         )}
                       </button>
                       {quoteStatus === 'error' && (

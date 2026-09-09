@@ -4,7 +4,7 @@ import { Analytics } from '@vercel/analytics/react'
 import { AuthProvider } from '@/context/AuthContext'
 import { CartProvider } from '@/context/CartContext'
 import Layout from '@/components/layout/Layout'
-import { trackPageView, setupClickTracking } from '@/lib/analytics'
+import { trackPageView, setupClickTracking, shouldSuppressAnalytics } from '@/lib/analytics'
 import { captureReferralCode } from '@/lib/referrals'
 import { cityBySlug } from '@/lib/cities'
 import { getStructuredData, SITE_URL } from '@/lib/structuredData'
@@ -27,6 +27,7 @@ const About = lazy(() => import('@/pages/About'))
 const Projects = lazy(() => import('@/pages/Projects'))
 const CaseStudyDetail = lazy(() => import('@/pages/CaseStudyDetail'))
 const Referral = lazy(() => import('@/pages/Referral'))
+const OrderHelp = lazy(() => import('@/pages/OrderHelp'))
 const Account = lazy(() => import('@/pages/Account'))
 const Admin = lazy(() => import('@/pages/Admin'))
 const NotFound = lazy(() => import('@/pages/NotFound'))
@@ -121,6 +122,7 @@ const pageMeta: Record<string, PageMeta> = {
     title: 'Referral Program | The Sticker Smith',
     description: 'Share The Sticker Smith with friends, creators, and businesses and earn referral rewards on new print orders.',
   },
+  '/order-help': { title: 'Ordering, Proofs & Pickup | The Sticker Smith', description: 'How to send artwork, review your print proof and arrange pickup or order support.' },
   '/account': {
     title: 'Account | The Sticker Smith',
     description: 'Manage your Sticker Smith account, referral code, profile, and order details.',
@@ -271,17 +273,24 @@ function ScrollManager() {
   const { pathname, hash } = useLocation()
 
   useEffect(() => {
-    window.requestAnimationFrame(() => {
-      if (!hash) {
-        window.scrollTo({ top: 0, behavior: 'auto' })
-        return
-      }
-
-      const target = document.getElementById(decodeURIComponent(hash.slice(1)))
-      if (target) {
-        target.scrollIntoView({ behavior: 'auto', block: 'start' })
-      }
+    let observer: MutationObserver | undefined
+    let timer: number | undefined
+    const scroll = () => {
+      if (!hash) { window.scrollTo({ top: 0, behavior: 'instant' }); return true }
+      let id: string
+      try { id = decodeURIComponent(hash.slice(1)) } catch { return true }
+      const target = document.getElementById(id)
+      if (!target) return false
+      target.scrollIntoView({ behavior: 'instant', block: 'start' })
+      return true
+    }
+    const frame = window.requestAnimationFrame(() => {
+      if (scroll()) return
+      observer = new MutationObserver(() => { if (scroll()) observer?.disconnect() })
+      observer.observe(document.body, { childList: true, subtree: true })
+      timer = window.setTimeout(() => observer?.disconnect(), 3000)
     })
+    return () => { window.cancelAnimationFrame(frame); observer?.disconnect(); window.clearTimeout(timer) }
   }, [pathname, hash])
 
   return null
@@ -313,7 +322,7 @@ export default function App() {
   return (
     <BrowserRouter>
       <DesktopPrinterIntro />
-      <Analytics />
+      <Analytics beforeSend={event => { if (shouldSuppressAnalytics()) return null; const url = new URL(event.url); url.hash = ''; url.search = ''; return { ...event, url: url.href } }} />
       <HeadManager />
       <AnalyticsTracker />
       <ScrollManager />
@@ -341,6 +350,7 @@ export default function App() {
                 <Route path="/case-studies" element={<Navigate to="/projects" replace />} />
                 <Route path="/case-studies/:slug" element={<CaseStudyDetail />} />
                 <Route path="/referral" element={<Referral />} />
+                <Route path="/order-help" element={<OrderHelp />} />
                 <Route path="/account" element={<Account />} />
                 <Route path="/admin" element={<Admin />} />
                 {Object.keys(stickerSupportPageBySlug).map((slug) => (

@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import type { MutableRefObject } from 'react'
 import { AnimatePresence, motion } from 'framer-motion'
+import { trackEvent } from '@/lib/analytics'
 import { Printer } from 'lucide-react'
 
 const DURATION = 3.8
@@ -68,6 +69,8 @@ export default function PrinterIntro() {
 
   useEffect(() => {
     if (phase !== 'hidden') markIntroSeen()
+    if (phase === 'gate') trackEvent('intro_view')
+    if (phase === 'playing') trackEvent('intro_start')
   }, [phase])
 
   useEffect(() => {
@@ -103,6 +106,7 @@ export default function PrinterIntro() {
       timersRef.current.push(
         window.setTimeout(() => {
           markIntroSeen()
+          trackEvent('intro_complete')
           setPhase('hidden')
           document.body.style.overflow = ''
           stopAllSound(audioStoppers)
@@ -120,6 +124,7 @@ export default function PrinterIntro() {
   }, [phase])
 
   const finishIntro = () => {
+    trackEvent('intro_skip')
     timersRef.current.forEach((id) => clearTimeout(id))
     timersRef.current = []
     markIntroSeen()

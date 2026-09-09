@@ -207,6 +207,7 @@ export function normalizeCheckout(body) {
 
   const customer = normalizeCustomer(body?.customerInfo)
   const subtotal = toMoney(items.reduce((sum, item) => sum + item.lineTotal, 0))
+  if (subtotal < 35) throw new Error('The order minimum is $35 before discounts.')
   const discount = promoDiscountFor(body?.promoCode, subtotal, body?.promoDiscount)
   const total = toMoney(Math.max(0, subtotal - discount))
   const clientTotal = body?.total == null ? total : toMoney(body.total)

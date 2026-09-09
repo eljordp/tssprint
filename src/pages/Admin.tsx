@@ -1,3 +1,4 @@
+import { cartLifecycle, type CartLifecycleRow } from '@/lib/cartLifecycle'
 import { useState, useEffect, useRef, useCallback } from 'react'
 import { motion } from 'framer-motion'
 import {
@@ -73,7 +74,8 @@ interface Order {
   attribution?: AttributionData
 }
 
-interface CartSession {
+interface CartSession extends CartLifecycleRow {
+  email_status?: string | null
   id: string; email: string | null; items: unknown[]
   total_price: number; converted: boolean
   created_at: string; updated_at: string
@@ -239,13 +241,6 @@ const PRODUCT_PAGE_NAMES: Record<string, string> = {
 // Pages that are NOT product interest (internal, utility, or staff areas).
 function isInternalPath(path: string) {
   return path.startsWith('/admin') || path.startsWith('/account')
-}
-
-// Labels that signal buying intent when clicked.
-const CTA_KEYWORDS = ['start my project', 'get a quote', 'request a quote', 'quote', 'order', 'add to cart', 'checkout', 'call', 'contact', 'get started']
-function isCtaLabel(label: string) {
-  const l = (label || '').toLowerCase()
-  return CTA_KEYWORDS.some(k => l.includes(k)) || /^\(?\d{3}\)?[\s.-]?\d{3}[\s.-]?\d{4}/.test(l)
 }
 
 function formatRefreshTime(date: Date | null) {
@@ -1559,27 +1554,32 @@ function CartsTab() {
   const [carts, setCarts] = useState<CartSession[]>([])
   const [loading, setLoading] = useState(true)
   const [filter, setFilter] = useState<'all' | 'abandoned' | 'converted'>('all')
+  const [cartError, setCartError] = useState('')
 
   useEffect(() => { fetchCarts() }, [])
 
   const fetchCarts = async () => {
     setLoading(true)
     try {
-      const { data, error } = await supabase.from('cart_sessions').select('*').order('updated_at', { ascending: false })
-      if (!error && data) setCarts(data as CartSession[])
-    } catch { /* silent */ }
+      const { data, error } = await supabase.from('cart_sessions').select('id,email,items,total_price,converted,created_at,updated_at,access_token_hash,last_activity_at,checkout_started_at,payment_issue_at,recovered_at,paid_order_id,expires_at,email_status,is_test').order('updated_at', { ascending: false })
+      if (error) throw error
+      setCarts((data || []).filter(cart => !cart.is_test) as CartSession[])
+      setCartError('')
+    } catch { setCartError('Cart records could not be loaded. This is a reporting error, not a zero-cart result.') }
     finally { setLoading(false) }
   }
 
+  if (cartError && !loading) return <div role="alert" className="rounded-xl border border-yellow-500/30 p-5 text-sm">{cartError} <button onClick={fetchCarts} className="text-primary font-bold">Retry</button></div>
+
   const filtered = carts.filter(c => {
-    if (filter === 'abandoned') return !c.converted
-    if (filter === 'converted') return c.converted
+    if (filter === 'abandoned') return cartLifecycle(c) === 'Inactive'
+    if (filter === 'converted') return cartLifecycle(c) === 'Paid'
     return true
   })
 
-  const abandonedCount = carts.filter(c => !c.converted).length
-  const convertedCount = carts.filter(c => c.converted).length
-  const abandonedValue = carts.filter(c => !c.converted).reduce((s, c) => s + (c.total_price || 0), 0)
+  const abandonedCount = carts.filter(c => cartLifecycle(c) === 'Inactive').length
+  const convertedCount = new Set(carts.filter(c => cartLifecycle(c) === 'Paid').map(c => c.paid_order_id)).size
+  const abandonedValue = carts.filter(c => cartLifecycle(c) === 'Inactive').reduce((s, c) => s + (c.total_price || 0), 0)
 
   if (loading) return (
     <div className="bg-card border border-border rounded-2xl p-12 text-center">
@@ -1591,16 +1591,17 @@ function CartsTab() {
   return (
     <div className="space-y-6">
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-        <StatCard icon={ShoppingCart} label="Abandoned Carts" value={abandonedCount} color="text-yellow-400" delay={0.1} />
-        <StatCard icon={DollarSign} label="Abandoned Value" value={`$${abandonedValue.toFixed(2)}`} color="text-red-400" delay={0.2} />
-        <StatCard icon={CheckCircle} label="Converted" value={convertedCount} color="text-green-400" delay={0.3} />
+        <StatCard icon={ShoppingCart} label="Inactive Carts" value={abandonedCount} color="text-yellow-400" delay={0.1} />
+        <StatCard icon={DollarSign} label="Inactive Subtotal" value={`$${abandonedValue.toFixed(2)}`} color="text-red-400" delay={0.2} />
+        <StatCard icon={CheckCircle} label="Paid orders" value={convertedCount} color="text-green-400" delay={0.3} />
       </div>
 
       <div className="flex items-center gap-2">
+        <button onClick={fetchCarts} className="text-primary text-sm font-bold">Refresh</button>
         {(['all', 'abandoned', 'converted'] as const).map(f => (
           <button key={f} onClick={() => setFilter(f)}
             className={`px-4 py-2 rounded-xl text-sm font-medium transition-all ${filter === f ? 'bg-primary text-primary-foreground' : 'bg-card border border-border text-muted-foreground hover:text-foreground'}`}>
-            {f.charAt(0).toUpperCase() + f.slice(1)} {f === 'abandoned' ? `(${abandonedCount})` : f === 'converted' ? `(${convertedCount})` : `(${carts.length})`}
+            {f === 'abandoned' ? 'Inactive' : f === 'converted' ? 'Paid' : 'All'} {f === 'abandoned' ? `(${abandonedCount})` : f === 'converted' ? `(${convertedCount})` : `(${carts.length})`}
           </button>
         ))}
       </div>
@@ -1623,14 +1624,14 @@ function CartsTab() {
                       <Mail size={14} className="text-muted-foreground shrink-0" />
                       <p className="font-medium truncate">{cart.email || 'No email'}</p>
                       <span className={`px-2 py-0.5 rounded-lg text-xs font-bold ${cart.converted ? 'text-green-400 bg-green-400/10' : 'text-yellow-400 bg-yellow-400/10'}`}>
-                        {cart.converted ? 'Converted' : 'Abandoned'}
+                        {cartLifecycle(cart)}
                       </span>
                     </div>
                     <p className="text-sm text-muted-foreground">
                       {items.length} item{items.length !== 1 ? 's' : ''}: {items.map(item => item.name || 'Item').join(', ')}
                     </p>
                     <p className="text-xs text-muted-foreground mt-1">
-                      Last active: {new Date(cart.updated_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' })}
+                      Email: {cart.email_status || 'Not requested'} · Last active: {new Date(cart.updated_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' })}
                     </p>
                   </div>
                   <span className="font-black text-primary shrink-0">${(cart.total_price || 0).toFixed(2)}</span>
@@ -1673,96 +1674,6 @@ type LeadContactRow = {
   visitor_id: string | null
   attribution: AttributionData
   created_at: string
-}
-
-const CART_ADD_LABELS = ['Added to Cart!', 'Add to Cart']
-const CONTACT_MATCH_WINDOW_MS = 20 * 60 * 1000
-
-function deviceFromUserAgent(userAgent: string | null | undefined) {
-  const ua = userAgent || ''
-  if (ua.includes('iPhone') || ua.includes('iPad')) return 'iPhone'
-  if (ua.includes('Android')) return 'Android'
-  return 'Desktop'
-}
-
-function referrerHost(referrer: string | null | undefined) {
-  if (!referrer) return null
-  try {
-    const host = new URL(referrer).hostname.replace(/^www\./, '')
-    return host.includes('tssprint') ? null : host
-  } catch {
-    return null
-  }
-}
-
-// Shoppers who added to cart / reached checkout but never hit /order-confirmation,
-// joined with any contact info they left (exact visitor match, or a form sent
-// within 20 minutes of their activity).
-function buildAbandonedCarts(
-  views: PageViewRow[],
-  clicks: ClickEventRow[],
-  leadRows: LeadContactRow[],
-): AbandonedCartRow[] {
-  type Acc = { views: PageViewRow[]; clicks: ClickEventRow[] }
-  const byVisitor = new Map<string, Acc>()
-  for (const v of views) {
-    if (!v.visitor_id) continue
-    const acc = byVisitor.get(v.visitor_id) || { views: [], clicks: [] }
-    acc.views.push(v)
-    byVisitor.set(v.visitor_id, acc)
-  }
-  for (const c of clicks) {
-    if (!c.visitor_id) continue
-    const acc = byVisitor.get(c.visitor_id) || { views: [], clicks: [] }
-    acc.clicks.push(c)
-    byVisitor.set(c.visitor_id, acc)
-  }
-
-  const rows: AbandonedCartRow[] = []
-  for (const [visitorId, acc] of byVisitor) {
-    const paths = acc.views.map(v => v.path)
-    const els = acc.clicks.map(c => c.element || '')
-    const adds = els.filter(e => CART_ADD_LABELS.includes(e)).length
-    const hitCart = paths.includes('/cart')
-    const hitCheckout = paths.includes('/checkout')
-    const proceed = els.includes('Proceed to Checkout')
-    if (!adds && !hitCart && !hitCheckout && !proceed) continue
-    if (paths.includes('/order-confirmation')) continue
-
-    const times = [...acc.views, ...acc.clicks].map(r => new Date(r.created_at).getTime())
-    const contacts: AbandonedCartContact[] = []
-    const seen = new Set<string>()
-    for (const lead of leadRows) {
-      if (lead.visitor_id && lead.visitor_id !== visitorId) continue
-      const exact = lead.visitor_id === visitorId
-      const leadTime = new Date(lead.created_at).getTime()
-      const near = times.some(t => Math.abs(t - leadTime) < CONTACT_MATCH_WINDOW_MS)
-      if (!exact && !near) continue
-      const key = `${lead.email}|${lead.source}`
-      if (seen.has(key)) continue
-      seen.add(key)
-      contacts.push({ name: lead.name, email: lead.email, phone: lead.phone, source: lead.source, exact })
-    }
-
-    const stage = hitCheckout ? 'Reached checkout'
-      : proceed ? 'Clicked checkout'
-      : hitCart ? 'Viewed cart'
-      : 'Added to cart'
-    const pages = [...new Set(paths.filter(p => PRODUCT_PAGE_NAMES[p]).map(p => PRODUCT_PAGE_NAMES[p]))]
-
-    rows.push({
-      visitorId,
-      firstSeen: new Date(Math.min(...times)).toISOString(),
-      lastSeen: new Date(Math.max(...times)).toISOString(),
-      device: deviceFromUserAgent(acc.views[0]?.user_agent),
-      referrer: acc.views.map(v => referrerHost(v.referrer)).find(Boolean) || null,
-      stage,
-      adds,
-      pages,
-      contacts,
-    })
-  }
-  return rows.sort((a, b) => b.lastSeen.localeCompare(a.lastSeen))
 }
 
 type OrderAnalyticsRow = {
@@ -1890,14 +1801,14 @@ function AnalyticsTab() {
       clicks.forEach(c => {
         const label = c.element || '—'
         clickCounts[label] = (clickCounts[label] || 0) + 1
-        if (isCtaLabel(label)) ctaClicks++
+        if (c.event_type === 'add_to_cart') ctaClicks++
         if (c.event_type === 'phone_click') phoneClicks++
       })
       const topClicks = Object.entries(clickCounts)
         .sort((a, b) => b[1] - a[1]).slice(0, 8)
         .map(([element, count]) => ({ element, count }))
 
-      // Leads — contact / quote form submissions (rows also feed the abandoned-cart match)
+      // Leads — contact / quote form submissions
       let leadQuery = supabase
         .from('contact_submissions')
         .select('name, email, phone, source, visitor_id, attribution, created_at', { count: 'exact' })
@@ -1908,7 +1819,7 @@ function AnalyticsTab() {
       if (leadError) throw leadError
       const leads = leadCount || 0
 
-      const abandonedCarts = buildAbandonedCarts(views, clicks, (leadRows || []) as LeadContactRow[])
+      const abandonedCarts: AbandonedCartRow[] = []
 
       // Orders + paid revenue
       const {
@@ -2087,7 +1998,7 @@ function AnalyticsTab() {
         <StatCard icon={Target} label="Tap-to-call clicks" value={data.phoneClicks} color="text-orange-400" delay={0.2} />
         <StatCard icon={Users} label="Tracked visitors" value={data.visitors} color="text-blue-400" delay={0.25} />
         <StatCard icon={Eye} label="Page views" value={data.pageViews} color="text-blue-400" delay={0.3} />
-        <StatCard icon={MousePointer} label="Buy-intent clicks" value={data.ctaClicks} color="text-orange-400" delay={0.35} />
+        <StatCard icon={MousePointer} label="Items added to cart" value={data.ctaClicks} color="text-orange-400" delay={0.35} />
       </div>
 
       <div className="bg-card border border-border rounded-2xl p-6">
@@ -2133,41 +2044,7 @@ function AnalyticsTab() {
         )}
       </div>
 
-      {/* Abandoned carts */}
-      <div className="bg-card border border-border rounded-2xl p-6">
-        <h3 className="font-bold mb-1 flex items-center gap-2"><ShoppingCart size={16} className="text-primary" /> Abandoned carts</h3>
-        <p className="text-xs text-muted-foreground mb-4">Shoppers who added items or reached checkout but never finished the order. If they left contact info on a form, it shows here — reach out and offer to finish the order for them.</p>
-        {data.abandonedCarts.length === 0 ? <p className="text-sm text-muted-foreground">No abandoned carts in this period. Nice.</p> : (
-          <div className="space-y-3">
-            {data.abandonedCarts.map(cart => (
-              <div key={cart.visitorId} className="rounded-xl border border-border bg-background/40 p-4">
-                <div className="flex items-center justify-between flex-wrap gap-2 mb-1">
-                  <div className="flex items-center gap-2 text-sm">
-                    <span className={`px-2 py-0.5 rounded-full text-xs font-semibold ${cart.stage === 'Reached checkout' || cart.stage === 'Clicked checkout' ? 'bg-red-400/15 text-red-300' : 'bg-yellow-400/15 text-yellow-300'}`}>{cart.stage}</span>
-                    <span className="text-muted-foreground text-xs">{cart.device}{cart.referrer ? ` · from ${cart.referrer}` : ''}</span>
-                  </div>
-                  <span className="text-xs text-muted-foreground">
-                    {new Date(cart.firstSeen).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
-                    {cart.lastSeen.slice(0, 10) !== cart.firstSeen.slice(0, 10) && ` – ${new Date(cart.lastSeen).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}`}
-                  </span>
-                </div>
-                {cart.pages.length > 0 && <p className="text-xs text-muted-foreground mb-2">Looked at: {cart.pages.join(', ')}</p>}
-                {cart.contacts.length > 0 ? cart.contacts.map((c, i) => (
-                  <div key={i} className="flex items-center gap-2 text-sm flex-wrap">
-                    <Mail size={13} className="text-green-400 shrink-0" />
-                    <span className="font-medium">{c.name || 'No name'}</span>
-                    {c.email && <a href={`mailto:${c.email}`} className="text-primary hover:underline">{c.email}</a>}
-                    {c.phone && <a href={`tel:${c.phone}`} className="text-primary hover:underline">{c.phone}</a>}
-                    <span className="text-xs text-muted-foreground">via {c.source || 'form'}{c.exact ? '' : ' · submitted around the same time'}</span>
-                  </div>
-                )) : (
-                  <p className="text-xs text-muted-foreground">No contact info left — anonymous shopper.</p>
-                )}
-              </div>
-            ))}
-          </div>
-        )}
-      </div>
+      <div className="space-y-3"><h3 className="font-bold">Cart recovery</h3><p className="text-xs text-muted-foreground">Live cart lifecycle across all dates. Inactive means a nonempty cart with at least 60 minutes without activity; it does not prove the shopper has left for good.</p><CartsTab /></div>
 
       <div className="grid md:grid-cols-2 gap-6">
         <div className="bg-card border border-border rounded-2xl p-6">

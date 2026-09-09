@@ -10,8 +10,9 @@ import { supabase } from '@/lib/supabase'
 import { linkReferral } from '@/lib/referrals'
 import { isReferralCode, processReferralConversion } from '@/lib/referralRewards'
 import { sendOrderEmail } from '@/lib/email'
-import { getAnalyticsIdentity, trackCheckoutStarted, trackPaymentCapture } from '@/lib/analytics'
+import { getAnalyticsIdentity, trackCheckoutStarted, trackPaymentCapture, trackEvent, trackCartEvent } from '@/lib/analytics'
 import { toast } from 'sonner'
+import { getCartCredentials } from '@/lib/cartSession'
 import { MIN_ORDER_SUBTOTAL } from '@/lib/stickerPricing'
 
 const PAYPAL_CLIENT_ID = import.meta.env.VITE_PAYPAL_CLIENT_ID
@@ -29,7 +30,7 @@ interface CustomerInfo {
 }
 
 export default function Checkout() {
-  const { items, total, clearCart, markConverted, setCartEmail, promoCode, promoDiscount, promoLabel, applyPromo, removePromo, finalizePromo } = useCart()
+  const { items, total, clearCart, markConverted, setCartEmail, setCartStage, promoCode, promoDiscount, promoLabel, applyPromo, removePromo, finalizePromo } = useCart()
   const navigate = useNavigate()
   const [customerInfo, setCustomerInfo] = useState<CustomerInfo>({
     deliveryMethod: 'shipping',
@@ -51,6 +52,7 @@ export default function Checkout() {
   useEffect(() => {
     if (checkoutStartedTracked.current || items.length === 0 || total < MIN_ORDER_SUBTOTAL) return
     checkoutStartedTracked.current = true
+    setCartStage('checkout')
     trackCheckoutStarted({
       items,
       value: finalTotal,
@@ -58,7 +60,7 @@ export default function Checkout() {
       promoCode,
       promoDiscount,
     })
-  }, [finalTotal, items, promoCode, promoDiscount, total])
+  }, [finalTotal, items, promoCode, promoDiscount, total, setCartStage])
 
   if (items.length === 0) {
     return (
@@ -89,7 +91,7 @@ export default function Checkout() {
     setCustomerInfo(updated)
 
     // Persist email back to cart context so the cart_sessions row carries it.
-    // Enables cross-device cart restore by email later.
+    // The customer can explicitly request a secure recovery link from the cart.
     if (e.target.name === 'email') {
       const trimmed = e.target.value.trim()
       if (trimmed && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(trimmed)) {
@@ -107,6 +109,7 @@ export default function Checkout() {
   }
 
   const handleDeliveryMethod = (deliveryMethod: CustomerInfo['deliveryMethod']) => {
+    trackEvent('delivery_method_selected', { method: deliveryMethod })
     const updated = { ...customerInfo, deliveryMethod }
     setCustomerInfo(updated)
     const result = checkoutSchema.safeParse(updated)
@@ -128,6 +131,7 @@ export default function Checkout() {
     if (!result.success) {
       const fieldError = result.error.issues.find(issue => issue.path[0] === field)
       if (fieldError) {
+        trackEvent('checkout_validation_error', { field })
         setErrors(prev => ({ ...prev, [field]: fieldError.message }))
       } else {
         setErrors(prev => { const next = { ...prev }; delete next[field]; return next })
@@ -161,6 +165,7 @@ export default function Checkout() {
   const checkoutPayload = () => {
     const identity = getAnalyticsIdentity()
     return {
+      cartSession: getCartCredentials(),
       items: items.map(item => ({ ...item })),
       customerInfo: { ...customerInfo },
       promoCode,
@@ -217,6 +222,9 @@ export default function Checkout() {
   const captureSquarePayment = async (sourceId: string, attemptId: string) => {
     setProcessing(true)
     setPaymentError('')
+    trackCartEvent('add_shipping_info', items)
+    trackCartEvent('add_payment_info', items)
+    trackEvent('payment_method_selected', { provider: 'square' })
     try {
       const response = await fetch('/api/square/create-payment', {
         method: 'POST',
@@ -236,6 +244,8 @@ export default function Checkout() {
       const message = error instanceof Error ? error.message : 'The card payment could not be processed.'
       console.error('Square payment error:', error)
       setPaymentError(message)
+      setCartStage('payment_issue')
+      trackEvent('payment_failed', { provider: 'square' })
       toast.error('Card payment failed')
       throw error
     } finally {
@@ -586,7 +596,7 @@ export default function Checkout() {
                       <span className="font-bold text-green-400">{promoCode}</span>
                       <span className="text-sm text-muted-foreground">— {promoLabel}</span>
                     </div>
-                    <button onClick={removePromo} className="text-muted-foreground hover:text-foreground transition-colors">
+                    <button aria-label="Remove promo code" onClick={removePromo} className="text-muted-foreground hover:text-foreground transition-colors">
                       <X size={16} />
                     </button>
                   </div>
@@ -662,6 +672,9 @@ export default function Checkout() {
                       onApprove={async (data, actions) => {
                         setProcessing(true)
                         setPaymentError('')
+                        trackCartEvent('add_shipping_info', items)
+                        trackCartEvent('add_payment_info', items)
+                        trackEvent('payment_method_selected', { provider: 'paypal' })
                         try {
                           const capture = await capturePayPalOrder(data.orderID)
                           if (!capture.ok) {
@@ -682,7 +695,7 @@ export default function Checkout() {
                           })
                         } catch (err) {
                           console.error('Payment capture error:', err)
-                          setPaymentError('Payment capture failed. Please contact us if you were charged.')
+                          setPaymentError('Payment capture failed. Please contact us if you were charged.'); setCartStage('payment_issue'); trackEvent('payment_failed', { provider: 'paypal' })
                           toast.error('Payment issue — please contact us')
                         } finally {
                           setProcessing(false)
@@ -690,7 +703,7 @@ export default function Checkout() {
                       }}
                       onError={(err) => {
                         console.error('PayPal error:', err)
-                        setPaymentError('Payment failed. Please try again or contact us.')
+                        setPaymentError('Payment failed. Please try again or contact us.'); setCartStage('payment_issue'); trackEvent('payment_failed', { provider: 'paypal' })
                         toast.error('Payment failed')
                       }}
                     />
@@ -703,7 +716,7 @@ export default function Checkout() {
               </div>
             </div>
 
-            <div className="lg:col-span-2">
+            <div className="lg:col-span-2 order-first lg:order-last">
               <div className="bg-card border border-border rounded-2xl p-6 lg:sticky lg:top-24">
                 <h2 className="text-xl font-bold mb-6">Order Summary</h2>
                 <div className="space-y-4 mb-6">
@@ -715,7 +728,7 @@ export default function Checkout() {
                         <div className="min-w-0">
                           <p className="font-medium truncate">{item.name}</p>
                           <p className="text-sm text-muted-foreground">{item.option} · {item.size}</p>
-                          <p className="text-sm text-muted-foreground">Qty: {item.quantity}</p>
+                          <p className="text-sm text-muted-foreground">Batches: {item.quantity}</p>
                           {item.addOns && item.addOns.length > 0 && (
                             <p className="text-xs text-muted-foreground mt-1">+ {item.addOns.map(a => a.name).join(', ')}</p>
                           )}

@@ -131,7 +131,9 @@ export default function ProductOrder({ categoryNames, onCategoryChange, checkout
 
     addItem({
       id: createCartItemId(category.name, item.size),
-      name: `${item.size}`,
+      name: `${category.name} — ${item.size}`,
+      artworkIntent: 'send_later',
+      pieceCount: effectiveQty,
       size: item.size,
       option: effectiveQty > 1 ? `${effectiveQty} pcs` : '1',
       price: cartBasePrice,

@@ -1,7 +1,7 @@
 import { useState, useCallback, useEffect } from 'react'
 import { motion } from 'framer-motion'
-import { Upload, X, Package, Sparkles, Box, ShoppingCart, Check } from 'lucide-react'
-import { useCart } from '@/context/CartContext'
+import { Upload, X, Package, Sparkles, Box, ArrowRight } from 'lucide-react'
+import { trackEvent } from '@/lib/analytics'
 import { supabase } from '@/lib/supabase'
 import { getPricing, loadPricing, type ProductCategory, type AddOn } from '@/lib/pricing'
 import EstimateForm from '@/components/EstimateForm'
@@ -122,12 +122,7 @@ function canPreviewArtwork(file: File) {
   return file.type.startsWith('image/') || file.name.toLowerCase().endsWith('.svg')
 }
 
-function createMylarCartItemId(size: string) {
-  return `mylar-${size}-${Date.now()}`
-}
-
 export default function MylarPackaging() {
-  const { addItem } = useCart()
   const [pricing, setPricing] = useState(() => getPricing())
   const category = pricing.products.find(p => p.name === 'Mylar Packaging') as ProductCategory | undefined
 
@@ -151,7 +146,6 @@ export default function MylarPackaging() {
   const [artworkError, setArtworkError] = useState('')
   const [isDragging, setIsDragging] = useState(false)
   const [activeMockup, setActiveMockup] = useState<MockupType>('pouch')
-  const [added, setAdded] = useState(false)
 
   const items = category?.items ?? []
   const addOns = category?.addOns ?? []
@@ -258,26 +252,6 @@ export default function MylarPackaging() {
     setSelectedAddOns(prev => { const next = new Set(prev); if (next.has(name)) next.delete(name); else next.add(name); return next })
   }
 
-  const handleAddToCart = () => {
-    if (!item || !qtyTier) return
-    if (uploadedFile && artworkStatus !== 'uploaded') return
-    const cartAddOns = addOns
-      .filter(a => selectedAddOns.has(a.name))
-      .map(a => ({ name: a.name, price: +(a.value * quantity).toFixed(2) }))
-    const cartBasePrice = +(unitPrice * quantity).toFixed(2)
-    addItem({
-      id: createMylarCartItemId(item.size),
-      name: `Custom ${item.size}`,
-      size: item.size,
-      option: `${quantity} pcs · ${finish} · ${pouchColor} · ${selectedAddOns.has('Holographic Upgrade') ? 'Holo' : 'Standard'}`,
-      price: cartBasePrice,
-      quantity: 1,
-      addOns: cartAddOns.length > 0 ? cartAddOns : undefined,
-      artwork: artworkUpload || undefined,
-    })
-    setAdded(true)
-    setTimeout(() => setAdded(false), 2000)
-  }
 
   if (!category) return <div className="section-container py-20 text-center text-muted-foreground">Mylar Packaging pricing not configured.</div>
 
@@ -294,7 +268,7 @@ export default function MylarPackaging() {
           <ServicePageIntro
             eyebrow="Custom Mylar"
             title="Custom Mylar Bags & Product Packaging"
-            description="Price pouch sizes, finishes, artwork uploads, and launch-run packaging before sending the job to proof."
+            description="Explore pouch sizes and finishes, then request an exact quote for your packaging."
           />
           {/* Calculator Section */}
           <div className="grid gap-6 lg:grid-cols-[1.4fr_1fr]">
@@ -410,22 +384,10 @@ export default function MylarPackaging() {
               {/* Add to Cart */}
               {quantity > 0 && qtyTier && (
                 <div className="rounded-2xl border border-primary/30 bg-primary/5 p-5">
-                  <button
-                    onClick={handleAddToCart}
-                    disabled={Boolean(uploadedFile) && artworkStatus !== 'uploaded'}
-                    className={`btn-primary w-full disabled:opacity-50 disabled:cursor-not-allowed ${added ? 'bg-green-600' : ''}`}
-                  >
-                    {added ? (
-                      <><Check size={18} /> Added to Cart!</>
-                    ) : uploadedFile && artworkStatus === 'uploading' ? (
-                      <>Uploading artwork...</>
-                    ) : uploadedFile && artworkStatus === 'error' ? (
-                      <>Fix artwork upload first</>
-                    ) : (
-                      <><ShoppingCart size={18} /> Add to Cart — ${totalPrice.toFixed(2)}</>
-                    )}
-                  </button>
-                  <p className="text-[10px] text-muted-foreground text-center mt-2">You'll receive a proof before anything prints.</p>
+                  <a href="#quote" className="btn-primary w-full" onClick={() => trackEvent('mylar_quote_started')}>
+                    <ArrowRight size={18} /> Request an exact quote
+                  </a>
+                  <p className="text-xs text-muted-foreground text-center mt-2">This is a price guide. We’ll confirm stock, printing, finishing and the final price before payment.</p>
                 </div>
               )}
 
@@ -501,6 +463,7 @@ export default function MylarPackaging() {
         <div className="section-container">
           <EstimateForm
             service="Mylar Packaging"
+            initialProject={`${quantity} × ${item?.size || "packaging"}; ${finish}; ${pouchColor}; extras: ${[...selectedAddOns].join(", ") || "none"}; guide total $${totalPrice.toFixed(2)}${artworkUpload ? `; artwork: ${artworkUpload.bucket}/${artworkUpload.path}` : ""}`}
             title="Custom Mylar Quote"
             subtitle="Bulk, custom sizes, or complex artwork? Send the bag size and quantity."
             fields={[

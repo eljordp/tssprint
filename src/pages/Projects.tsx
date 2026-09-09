@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useSearchParams } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
 import { caseStudies } from '@/lib/caseStudies'
 import { projects, projectCategories, type Project } from '@/lib/projects'
@@ -46,8 +46,9 @@ const serviceProofLinks = [
 ]
 
 export default function Projects() {
+  const [searchParams] = useSearchParams()
   const [active, setActive] = useState<string>('All')
-  const [openProject, setOpenProject] = useState<Project | null>(null)
+  const [openProject, setOpenProject] = useState<Project | null>(() => projects.find(project => project.slug === searchParams.get('project')) || null)
   // Exclude projects already featured up top as case studies so they don't appear twice.
   const gridProjects = projects.filter((p) => !p.caseStudySlug)
   const filtered = active === 'All' ? gridProjects : gridProjects.filter((p) => p.category === active)

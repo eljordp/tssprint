@@ -42,6 +42,7 @@
     }
   ],
   "rewrites": [
+    { "source": "/order-help", "destination": "/index.html" },
     { "source": "/cart", "destination": "/index.html" },
     { "source": "/checkout", "destination": "/index.html" },
     { "source": "/order-confirmation", "destination": "/index.html" },

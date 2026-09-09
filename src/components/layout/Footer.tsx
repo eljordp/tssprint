@@ -162,6 +162,6 @@ export default function Footer() {
           </div>
         </div>
       </div>
-    </footer>
+    <div className="section-container pb-6 text-sm"><Link to="/order-help" className="text-primary">Proofs, delivery & order help</Link></div></footer>
   )
 }

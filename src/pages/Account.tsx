@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
-import { Link } from 'react-router-dom'
+import { Link, useSearchParams } from 'react-router-dom'
+import PasswordRecovery from '@/components/PasswordRecovery'
 import {
   User, Package, Share2, Settings, LogOut, Loader2, Eye, EyeOff,
   Copy, Check, Gift, ExternalLink, ArrowRight, TrendingUp,
@@ -17,6 +18,7 @@ import { toast } from 'sonner'
 
 function AuthForms() {
   const { signIn, signUp } = useAuth()
+  const [params] = useSearchParams()
   const [mode, setMode] = useState<'login' | 'register'>('login')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
@@ -87,12 +89,13 @@ function AuthForms() {
             ))}
           </div>
 
+          {params.get('password') === 'updated' && <p role="status" className="text-green-400 mb-4">Password updated. Log in with your new password.</p>}
           <form onSubmit={handleSubmit} className="space-y-4">
             {mode === 'register' && (
               <>
                 <div>
-                  <label className="block text-sm font-medium text-muted-foreground mb-1.5">Full Name *</label>
-                  <input type="text" value={name} onChange={e => setName(e.target.value)}
+                  <label className="block text-sm font-medium text-muted-foreground mb-1.5" htmlFor="auth-name">Full Name *</label>
+                  <input id="auth-name" type="text" value={name} onChange={e => setName(e.target.value)}
                     className="w-full px-4 py-3 bg-background border border-border rounded-xl text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all"
                     placeholder="John Doe" required autoComplete="name" />
                 </div>
@@ -105,23 +108,24 @@ function AuthForms() {
               </>
             )}
             <div>
-              <label className="block text-sm font-medium text-muted-foreground mb-1.5">Email *</label>
-              <input type="email" value={email} onChange={e => setEmail(e.target.value)}
+              <label className="block text-sm font-medium text-muted-foreground mb-1.5" htmlFor="auth-email">Email *</label>
+              <input id="auth-email" type="email" value={email} onChange={e => setEmail(e.target.value)}
                 className="w-full px-4 py-3 bg-background border border-border rounded-xl text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all"
                 placeholder="you@email.com" required autoComplete="email" />
             </div>
             <div>
-              <label className="block text-sm font-medium text-muted-foreground mb-1.5">Password *</label>
+              <label className="block text-sm font-medium text-muted-foreground mb-1.5" htmlFor="auth-password">Password *</label>
               <div className="relative">
-                <input type={showPw ? 'text' : 'password'} value={password} onChange={e => setPassword(e.target.value)}
+                <input id="auth-password" type={showPw ? 'text' : 'password'} value={password} onChange={e => setPassword(e.target.value)}
                   className="w-full px-4 py-3 pr-12 bg-background border border-border rounded-xl text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all"
                   placeholder="••••••••" required autoComplete={mode === 'login' ? 'current-password' : 'new-password'} />
-                <button type="button" onClick={() => setShowPw(!showPw)}
+                <button type="button" aria-label={showPw ? 'Hide password' : 'Show password'} onClick={() => setShowPw(!showPw)}
                   className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors">
                   {showPw ? <EyeOff size={18} /> : <Eye size={18} />}
                 </button>
               </div>
             </div>
+            {mode === 'login' && <Link to="/account?mode=forgot" className="block text-sm font-bold text-primary">Forgot password?</Link>}
             {error && <p className="text-sm text-destructive" role="alert">{error}</p>}
             <button type="submit" className="btn-primary w-full flex items-center justify-center gap-2" disabled={loading}>
               {loading ? <><Loader2 size={18} className="animate-spin" /> {mode === 'login' ? 'Logging in...' : 'Creating account...'}</> : mode === 'login' ? 'Log In' : 'Create Account'}
@@ -541,6 +545,9 @@ function ProfileTab({ user, userName, userEmail, userPhone, orderCount, onSignOu
 
 export default function Account() {
   const { user, loading } = useAuth()
+  const [params] = useSearchParams()
+  const mode = params.get('mode')
+  if (mode === 'forgot' || mode === 'recovery') return <PasswordRecovery key={mode} reset={mode === 'recovery'} />
 
   if (loading) {
     return (

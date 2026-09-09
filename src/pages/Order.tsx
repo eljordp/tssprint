@@ -1,11 +1,14 @@
 import { useEffect, useState, useRef } from 'react'
-import { Link, useSearchParams } from 'react-router-dom'
+import { Link, useSearchParams, useNavigate } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import { ShoppingCart, Sparkles, FileUp, Check, Clock, MapPin, Shield, Zap, Palette, Droplets, Sticker as StickerIcon, Hand, PanelsTopLeft, ScrollText, ArrowRight, Send } from 'lucide-react'
 import { useCart } from '@/context/CartContext'
 import { supabase } from '@/lib/supabase'
 import { getPricing, loadPricing, getBasePrice, getMaterialMultiplier, getSizeMultiplier } from '@/lib/pricing'
 import { STICKER_QUANTITIES, MIN_STICKER_QUANTITY, MIN_ORDER_SUBTOTAL, isValidStickerQuantity, getStickerPrice, formatPriceAdjustment } from '@/lib/stickerPricing'
+import MaterialGuide from '@/components/MaterialGuide'
+import PrintTrust from '@/components/PrintTrust'
+import { trackEvent } from '@/lib/analytics'
 import { cities } from '@/lib/cities'
 import { projects } from '@/lib/projects'
 import PageHero from '@/components/PageHero'
@@ -17,12 +20,12 @@ import stkHolo from '@/assets/projects/stickers-holographic.jpg'
 import stkLaptop from '@/assets/projects/stickers-on-laptop.jpg'
 import stkSheet from '@/assets/projects/stickers-sheet.jpg'
 import stkRoll from '@/assets/projects/stickers-roll.jpg'
-import stkMatte from '@/assets/projects/stickers-matte-detail.jpg'
+import stkMatte from '@/assets/projects/drive-bottle-labels.jpg'
 
 const stickerSpecs = [
-  { icon: Droplets, label: 'Material', value: 'Premium 3M & Avery cast vinyl' },
-  { icon: Clock, label: 'Turnaround', value: '3-5 business days + 24hr proof' },
-  { icon: Shield, label: 'Durability', value: '3-5 years outdoor · waterproof' },
+  { icon: Droplets, label: 'Material', value: 'Chosen for your application' },
+  { icon: Clock, label: 'Turnaround', value: 'Production after proof approval' },
+  { icon: Shield, label: 'Durability', value: 'Ask about stock and exposure' },
   { icon: MapPin, label: 'Shipping', value: 'Free US shipping · Bay pickup' },
 ]
 
@@ -217,7 +220,9 @@ function StickerMockup({ shape, artworkUrl, variant }: { shape: string; artworkU
 }
 
 export default function Order() {
-  const { addItem } = useCart()
+  const { addItem, replaceItem, items } = useCart()
+  const navigate = useNavigate()
+  const submittedRef = useRef(false)
   const [searchParams] = useSearchParams()
   const [shape, setShape] = useState('Die-Cut')
   const [material, setMaterial] = useState('Matte Vinyl')
@@ -238,7 +243,9 @@ export default function Order() {
   const fileRef = useRef<HTMLInputElement>(null)
 
   const [pricingConfig, setPricingConfig] = useState(() => getPricing())
+  useEffect(() => { trackEvent('view_item', { product: 'custom-stickers' }) }, [])
   const queryString = searchParams.toString()
+  const editingItem = items.find(item => item.id === searchParams.get('edit'))
 
   useEffect(() => {
     let active = true
@@ -277,7 +284,7 @@ export default function Order() {
     const materialParam = params.get('material')
     const nextMaterial = materialData.find(m => m.value.toLowerCase() === materialParam?.toLowerCase())?.value
     if (nextMaterial) setMaterial(nextMaterial)
-    if (product.includes('sample')) setMaterial('Holographic')
+    if (product.includes('sample')) { navigate('/contact?service=Sticker%20samples', { replace: true }); return }
 
     const qtyParam = Number(params.get('qty'))
     if (isValidStickerQuantity(qtyParam)) {
@@ -288,7 +295,18 @@ export default function Order() {
         setCustomQty(String(qtyParam))
       }
     }
-  }, [queryString])
+  }, [queryString, navigate])
+
+  useEffect(() => {
+    if (!editingItem?.configuration) return
+    const config = editingItem.configuration
+    setShape(config.shape); setMaterial(config.material); setSize(config.size)
+    setCustomQty(String(config.pieces)); setMockupView(config.format)
+    setRushAddon(Boolean(config.rush)); setDesignAddon(Boolean(config.design))
+    setArtworkIntent(editingItem.artworkIntent === 'uploaded' ? 'upload' : editingItem.artworkIntent || null)
+    setArtworkUpload(editingItem.artwork || null)
+    setArtworkStatus(editingItem.artwork ? 'uploaded' : 'idle')
+  }, [editingItem])
 
   const requestedQty = customQty ? Number(customQty) : quantity
   const quantityValid = isValidStickerQuantity(requestedQty)
@@ -350,8 +368,10 @@ export default function Order() {
         uploadedAt: new Date().toISOString(),
       })
       setArtworkStatus('uploaded')
+      trackEvent('artwork_upload_succeeded')
     } catch (error) {
       setArtworkStatus('error')
+      trackEvent('artwork_upload_failed')
       setArtworkError(error instanceof Error ? error.message : 'Artwork upload failed.')
     }
   }
@@ -366,6 +386,7 @@ export default function Order() {
   }
 
   const chooseArtworkIntent = (intent: ArtworkIntent) => {
+    trackEvent('artwork_option_selected', { option: intent })
     setArtworkIntent(intent)
     setArtworkChoiceError('')
     setDesignAddon(intent === 'design_help')
@@ -390,13 +411,16 @@ export default function Order() {
     }
   }, [artworkUrl])
 
-  const handleAddToCart = () => {
-    if (!quantityValid) return
+  const handleAddToCart = (checkout = false) => {
+    if (!quantityValid || submittedRef.current) return
     if (!artworkIntent) {
-      setArtworkChoiceError('Choose how you will provide artwork before adding this order.')
+      document.getElementById('artwork-options')?.scrollIntoView({ behavior: 'smooth', block: 'center' })
+      document.getElementById('artwork-options')?.focus()
+      trackEvent('artwork_choice_required')
+      setArtworkChoiceError('Choose how you will provide artwork to continue.')
       return
     }
-    if (artworkIntent === 'upload' && !artworkFile) {
+    if (artworkIntent === 'upload' && !artworkFile && !artworkUpload) {
       setArtworkChoiceError('Select an artwork file, or choose to send it after checkout.')
       fileRef.current?.click()
       return
@@ -405,8 +429,10 @@ export default function Order() {
     const addOns: { name: string; price: number }[] = []
     if (rushAddon) addOns.push({ name: ADDON_RUSH.label, price: ADDON_RUSH.price })
     if (designAddon) addOns.push({ name: ADDON_DESIGN.label, price: ADDON_DESIGN.price })
-    addItem({
-      id: `sticker-${Date.now()}`,
+    const item = {
+      id: editingItem?.id || `sticker-${crypto.randomUUID()}`,
+      pieceCount: effectiveQty,
+      configuration: { shape, material, size, pieces: effectiveQty, format: mockupView, rush: rushAddon, design: designAddon },
       name: cartProductName,
       size,
       option: `${effectiveQty} pcs · ${formatLabel}`,
@@ -415,11 +441,16 @@ export default function Order() {
       material,
       shape,
       dimensions: size,
-      artworkIntent: artworkIntent === 'upload' ? 'uploaded' : artworkIntent,
+      artworkIntent: artworkIntent === 'upload' ? 'uploaded' as const : artworkIntent,
       addOns: addOns.length > 0 ? addOns : undefined,
       artwork: artworkUpload || undefined,
-    })
+    }
+    submittedRef.current = true
+    if (editingItem) replaceItem(editingItem.id, item)
+    else addItem(item)
+    if (checkout) { navigate(`/stickers?edit=${encodeURIComponent(item.id)}#configure`, { replace: true }); navigate('/checkout'); return }
     setAdded(true)
+    window.setTimeout(() => { submittedRef.current = false }, 1000)
     setTimeout(() => setAdded(false), 2000)
   }
 
@@ -436,8 +467,34 @@ export default function Order() {
         secondaryCta={{ label: 'See Sticker Work', href: '#portfolio' }}
       />
 
+      <div className="fixed bottom-0 inset-x-0 z-50 md:hidden border-t border-border bg-background/95 backdrop-blur p-3 flex items-center justify-between gap-3 pb-[max(0.75rem,env(safe-area-inset-bottom))]">
+        <div><p className="font-black">{quantityValid ? `$${totalPrice.toFixed(2)}` : 'Choose quantity'}</p><p className="text-[10px] text-muted-foreground">Before cart discounts</p></div>
+        <button type="button" className="btn-primary text-sm" disabled={!quantityValid} onClick={() => handleAddToCart(true)}>Continue to Checkout</button>
+      </div>
       <section id="configure" className="py-8 md:py-12 scroll-mt-24">
         <div className="section-container">
+          <div className="max-w-6xl mx-auto mb-6"><h2 className="text-sm font-black uppercase tracking-wider mb-3">Choose your format</h2>              {/* View toggle */}
+              <div className="flex gap-1 bg-muted/60 p-1 rounded-full mb-6">
+                {stickerFormats.map(format => {
+                  const FormatIcon = format.icon
+                  return (
+                    <button
+                      key={format.value}
+                      aria-pressed={mockupView === format.value}
+                      onClick={() => setMockupView(format.value)}
+                      className={`flex items-center gap-1.5 px-4 py-2 rounded-full text-xs font-medium transition-all ${
+                        mockupView === format.value
+                          ? 'bg-primary text-white shadow-sm'
+                          : 'text-muted-foreground hover:text-foreground'
+                      }`}
+                    >
+                      <FormatIcon size={13} /> {format.label}
+                    </button>
+                  )
+                })}
+              </div>
+
+<p className="text-xs text-muted-foreground mb-4">{mockupView === 'handheld' ? 'Separate stickers, ready to hand out.' : mockupView === 'sheet' ? 'Quantity counts individual stickers, arranged on sheets. We confirm the sheet layout in your proof.' : 'Quantity counts labels, supplied on rolls. Tell us if you need a particular roll size or machine unwind direction.'}</p></div>
           {/* 4-column configurator — first thing after the hero */}
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -452,6 +509,7 @@ export default function Order() {
                 {shapeData.map(s => (
                   <button
                     key={s.value}
+                    aria-pressed={shape === s.value}
                     onClick={() => {
                       setShape(s.value)
                       // If current size isn't valid for the new shape, snap to that shape's first preset
@@ -478,7 +536,8 @@ export default function Order() {
                 {materialData.map(m => (
                   <button
                     key={m.value}
-                    onClick={() => setMaterial(m.value)}
+                    aria-pressed={material === m.value}
+                    onClick={() => { setMaterial(m.value); trackEvent('configuration_change', { field: 'material', value: m.value }) }}
                     className={`flex flex-col items-center gap-2 p-4 rounded-xl border transition-all ${
                       material === m.value
                         ? 'border-primary bg-primary/10'
@@ -506,6 +565,7 @@ export default function Order() {
                 {getSizesForShape(shape).map(s => (
                   <button
                     key={s}
+                    aria-pressed={size === s}
                     onClick={() => setSize(s)}
                     className={`w-full px-4 py-3.5 rounded-xl text-sm font-medium border transition-all text-left ${
                       size === s
@@ -531,6 +591,7 @@ export default function Order() {
                   return (
                     <button
                       key={q}
+                      aria-pressed={isActive}
                       onClick={() => { setQuantity(q); setCustomQty('') }}
                       className={`w-full flex items-center justify-between px-4 py-3.5 rounded-xl text-sm font-medium border transition-all ${
                         isActive
@@ -578,6 +639,7 @@ export default function Order() {
                 </div>
               </div>
             </div>
+              <MaterialGuide value={material} onSelect={next => { setMaterial(next); trackEvent('configuration_change', { field: 'material', value: next }) }} />
           </motion.div>
 
           {/* Bottom 3-column section */}
@@ -595,7 +657,7 @@ export default function Order() {
               <div className="space-y-3 w-full max-w-xs">
                 <button
                   type="button"
-                  onClick={() => chooseArtworkIntent('upload')}
+                  id="artwork-options" onClick={() => chooseArtworkIntent('upload')}
                   className={`w-full flex items-center justify-center gap-2.5 px-5 py-4 rounded-xl border text-sm font-medium transition-all ${
                     artworkIntent === 'upload'
                       ? 'border-primary bg-primary/10 text-primary'
@@ -664,7 +726,7 @@ export default function Order() {
                   </p>
                 )}
                 {artworkIntent === 'send_later' && (
-                  <p className="text-xs font-medium text-primary">We will email you where to send the final file.</p>
+                  <p className="text-xs font-medium text-primary">Email your artwork to thestickersmith@gmail.com with your order number after checkout.</p>
                 )}
                 {artworkIntent === 'design_help' && (
                   <p className="text-xs font-medium text-primary">Design help is included in the total below.</p>
@@ -677,26 +739,7 @@ export default function Order() {
 
             {/* Mockup preview */}
             <div className="bg-card border border-border rounded-2xl p-6 flex flex-col items-center">
-              {/* View toggle */}
-              <div className="flex gap-1 bg-muted/60 p-1 rounded-full mb-6">
-                {stickerFormats.map(format => {
-                  const FormatIcon = format.icon
-                  return (
-                    <button
-                      key={format.value}
-                      onClick={() => setMockupView(format.value)}
-                      className={`flex items-center gap-1.5 px-4 py-2 rounded-full text-xs font-medium transition-all ${
-                        mockupView === format.value
-                          ? 'bg-primary text-white shadow-sm'
-                          : 'text-muted-foreground hover:text-foreground'
-                      }`}
-                    >
-                      <FormatIcon size={13} /> {format.label}
-                    </button>
-                  )
-                })}
-              </div>
-
+<p className="text-xs font-bold text-muted-foreground">Illustrative layout preview</p>
               {/* Preview area */}
               <div className="flex-1 flex items-center justify-center w-full min-h-[240px] py-4">
                 {mockupView === 'handheld' && (
@@ -798,7 +841,7 @@ export default function Order() {
                 <p className="text-xs text-muted-foreground mt-2">${MIN_ORDER_SUBTOTAL} cart minimum before discounts.</p>
               </div>
               <button
-                onClick={handleAddToCart}
+                onClick={() => handleAddToCart(true)}
                 disabled={!quantityValid || (Boolean(artworkFile) && artworkStatus !== 'uploaded')}
                 className={`btn-primary w-full mt-5 ${added ? 'bg-green-600' : ''} disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:!transform-none`}
               >
@@ -811,9 +854,11 @@ export default function Order() {
                 ) : added ? (
                   <><Check size={18} /> Added to Cart!</>
                 ) : (
-                  <><ShoppingCart size={18} /> Add to Cart</>
+                  <><ShoppingCart size={18} /> {editingItem ? 'Save & Continue to Checkout' : 'Continue to Checkout'}</>
                 )}
               </button>
+              <button type="button" className="mt-3 text-sm text-primary font-bold" disabled={!quantityValid} onClick={() => handleAddToCart(false)}>{added ? 'Saved to cart' : editingItem ? 'Save changes & keep shopping' : 'Add to cart & keep shopping'}</button>
+              <PrintTrust />
               {effectiveQty > 2500 && (
                 <a
                   href={`/contact?service=Bulk+Sticker+Order&qty=${effectiveQty}&size=${encodeURIComponent(size)}&material=${encodeURIComponent(material)}`}
@@ -844,7 +889,7 @@ export default function Order() {
               <div key={s.label} className="bg-card/60 border border-border rounded-xl p-4">
                 <s.icon className="w-5 h-5 text-primary mb-2" />
                 <p className="text-[10px] text-muted-foreground uppercase tracking-wider mb-0.5">{s.label}</p>
-                <p className="text-xs font-semibold leading-snug">{s.value}</p>
+                <p className="text-xs font-semibold leading-snug">{s.label === 'Material' ? materialLabel : s.label === 'Durability' && material === 'Paper' ? 'Dry indoor use; not waterproof' : s.value}</p>
               </div>
             ))}
           </motion.div>
@@ -926,7 +971,7 @@ export default function Order() {
             {stickerProofProjects.map((project) => (
               <Link
                 key={project.slug}
-                to="/projects"
+                to={`/projects?project=${encodeURIComponent(project.slug)}`}
                 className="group bg-background border border-border rounded-xl overflow-hidden hover:border-primary/40 transition-all"
               >
                 <div className="aspect-[4/3] overflow-hidden bg-black">
@@ -996,7 +1041,7 @@ export default function Order() {
               { src: stkLaptop, alt: 'Stickers on laptop', caption: 'In the wild' },
               { src: stkSheet, alt: 'Sticker sheet', caption: 'Kiss-cut sheets' },
               { src: stkRoll, alt: 'Sticker roll', caption: 'Rolls for retail' },
-              { src: stkMatte, alt: 'Matte sticker detail', caption: 'Matte detail' },
+              { src: stkMatte, alt: 'Sticker Smith labels on bottles', caption: 'Bottle labels' },
             ]}
           />
         </div>

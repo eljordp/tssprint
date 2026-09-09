@@ -82,8 +82,7 @@ export default function EstimateForm({
         </div>
         <h3 className="text-2xl font-black mb-2">Request received.</h3>
         <p className="text-muted-foreground">
-          We sent a confirmation to <span className="text-foreground font-semibold">{email}</span>.
-          The request is in the lead queue. JP or the team will reply by email with availability and next steps for your {service.toLowerCase()} estimate.
+          Your request is saved. We’ll reply to <span className="text-foreground font-semibold">{email}</span> with availability and next steps for your {service.toLowerCase()} estimate.
         </p>
       </motion.div>
     )

@@ -35,7 +35,7 @@ function MobileTrustStrip() {
   const items = [
     { icon: Clock, label: '24hr proof' },
     { icon: MapPin, label: 'Bay Area pickup' },
-    { icon: Star, label: '5.0 Google' },
+    { icon: Star, label: 'Real local projects' },
     { icon: Shield, label: 'Quality checked' },
   ]
 

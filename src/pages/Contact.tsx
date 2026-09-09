@@ -17,7 +17,7 @@ export default function Contact() {
   const [submitted, setSubmitted] = useState(false)
   const [loading, setLoading] = useState(false)
   const [errors, setErrors] = useState<ContactFormErrors>({})
-  const [formData, setFormData] = useState({ name: '', email: '', phone: '', service: '', message: '' })
+  const [formData, setFormData] = useState({ name: '', email: '', phone: '', service: '', message: searchParams.get('message') || (searchParams.get('project') ? `I’m interested in a project like ${searchParams.get('project')}.` : '') })
   const [emailOptIn, setEmailOptIn] = useState(false)
 
   // Prefill from query params — lets other pages hand off context
@@ -109,7 +109,7 @@ export default function Contact() {
                 <div className="text-center py-16">
                   <Send size={48} className="mx-auto text-primary mb-4" />
                   <h2 className="text-2xl font-bold mb-2">Quote Request Sent!</h2>
-                  <p className="text-muted-foreground">Your request goes directly into the team lead queue.</p>
+                  <p className="text-muted-foreground">Your request is saved. We’ll review your project and reply by email.</p>
                 </div>
               ) : (
                 <form onSubmit={handleSubmit} className="space-y-4" noValidate>
@@ -229,8 +229,8 @@ export default function Contact() {
               </div>
               <div className="bg-card border border-border rounded-2xl p-6">
                 <Send className="text-primary mb-3" size={24} aria-hidden="true" />
-                <h3 className="font-bold mb-1">Response Time</h3>
-                <p className="text-sm text-muted-foreground">Replies are tracked in the team lead queue.</p>
+                <h3 className="font-bold mb-1">What happens next</h3>
+                <p className="text-sm text-muted-foreground">We’ll reply by email with pricing and next steps.</p>
               </div>
             </div>
           </div>

@@ -1,3 +1,4 @@
+import { shouldSuppressAnalytics } from '@/lib/analytics'
 const measurementId = import.meta.env.VITE_GA4_MEASUREMENT_ID as string | undefined
 const scriptId = 'tss-ga4-script'
 
@@ -10,7 +11,7 @@ declare global {
 
 // Bootstrap GA before React mounts. Route events still come from analytics.ts,
 // but the queue and Google script are ready before the first page_view fires.
-if (measurementId && typeof window !== 'undefined') {
+if (measurementId && typeof window !== 'undefined' && !shouldSuppressAnalytics()) {
   window.dataLayer = window.dataLayer || []
   window.gtag = window.gtag || function gtag(...args: unknown[]) {
     window.dataLayer?.push(args)
@@ -25,7 +26,8 @@ if (measurementId && typeof window !== 'undefined') {
   }
 
   window.gtag('js', new Date())
-  window.gtag('config', measurementId, { send_page_view: false })
+  window.gtag('config', measurementId, { send_page_view: false, page_location: window.location.origin + window.location.pathname })
+  window.__tssGa4Configured = true
 }
 
 export {}

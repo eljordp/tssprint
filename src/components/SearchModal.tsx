@@ -1,3 +1,4 @@
+import { useModalFocus } from '@/hooks/useModalFocus'
 import { useState, useEffect, useRef } from 'react'
 import { Link } from 'react-router-dom'
 import { Search, X, ArrowRight } from 'lucide-react'
@@ -56,6 +57,7 @@ const searchItems: SearchItem[] = [
 ]
 
 export default function SearchModal({ isOpen, onClose }: { isOpen: boolean; onClose: () => void }) {
+  const dialogRef = useModalFocus(isOpen, onClose)
   const [query, setQuery] = useState('')
   const inputRef = useRef<HTMLInputElement>(null)
 
@@ -110,6 +112,7 @@ export default function SearchModal({ isOpen, onClose }: { isOpen: boolean; onCl
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: -20, scale: 0.95 }}
             transition={{ duration: 0.15 }}
+            ref={dialogRef} tabIndex={-1} role="dialog" aria-modal="true" aria-label="Search products and services"
             className="relative w-full max-w-xl bg-card border border-border rounded-2xl shadow-lg overflow-hidden"
           >
             {/* Search Input */}
@@ -120,10 +123,11 @@ export default function SearchModal({ isOpen, onClose }: { isOpen: boolean; onCl
                 type="text"
                 value={query}
                 onChange={e => setQuery(e.target.value)}
+                aria-label="Search products and services"
                 placeholder="Search products & services..."
                 className="flex-1 bg-transparent text-foreground placeholder:text-muted-foreground text-base focus:outline-none"
               />
-              <button onClick={onClose} className="p-1 text-muted-foreground hover:text-foreground transition-colors">
+              <button aria-label="Close search" onClick={onClose} className="p-1 text-muted-foreground hover:text-foreground transition-colors">
                 <X size={18} />
               </button>
             </div>

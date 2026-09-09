@@ -17,7 +17,7 @@ function StickerSupportPageInner({ page }: { page: StickerSupportPageConfig }) {
         image={page.image}
         imageAlt={page.imageAlt}
         icon={Sticker}
-        primaryCta={{ label: 'Order Custom Stickers', href: '/stickers#configure' }}
+        primaryCta={{ label: 'Order Custom Stickers', href: `/stickers?product=${page.slug}${page.slug === 'holographic-stickers' ? '&material=Holographic' : ''}#configure` }}
         secondaryCta={{ label: 'Get a Quote', href: '/contact' }}
       />
 
@@ -183,7 +183,7 @@ function StickerSupportPageInner({ page }: { page: StickerSupportPageConfig }) {
             Upload artwork, choose specs, and get a proof before production starts.
           </p>
           <div className="flex flex-wrap justify-center gap-3">
-            <Link to="/stickers#configure" className="btn-primary">Start Sticker Order <ArrowRight size={18} /></Link>
+            <Link to={`/stickers?product=${page.slug}${page.slug === 'holographic-stickers' ? '&material=Holographic' : ''}#configure`} className="btn-primary">Start Sticker Order <ArrowRight size={18} /></Link>
             <Link to="/contact" className="btn-secondary">Ask for a Quote</Link>
           </div>
         </div>
