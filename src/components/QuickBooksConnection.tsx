@@ -105,7 +105,7 @@ export default function QuickBooksConnection() {
         </>}
         <button className="rounded-lg border border-border px-4 py-2 disabled:opacity-50" disabled={busy} onClick={() => refresh().catch(error => setMessage(error.message))}>Refresh status</button>
       </div>
-      <p className="text-sm text-muted-foreground">{status.environment === 'sandbox' ? 'Sandbox uses test company data. ' : ''}This connection does not enable customer payments yet. Invoice creation and payment confirmation still need verification.</p>
+      <p className="text-sm text-muted-foreground">{status.environment === 'sandbox' ? 'Sandbox uses test company data. ' : ''}Connection status confirms access to your books. Website invoices and payment follow-ups are shown below; an unpaid invoice is not a completed purchase.</p>
       {readiness && <section className="space-y-3 border-t border-border pt-4">
         <h3 className="font-bold">Live invoice settings</h3>
         <p className="text-sm text-muted-foreground">Read from QuickBooks. No invoice was created or sent.</p>

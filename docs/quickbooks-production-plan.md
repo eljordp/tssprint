@@ -1,7 +1,7 @@
 # QuickBooks checkout execution plan
 
 ## Outcome
-Customers review an itemized, server-priced order, continue to Intuit's hosted invoice payment page, and receive accurate paid / artwork / proof / production states. Card payments and eligible-device Apple Pay feed the same QuickBooks invoice. PayPal remains available separately.
+Customers review an itemized, server-priced order, continue to Intuit's hosted invoice payment page, and receive accurate paid / artwork / proof / production states. Card payments and eligible-device Apple Pay feed the same QuickBooks invoice. New website payments use QuickBooks so the invoice includes Intuit-calculated sales tax. PayPal and Square remain connected for existing payment recovery.
 
 ## Ordered work
 1. **In progress:** Read production payment preferences, catalog/income accounts, currency and tax configuration. Select mappings from evidence; resolve any merchant-specific tax question before enabling sales.
@@ -11,7 +11,7 @@ Customers review an itemized, server-priced order, continue to Intuit's hosted i
 5. Add durable receipt/staff notifications and purchase tracking with deduplication, recovery status and staff review for ambiguous outcomes.
 6. Test pricing tampering, duplicate clicks, lost responses, private access, failures and mobile checkout. Deploy from the current combined release. Verify a specifically authorized real payment and eligible-device Apple Pay before claiming end-to-end success.
 
-## Current evidence
+## Initial checkpoint (superseded by dated verification below)
 - Production OAuth and CompanyInfo read verified for The Sticker Smith.
 - Policies/disclosure live at /terms and /privacy; registered in Intuit.
 - Existing sandbox invoice/payment fixture verified accounting linkage only.

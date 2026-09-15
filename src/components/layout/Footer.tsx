@@ -153,7 +153,7 @@ export default function Footer() {
             <p className="text-muted-foreground text-xs md:text-sm text-center">&copy; {new Date().getFullYear()} The Sticker Smith. All rights reserved.</p>
             <div className="flex flex-wrap items-center justify-center gap-1.5 md:gap-2">
               <span className="text-[10px] md:text-xs text-muted-foreground">Secure checkout</span>
-              <div className="px-2 py-1 rounded bg-white/5 border border-border text-[10px] text-muted-foreground font-bold">PayPal</div>
+              <div className="px-2 py-1 rounded bg-white/5 border border-border text-[10px] text-muted-foreground font-bold">Encrypted payments</div>
             </div>
             <div className="flex items-center gap-2 text-xs md:text-sm">
               <span className="text-muted-foreground">Website by</span>
