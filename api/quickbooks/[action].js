@@ -11,6 +11,7 @@ import { consumeRateLimit } from '../../server/request-guards.js'
 import { digest } from '../../server/quickbooks-core.js'
 import { claimWorker, runWorker, workerHealth } from '../../server/quickbooks-worker.js'
 import { quickBooksOnly } from '../../server/payment-policy.js'
+import { setupWebsiteProducts } from '../../server/quickbooks-catalog.js'
 import { QB_PRODUCT_NAMES } from '../../server/quickbooks-checkout-core.js'
 
 export const config = { api: { bodyParser: false } }
@@ -61,7 +62,7 @@ export default async function handler(req, res) {
       return sendJson(res, known ? error.status : 503, { error: known ? error.code : 'checkout_service_unavailable' })
     }
   }
-  if (!['connect', 'callback', 'status', 'check', 'disconnect', 'invoice-tests', 'test-invoice', 'test-payment', 'readiness', 'checkouts', 'reconcile'].includes(action)) return sendJson(res, 404, { error: 'Not found' })
+  if (!['connect', 'callback', 'status', 'check', 'disconnect', 'invoice-tests', 'test-invoice', 'test-payment', 'readiness', 'setup-products', 'checkouts', 'reconcile'].includes(action)) return sendJson(res, 404, { error: 'Not found' })
   const expectedMethod = ['status', 'callback', 'invoice-tests', 'readiness', 'checkouts'].includes(action) ? 'GET' : 'POST'
   if (req.method !== expectedMethod) { res.setHeader('Allow', expectedMethod); return sendJson(res, 405, { error: 'Method not allowed' }) }
   if (action === 'callback') {
@@ -95,6 +96,7 @@ export default async function handler(req, res) {
       return sendJson(res, 200, { authorizationUrl: result.authorizationUrl })
     }
     if (action === 'check') return sendJson(res, 200, await checkConnection())
+    if (action === 'setup-products') return sendJson(res, 200, await setupWebsiteProducts())
     if (action === 'readiness') return sendJson(res, 200, await checkoutReadiness())
     if (action === 'checkouts') return sendJson(res, 200, { checkouts: await listCheckouts(), worker: await workerHealth() })
     if (action === 'reconcile') { await processWebhookEvents(); const checked = await reconcileCheckouts(); waitUntil(followUp(null)); return sendJson(res, 200, { checked }) }
