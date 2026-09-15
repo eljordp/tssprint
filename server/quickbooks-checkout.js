@@ -21,7 +21,7 @@ export function publicCheckout(row) {
     id: row.id, status: row.status, invoiceNumber: row.invoice_number, estimateId: row.estimate_id || null, orderId: row.order_id,
     subtotal: row.checkout.subtotal, discount: row.checkout.discount, tax: row.tax, total: row.total,
     // This response is protected by an unguessable token in the POST body.
-    items: row.checkout.items, email: row.checkout.customer.email,
+    items: row.checkout.items, email: row.checkout.customer.email, ownerTest: row.checkout.ownerTest === true,
     deliveryMethod: row.checkout.customer.deliveryMethod, customerName: row.checkout.customer.firstName,
     invoiceLink: row.payment_mode === 'invoice' && (row.status === 'awaiting_payment' || row.status === 'partially_paid') ? safeInvoiceLink(row.invoice_link) : null,
     lastChecked: row.last_checked_at, issue: row.last_error,

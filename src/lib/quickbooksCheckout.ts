@@ -1,7 +1,7 @@
 import type { CartItem } from '@/context/CartContext'
 export type QuickBooksAttempt = { id: string; token: string; request: unknown }
 export type InvoiceCheckout = {
-  id: string; status: string; invoiceNumber: string | null; orderId: string | null
+  id: string; status: string; invoiceNumber: string | null; orderId: string | null; ownerTest?: boolean
   subtotal: number; discount: number; tax: number | null; total: number | null
   paymentMode?: 'direct' | 'invoice' | 'wallet'; chargeStatus?: string | null; walletCanRetry?: boolean; walletOrderId?: string | null; paymentProvider?: string; estimateId?: string | null
   items: { id: string; name: string; category?: string; option: string; size: string; quantity: number; price: number; artwork?: CartItem['artwork']; addOns: { name: string; price: number }[] }[]
