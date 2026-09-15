@@ -4,56 +4,7 @@ import { Link } from 'react-router-dom'
 import { Search, X, ArrowRight } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 
-interface SearchItem {
-  name: string
-  category: string
-  href: string
-  keywords: string[]
-}
-
-const searchItems: SearchItem[] = [
-  // Stickers
-  { name: 'Custom Stickers', category: 'Stickers', href: '/stickers', keywords: ['sticker', 'die-cut', 'kiss-cut', 'vinyl', 'matte', 'glossy', 'clear', 'holographic', 'paper', 'circle', 'square', 'rectangle', 'decal', 'label'] },
-  { name: 'Gloss Finish Stickers', category: 'Stickers', href: '/stickers', keywords: ['gloss', 'glossy', 'shiny', 'finish'] },
-  { name: 'Holographic Stickers', category: 'Stickers', href: '/stickers', keywords: ['holo', 'holographic', 'rainbow', 'iridescent'] },
-  { name: 'UV Coating Stickers', category: 'Stickers', href: '/stickers', keywords: ['uv', 'coating', 'protection', 'spot uv'] },
-  { name: 'Embossed Stickers', category: 'Stickers', href: '/stickers', keywords: ['emboss', 'embossed', 'raised', 'textured', '3d'] },
-  { name: 'Paper Stickers', category: 'Stickers', href: '/stickers', keywords: ['paper', 'eco', 'recyclable'] },
-  { name: 'Custom Labels in Hayward', category: 'Labels', href: '/custom-labels', keywords: ['custom labels', 'product labels', 'bottle label', 'jar label', 'mylar label', 'hayward', 'bay area'] },
-  { name: 'Roll Labels in Hayward', category: 'Labels', href: '/roll-labels', keywords: ['roll labels', 'labels on rolls', 'product roll labels', 'bottle labels', 'jar labels', 'hayward', 'bay area'] },
-
-  // Mylar Packaging
-  { name: 'Mylar Bags – Eighths', category: 'Mylar Packaging', href: '/mylar#configure', keywords: ['mylar', 'bag', 'eighth', '8th', '3x5', 'packaging', 'pouch', 'hayward', 'bay area'] },
-  { name: 'Mylar Bags – Quarters', category: 'Mylar Packaging', href: '/mylar#configure', keywords: ['mylar', 'bag', 'quarter', 'qtr', '4x6', 'packaging', 'hayward'] },
-  { name: 'Mylar Bags – Ounce', category: 'Mylar Packaging', href: '/mylar#configure', keywords: ['mylar', 'bag', 'ounce', 'oz', '5x8', 'packaging', 'hayward'] },
-  { name: 'Mylar Bags – Half Pound', category: 'Mylar Packaging', href: '/mylar#configure', keywords: ['mylar', 'bag', 'half pound', 'hp', '10x12', 'packaging', 'hayward'] },
-  { name: 'Mylar Bags – Pound', category: 'Mylar Packaging', href: '/mylar#configure', keywords: ['mylar', 'bag', 'pound', 'lb', '14x16', 'packaging', 'hayward'] },
-  { name: '2oz Jar + Custom Label', category: 'Mylar Packaging', href: '/mylar#configure', keywords: ['jar', 'label', '2oz', 'container', 'cannabis', 'bottle'] },
-
-  // Event Displays
-  { name: 'Custom Canopy Tents', category: 'Event Displays', href: '/services/event-displays#shop', keywords: ['canopy', 'tent', 'popup', 'pop-up', 'event', 'booth', 'trade show', 'steel', 'aluminum', '5x5', '10x10', '10x15', '10x20', 'hayward', 'bay area'] },
-  { name: 'Sidewalls & Half Walls', category: 'Event Displays', href: '/services/event-displays#shop', keywords: ['sidewall', 'half wall', 'wall', 'tent wall', 'enclosure'] },
-
-  // Backdrops
-  { name: 'Backdrop Displays', category: 'Backdrops & Displays', href: '/services/event-displays#shop', keywords: ['backdrop', 'display', 'banner', 'step and repeat', 'photo', 'background', 'fabric', 'vinyl', 'pop-up', 'tension'] },
-
-  // Table Covers
-  { name: 'Table Covers & Throws', category: 'Table Covers', href: '/services/event-displays#shop', keywords: ['table', 'cover', 'throw', 'tablecloth', 'fitted', 'draped', '6ft', '8ft', 'round', 'rectangular'] },
-
-  // Retractable Banners
-  { name: 'Retractable Banners', category: 'Banners', href: '/services/business-signage#shop', keywords: ['retractable', 'banner', 'roll up', 'pull up', 'stand', 'portable', 'display', 'economy', 'standard', 'premium', 'wide'] },
-
-  // Business Print
-  { name: 'Business Cards', category: 'Business Print', href: '/services/business-print#shop', keywords: ['business card', 'card', 'standard', 'square', 'mini', 'soft-touch', 'spot uv', 'foil', 'rounded'] },
-  { name: 'Flyers', category: 'Business Print', href: '/services/business-print#shop', keywords: ['flyer', 'flier', 'handout', 'leaflet', '8.5x11', '5.5x8.5'] },
-  { name: 'Door Hangers', category: 'Business Print', href: '/services/business-print#shop', keywords: ['door hanger', 'hanger', 'door', 'marketing'] },
-  { name: 'Postcards', category: 'Business Print', href: '/services/business-print#shop', keywords: ['postcard', 'mailer', 'mailing', '4x6', '5x7'] },
-  { name: 'Vehicle Magnets', category: 'Business Print', href: '/services/business-print#shop', keywords: ['magnet', 'vehicle magnet', 'car magnet', 'truck magnet', 'magnetic', '12x18', '18x24', '24x36'] },
-
-  // Other Services
-  { name: 'Vehicle Graphics & Wraps', category: 'Vehicle Graphics', href: '/services/vehicle-graphics#quote', keywords: ['vehicle', 'wrap', 'car wrap', 'truck', 'fleet', 'vinyl', 'lettering', 'decal', 'door graphic', 'perforated', 'window', 'hayward', 'bay area'] },
-  { name: 'Business Signage', category: 'Business Signage', href: '/services/business-signage#shop', keywords: ['sign', 'signage', 'storefront', 'wall graphic', 'mural', 'a-frame', 'sidewalk', 'acrylic', 'metal', 'led', 'illuminated'] },
-]
+import { searchStorefront, type SearchItem } from '@/lib/storefrontSearch'
 
 export default function SearchModal({ isOpen, onClose }: { isOpen: boolean; onClose: () => void }) {
   const dialogRef = useModalFocus(isOpen, onClose)
@@ -81,14 +32,7 @@ export default function SearchModal({ isOpen, onClose }: { isOpen: boolean; onCl
     return () => window.removeEventListener('keydown', handleKey)
   }, [isOpen, onClose])
 
-  const results = query.trim().length < 2 ? [] : searchItems.filter(item => {
-    const q = query.toLowerCase()
-    return (
-      item.name.toLowerCase().includes(q) ||
-      item.category.toLowerCase().includes(q) ||
-      item.keywords.some(k => k.includes(q))
-    )
-  })
+  const results = searchStorefront(query)
 
   const grouped = results.reduce<Record<string, SearchItem[]>>((acc, item) => {
     if (!acc[item.category]) acc[item.category] = []
@@ -124,9 +68,9 @@ export default function SearchModal({ isOpen, onClose }: { isOpen: boolean; onCl
                 onChange={e => setQuery(e.target.value)}
                 aria-label="Search products and services"
                 placeholder="Search products & services..."
-                className="flex-1 bg-transparent text-foreground placeholder:text-muted-foreground text-base focus:outline-none"
+                className="min-w-0 flex-1 bg-transparent text-foreground placeholder:text-muted-foreground text-base focus:outline-none"
               />
-              <button aria-label="Close search" onClick={onClose} className="p-1 text-muted-foreground hover:text-foreground transition-colors">
+              <button aria-label="Close search" onClick={onClose} className="min-h-11 min-w-11 inline-flex items-center justify-center text-muted-foreground hover:text-foreground transition-colors">
                 <X size={18} />
               </button>
             </div>
