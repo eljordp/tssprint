@@ -11,6 +11,7 @@ import { cp, stat, readFile, writeFile, readdir, mkdir } from 'node:fs/promises'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { routePreloads } from './route-preloads.mjs'
+import { imageAssetMap, imageReplacements } from './image-asset-map.mjs'
 import { APP_SHELL_ROUTES, appShellHtmlForRoute } from './app-shell-meta.mjs'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
@@ -74,6 +75,8 @@ async function buildAssetMap() {
   return map
 }
 const assetMap = await buildAssetMap()
+const previousImages = JSON.parse(await readFile(path.join(SRC, 'image-assets.json'), 'utf8'))
+const refreshedImages = imageReplacements(previousImages, await imageAssetMap(path.join(DEST, 'assets')))
 
 function patchHtml(html, route) {
   // Strip every existing /assets/*.js script + /assets/*.css link.
@@ -88,6 +91,7 @@ function patchHtml(html, route) {
   // fresh build's filenames, matched by base name. Unknown refs pass through.
   html = html.replace(/\/assets\/([A-Za-z0-9._-]+)/g, (full, file) => {
     if (existingAssets.has(file)) return full
+    if (refreshedImages.has(file)) return `/assets/${refreshedImages.get(file)}`
     const m = file.match(HASH_RE)
     if (!m) return full
     const fresh = assetMap.get(m[1] + m[2])
@@ -139,6 +143,7 @@ async function walk(srcDir, destDir) {
   await mkdir(destDir, { recursive: true })
   const entries = await readdir(srcDir, { withFileTypes: true })
   for (const entry of entries) {
+    if (entry.name === 'image-assets.json') continue
     const s = path.join(srcDir, entry.name)
     const d = path.join(destDir, entry.name)
     if (entry.isDirectory()) {
