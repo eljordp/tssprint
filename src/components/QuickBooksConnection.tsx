@@ -11,6 +11,7 @@ type Status = {
   status: 'connected' | 'disconnected' | 'reconnect_required'
   companyName: string | null
   redirectUri: string
+  paymentsScopeGranted?: boolean
 }
 type Readiness = { currency: string | null; salesTaxEnabled: boolean | null; automatedSalesTax: boolean | null; onlinePayments: boolean | null; autoEmail: boolean | null; serverPurchaseTracking: boolean; items: { id: string; name: string; type: string; taxable: boolean | null; incomeAccount: string | null }[] }
 const messages: Record<string, string> = {
@@ -61,13 +62,13 @@ export default function QuickBooksConnection() {
     }
     refresh().catch(error => setMessage(error.message))
   }, [refresh])
-  const act = async (action: 'connect' | 'check' | 'disconnect') => {
+  const act = async (action: 'connect' | 'connect-payments' | 'check' | 'disconnect') => {
     if (action === 'disconnect' && !window.confirm('Disconnect this QuickBooks company from the website? Existing QuickBooks records will remain.')) return
     setBusy(true)
     setMessage('')
     try {
       const data = await request(action, 'POST')
-      if (action === 'connect') {
+      if (action === 'connect' || action === 'connect-payments') {
         const destination = new URL(data.authorizationUrl)
         if (destination.origin !== 'https://appcenter.intuit.com' || destination.pathname !== '/connect/oauth2') throw new Error('Invalid QuickBooks connection URL.')
         window.location.assign(destination.toString())
@@ -110,6 +111,12 @@ export default function QuickBooksConnection() {
         <button className="rounded-lg border border-border px-4 py-2 disabled:opacity-50" disabled={busy} onClick={() => refresh().catch(error => setMessage(error.message))}>Refresh status</button>
       </div>
       <p className="text-sm text-muted-foreground">{status.environment === 'sandbox' ? 'Sandbox uses test company data. ' : ''}Connection status confirms access to your books. Website invoices and payment follow-ups are shown below; an unpaid invoice is not a completed purchase.</p>
+      {status.status === 'connected' && <section className="rounded-lg border border-border p-4 space-y-3">
+        <h3 className="font-bold">Direct card payments</h3>
+        <p className="text-sm">{status.paymentsScopeGranted ? 'Payments permission granted. Direct checkout still needs a verified charge before it is ready for customers.' : 'The current connection can access the books. Direct card checkout needs the separate Payments permission.'}</p>
+        <button className="rounded-lg border border-border px-4 py-2 disabled:opacity-50" disabled={busy || !ready} onClick={() => act('connect-payments')}>Connect Payments API</button>
+        <p className="text-xs text-muted-foreground">Connect the same The Sticker Smith company. This authorizes access; it does not charge a card or enable Apple Pay.</p>
+      </section>}
       {readiness && <section className="space-y-3 border-t border-border pt-4">
         <h3 className="font-bold">Live invoice settings</h3>
         <p className="text-sm text-muted-foreground">Read from QuickBooks. No invoice was created or sent.</p>

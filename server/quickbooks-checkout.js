@@ -23,8 +23,9 @@ export function publicCheckout(row) {
     // This response is protected by an unguessable token in the POST body.
     items: row.checkout.items, email: row.checkout.customer.email,
     deliveryMethod: row.checkout.customer.deliveryMethod, customerName: row.checkout.customer.firstName,
-    invoiceLink: row.status === 'awaiting_payment' || row.status === 'partially_paid' ? safeInvoiceLink(row.invoice_link) : null,
+    invoiceLink: row.payment_mode !== 'direct' && (row.status === 'awaiting_payment' || row.status === 'partially_paid') ? safeInvoiceLink(row.invoice_link) : null,
     lastChecked: row.last_checked_at, issue: row.last_error,
+    paymentMode: row.payment_mode || 'invoice', chargeStatus: row.direct_payment?.status || null,
   }
 }
 export async function ownedCheckout(body, db = supabaseFetch) {
@@ -33,13 +34,13 @@ export async function ownedCheckout(body, db = supabaseFetch) {
   if (!row) throw new QuickBooksError('checkout_not_found', 404)
   return row
 }
-export async function prepareCheckout(body, rateKey, { db = supabaseFetch, normalize = normalizeCheckout, context = checkoutContext, call = accountingRequest } = {}) {
+export async function prepareCheckout(body, rateKey, { db = supabaseFetch, normalize = normalizeCheckout, context = checkoutContext, call = accountingRequest, paymentMode = 'invoice' } = {}) {
   if (!uuid(body?.id) || !validNonce(body?.token) || !body.checkout) throw new QuickBooksError('invalid_checkout', 400)
   const requestHash = digest(JSON.stringify(body.checkout))
   let [row] = await db(`${table}?id=eq.${body.id}`)
   if (row) {
     if (row.token_hash !== digest(body.token)) throw new QuickBooksError('checkout_not_found', 404)
-    if (row.request_hash !== requestHash) throw new QuickBooksError('checkout_changed', 409)
+    if (row.request_hash !== requestHash || (row.payment_mode || 'invoice') !== paymentMode) throw new QuickBooksError('checkout_changed', 409)
   } else {
     if (!await db('/rest/v1/rpc/allow_quickbooks_checkout', { method: 'POST', body: JSON.stringify({ p_key: rateKey }) })) throw new QuickBooksError('rate_limited', 429)
     let checkout
@@ -50,9 +51,9 @@ export async function prepareCheckout(body, rateKey, { db = supabaseFetch, norma
     }
     checkout.ga4 = /^\d{1,20}\.\d{1,20}$/.test(body.ga4?.clientId || '') ? { clientId: body.ga4.clientId, sessionId: /^\d{1,20}$/.test(body.ga4?.sessionId || '') ? body.ga4.sessionId : null, ...(body.ga4.debugMode === true ? { debugMode: true } : {}) } : null
     const ctx = await context()
-    await db(`${table}?on_conflict=id`, { method: 'POST', headers: { Prefer: 'resolution=ignore-duplicates,return=representation' }, body: JSON.stringify({ id: body.id, token_hash: digest(body.token), request_hash: requestHash, environment: ctx.environment, realm_id: ctx.realmId, checkout, cart_session: body.checkout.cartSession || null }) })
+    await db(`${table}?on_conflict=id`, { method: 'POST', headers: { Prefer: 'resolution=ignore-duplicates,return=representation' }, body: JSON.stringify({ id: body.id, token_hash: digest(body.token), request_hash: requestHash, environment: ctx.environment, realm_id: ctx.realmId, checkout, cart_session: body.checkout.cartSession || null, ...(paymentMode === 'direct' ? { payment_mode: 'direct' } : {}) }) })
     row = await ownedCheckout(body, db)
-    if (row.request_hash !== requestHash) throw new QuickBooksError('checkout_changed', 409)
+    if (row.request_hash !== requestHash || (row.payment_mode || 'invoice') !== paymentMode) throw new QuickBooksError('checkout_changed', 409)
   }
   return withCheckoutLock(row, async (record, save, ctx) => {
     if (!record.invoice_id && Date.now() - Date.parse(record.created_at) > 23 * 3600000) throw new QuickBooksError('creation_review_required', 409)
@@ -73,7 +74,9 @@ export async function prepareCheckout(body, rateKey, { db = supabaseFetch, norma
         if (!numericId(result.Customer?.Id)) throw new QuickBooksError('invalid_customer_response')
         await save({ customer_id: result.Customer.Id })
       }
-      await save({ invoice_payload: mappedInvoice(record.checkout, products, record.customer_id, record.id) })
+      const invoice = mappedInvoice(record.checkout, products, record.customer_id, record.id)
+      if (record.payment_mode === 'direct') invoice.AllowOnlineCreditCardPayment = false
+      await save({ invoice_payload: invoice })
     }
     if (!record.invoice_id) {
       // Do not reissue an ambiguous creation after the provider deduplication
@@ -87,7 +90,7 @@ export async function prepareCheckout(body, rateKey, { db = supabaseFetch, norma
     return publicCheckout(record)
   }, { db, context })
 }
-async function withCheckoutLock(row, run, { db = supabaseFetch, context = checkoutContext } = {}) {
+export async function withCheckoutLock(row, run, { db = supabaseFetch, context = checkoutContext } = {}) {
   const ctx = await context()
   if (ctx.realmId !== row.realm_id || ctx.environment !== row.environment) throw new QuickBooksError('connection_changed', 409)
   const lockId = crypto.randomUUID()
@@ -102,11 +105,11 @@ async function withCheckoutLock(row, run, { db = supabaseFetch, context = checko
   catch (error) {
     const code = error instanceof QuickBooksError ? error.code : 'checkout_service_unavailable'
     if (record.order_id && /mismatch|changed/.test(code)) await db(`/rest/v1/orders?id=eq.${encodeURIComponent(record.order_id)}&payment_provider=eq.quickbooks`, { method: 'PATCH', body: JSON.stringify({ payment_status: 'unverified' }) }).catch(() => {})
-    await save({ last_error: code, ...(code.includes('mismatch') || code.includes('changed') || code === 'creation_review_required' ? { status: 'needs_review', invoice_link: null } : {}), next_check_at: new Date(Date.now() + 15 * 60000).toISOString() }).catch(() => {})
+    await save({ last_error: code, ...(code.includes('mismatch') || code.includes('changed') || code.endsWith('review_required') || code === 'charge_evidence_required' ? { status: 'needs_review', invoice_link: null } : {}), next_check_at: new Date(Date.now() + 15 * 60000).toISOString() }).catch(() => {})
     throw error
   } finally { await db(`${table}?id=eq.${row.id}&lock_id=eq.${lockId}`, { method: 'PATCH', body: JSON.stringify({ lock_id: null, lock_expires_at: null }) }).catch(() => {}) }
 }
-async function inspectInvoice(row, save, ctx, { db, call }) {
+export async function inspectInvoice(row, save, ctx, { db, call }) {
   const data = await call('/query', { ...ctx, body: { query: `select * from Invoice where Id = '${row.invoice_id}'` } })
   const invoice = data.QueryResponse?.Invoice?.[0]
   const ids = [...new Set((invoice?.LinkedTxn || []).filter(link => link.TxnType === 'Payment').map(link => String(link.TxnId)))]
@@ -119,8 +122,9 @@ async function inspectInvoice(row, save, ctx, { db, call }) {
     state.status = 'needs_review'; state.reason = 'recorded_payment_changed'
   }
   // An existing paid order stays visible; later changes are flagged for staff.
-  const link = safeInvoiceLink(invoice?.InvoiceLink)
-  await save({ status: state.status === 'payment_recorded' && !row.order_id ? 'awaiting_payment' : state.status, tax: state.tax, total: state.total, invoice_link: state.status === 'needs_review' ? null : link, last_error: state.reason || (!link && state.status === 'awaiting_payment' ? 'invoice_link_unavailable' : null), last_checked_at: new Date().toISOString(), next_check_at: new Date(Date.now() + 15 * 60000).toISOString() })
+  const link = row.payment_mode === 'direct' ? null : safeInvoiceLink(invoice?.InvoiceLink)
+  await save({ status: state.status === 'payment_recorded' && !row.order_id ? 'awaiting_payment' : state.status, tax: state.tax, total: state.total, invoice_link: state.status === 'needs_review' ? null : link, last_error: state.reason || (!link && row.payment_mode !== 'direct' && state.status === 'awaiting_payment' ? 'invoice_link_unavailable' : null), last_checked_at: new Date().toISOString(), next_check_at: new Date(Date.now() + 15 * 60000).toISOString() })
+  if (row.payment_mode === 'direct' && state.status === 'payment_recorded' && !['CAPTURED','SETTLED'].includes(row.direct_payment?.status)) throw new QuickBooksError('charge_evidence_required', 409)
   if (state.status === 'payment_recorded' && !row.order_id) {
     const orderId = await db('/rest/v1/rpc/finalize_quickbooks_checkout', { method: 'POST', body: JSON.stringify({ p_id: row.id, p_lock_id: row.lock_id, p_payments: state.paymentIds }) })
     Object.assign(row, { order_id: orderId, payment_ids: state.paymentIds, status: 'payment_recorded' })
@@ -130,6 +134,10 @@ async function inspectInvoice(row, save, ctx, { db, call }) {
   }
 }
 export async function refreshCheckout(row, { db = supabaseFetch, call = accountingRequest, context = checkoutContext, force = false } = {}) {
+  if (row.payment_mode === 'direct' && row.direct_payment) {
+    const { recoverDirectPayment } = await import('./quickbooks-direct.js')
+    return recoverDirectPayment(row, { db, call, context })
+  }
   if (!row.invoice_id) return publicCheckout(row)
   // Persisted paid state can be read without depending on a fresh provider call.
   if (row.status === 'payment_recorded' && row.order_id && !force) return publicCheckout(row)

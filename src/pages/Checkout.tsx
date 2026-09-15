@@ -754,7 +754,7 @@ export default function Checkout() {
                 {!promoReady && <p role={promoLoadError ? 'alert' : 'status'} className="mb-4 text-sm">{promoLoadError ? <>Discounts could not be checked. <button type="button" onClick={retryPromos} className="underline text-primary">Retry discounts</button></> : 'Checking your discounts…'}</p>}
                 {!paymentConfig && !paymentError && <p role="status" className="mb-4 text-sm">Loading secure payment options…</p>}
                 {onlyQuickBooks && paymentConfig && !paymentConfig.enabled && !qbPreview && <p role="alert" className="mb-4 text-sm">Online payment is temporarily unavailable. <a href="mailto:thestickersmith@gmail.com" className="text-primary underline">Contact the shop for an invoice.</a></p>}
-                <QuickBooksPayment categories={items.map(item => item.category || '')} disabled={!promoReady || !formValid || !quoteReady || processing} payload={checkoutPayload} onBusy={setProcessing} onError={setPaymentError} />
+                <QuickBooksPayment checkoutKey={quoteKey} categories={items.map(item => item.category || '')} disabled={!promoReady || !formValid || !quoteReady || processing} payload={checkoutPayload} onBusy={setProcessing} onError={setPaymentError} />
 
                 {paymentConfig && !onlyQuickBooks && <><SquareCardPayment
                   amount={finalTotal}

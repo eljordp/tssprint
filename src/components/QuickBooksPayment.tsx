@@ -1,19 +1,23 @@
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { supabase } from '@/lib/supabase'
-import { ga4CheckoutIdentity, getQuickBooksAttempt, quickBooksRequest } from '@/lib/quickbooksCheckout'
+import { ga4CheckoutIdentity, getQuickBooksAttempt, quickBooksRequest, type InvoiceCheckout, type QuickBooksAttempt } from '@/lib/quickbooksCheckout'
+import IntuitCardPayment from './IntuitCardPayment'
 import { trackEvent } from '@/lib/analytics'
-export default function QuickBooksPayment({ disabled, payload, onBusy, onError, categories }: {
-  categories: string[]; disabled: boolean; payload: () => Record<string, unknown>; onBusy: (busy: boolean) => void; onError: (message: string) => void
+export default function QuickBooksPayment({ disabled, payload, onBusy, onError, categories, checkoutKey }: {
+  categories: string[]; disabled: boolean; payload: () => Record<string, unknown>; onBusy: (busy: boolean) => void; onError: (message: string) => void; checkoutKey: string
 }) {
   const navigate = useNavigate()
   const [available, setAvailable] = useState(false)
   const [supported, setSupported] = useState<string[] | null>(null)
   const [busy, setBusy] = useState(false)
+  const [direct, setDirect] = useState(false)
+  const [environment, setEnvironment] = useState<'sandbox' | 'production'>('production')
+  const [prepared, setPrepared] = useState<{ invoice: InvoiceCheckout; attempt: QuickBooksAttempt; key: string } | null>(null)
   const preview = new URLSearchParams(window.location.search).get('qb_preview') === '1'
   useEffect(() => {
     let cancelled = false
-    fetch('/api/quickbooks/checkout-config').then(r => r.json()).then(data => { if (!cancelled) { setAvailable(data.enabled === true); setSupported(Array.isArray(data.categories) ? data.categories : []) } }).catch(() => {})
+    fetch('/api/quickbooks/checkout-config').then(r => r.json()).then(data => { if (!cancelled) { setAvailable(data.enabled === true); setSupported(Array.isArray(data.categories) ? data.categories : []); setDirect(data.direct === true); setEnvironment(data.environment === 'sandbox' ? 'sandbox' : 'production') } }).catch(() => {})
     return () => { cancelled = true }
   }, [])
   if (!available && !preview) return null
@@ -23,7 +27,7 @@ export default function QuickBooksPayment({ disabled, payload, onBusy, onError, 
     if (disabled || busy || !supported) return
     setBusy(true); onBusy(true); onError('')
     try {
-      const request = payload()
+      const request = { ...payload(), ...(direct ? { paymentMode: 'direct' } : {}) }
       // Freeze analytics with the original request so retries do not change it.
       const attempt = getQuickBooksAttempt(request)
       const ga4 = await ga4CheckoutIdentity()
@@ -32,14 +36,22 @@ export default function QuickBooksPayment({ disabled, payload, onBusy, onError, 
       const invoice = await quickBooksRequest('checkout', { id: attempt.id, token: attempt.token, checkout: attempt.request, ga4 }, headers)
       sessionStorage.setItem(`tss_qb_invoice_${attempt.id}`, JSON.stringify(invoice))
       trackEvent('payment_method_selected', { provider: 'quickbooks' })
-      navigate(`/payment-status#${attempt.id}.${attempt.token}`)
+      if (direct && !invoice.orderId) setPrepared({ invoice, attempt, key: checkoutKey })
+      else navigate(`/payment-status#${attempt.id}.${attempt.token}`)
     } catch (error) { onError(error instanceof Error ? error.message : 'Could not prepare your invoice.') }
     finally { setBusy(false); onBusy(false) }
   }
+  if (direct && prepared?.key === checkoutKey) return <div className="space-y-4">
+    <dl className="grid grid-cols-2 gap-2 text-sm"><dt>Subtotal</dt><dd className="text-right">${prepared.invoice.subtotal.toFixed(2)}</dd><dt>Discount</dt><dd className="text-right">−${prepared.invoice.discount.toFixed(2)}</dd><dt>Sales tax</dt><dd className="text-right">${prepared.invoice.tax?.toFixed(2)}</dd><dt className="font-bold">Total to pay</dt><dd className="text-right font-bold">${prepared.invoice.total?.toFixed(2)}</dd></dl>
+    <IntuitCardPayment key={prepared.attempt.id} invoice={prepared.invoice} attempt={prepared.attempt} environment={environment} disabled={disabled || busy} onBusy={onBusy} onError={onError} onResult={invoice => {
+      setPrepared({ ...prepared, invoice })
+      if (invoice.orderId) navigate(`/payment-status#${prepared.attempt.id}.${prepared.attempt.token}`)
+    }} />
+  </div>
   return <div className="mb-5 space-y-3 rounded-xl border border-primary/30 bg-primary/5 p-4">
     <h3 className="font-bold">Credit or debit card</h3>
-    <p className="text-sm text-muted-foreground">Review your itemized invoice and sales tax, then pay securely with QuickBooks. Choose card or Apple Pay when available on the payment page.</p>
+    <p className="text-sm text-muted-foreground">{direct ? 'Calculate your final total, including sales tax, then enter your card details here.' : 'Review your itemized invoice and sales tax, then pay securely with QuickBooks. Choose card or Apple Pay when available on the payment page.'}</p>
     {preview && <p className="text-sm font-semibold">Staff verification: creates a real unpaid invoice. No card is charged by this step.</p>}
-    <button type="button" className="btn-primary w-full disabled:opacity-50" disabled={disabled || busy || !supported} onClick={start}>{busy ? 'Preparing your invoice…' : 'Review total with tax'}</button>
+    <button type="button" className="btn-primary w-full disabled:opacity-50" disabled={disabled || busy || !supported} onClick={start}>{busy ? 'Calculating your total…' : direct ? 'Calculate total with tax' : 'Review total with tax'}</button>
   </div>
 }

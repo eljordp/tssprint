@@ -1,5 +1,5 @@
 import { requireAdmin, sendJson } from '../../server/square-api.js'
-import { beginConnection, checkConnection, configuration, disconnectConnection, finishConnection, getConnection, stateCookie } from '../../server/quickbooks-api.js'
+import { beginConnection, checkConnection, configuration, disconnectConnection, finishConnection, getConnection, paymentsAccess, stateCookie } from '../../server/quickbooks-api.js'
 import { QuickBooksError } from '../../server/quickbooks-core.js'
 import { listInvoiceTests, runInvoiceTest } from '../../server/quickbooks-invoices.js'
 import { checkoutReadiness } from '../../server/quickbooks-readiness.js'
@@ -13,6 +13,7 @@ import { claimWorker, runWorker, workerHealth } from '../../server/quickbooks-wo
 import { quickBooksOnly } from '../../server/payment-policy.js'
 import { setupWebsiteProducts } from '../../server/quickbooks-catalog.js'
 import { QB_PRODUCT_NAMES } from '../../server/quickbooks-checkout-core.js'
+import { directPaymentsEnabled, chargeCheckout } from '../../server/quickbooks-direct.js'
 
 export const config = { api: { bodyParser: false } }
 const followUp = id => processQuickBooksDelivery(id).catch(() => console.warn('QuickBooks follow-up remains queued'))
@@ -30,13 +31,14 @@ export default async function handler(req, res) {
       return sendJson(res, 200, result)
     } catch (error) { return sendJson(res, error instanceof QuickBooksError ? error.status : 503, { error: error instanceof QuickBooksError ? error.code : 'worker_failed' }) }
   }
-  if (['checkout-config', 'checkout', 'checkout-status', 'webhook'].includes(action)) {
+  if (['checkout-config', 'checkout', 'charge', 'checkout-status', 'webhook'].includes(action)) {
     if (req.method !== (action === 'checkout-config' ? 'GET' : 'POST')) return sendJson(res, 405, { error: 'Method not allowed' })
     try {
       if (action === 'checkout-config') {
         let enabled = checkoutEnabled()
         if (enabled) { try { await checkoutContext() } catch { enabled = false } }
-        return sendJson(res, 200, { enabled, quickBooksOnly: quickBooksOnly(), categories: Object.keys(QB_PRODUCT_NAMES) })
+        const direct = enabled && await directPaymentsEnabled().catch(() => false)
+        return sendJson(res, 200, { enabled, direct, environment: configuration().environment, quickBooksOnly: quickBooksOnly(), categories: Object.keys(QB_PRODUCT_NAMES) })
       }
       const raw = await boundedBody(req)
       if (action === 'webhook') {
@@ -53,7 +55,12 @@ export default async function handler(req, res) {
           try { await requireAdmin(req) } catch { throw new QuickBooksError('admin_access_required', 403) }
         }
         const ip = String(req.headers['x-forwarded-for'] || req.socket?.remoteAddress || 'unknown').split(',')[0].trim()
-        result = await prepareCheckout(body, digest(`${configuration().key}:${ip}`))
+        const direct = body.checkout?.paymentMode === 'direct'
+        if (direct && !await directPaymentsEnabled()) throw new QuickBooksError('direct_payments_unavailable', 409)
+        result = await prepareCheckout(body, digest(`${configuration().key}:${ip}`), { paymentMode: direct ? 'direct' : 'invoice' })
+      } else if (action === 'charge') {
+        if (!checkoutEnabled() || !await directPaymentsEnabled()) throw new QuickBooksError('direct_payments_unavailable', 409)
+        result = await chargeCheckout(body)
       } else result = await refreshCheckout(await ownedCheckout(body))
       if (result.orderId) waitUntil(followUp(result.id))
       return sendJson(res, 200, result)
@@ -62,7 +69,7 @@ export default async function handler(req, res) {
       return sendJson(res, known ? error.status : 503, { error: known ? error.code : 'checkout_service_unavailable' })
     }
   }
-  if (!['connect', 'callback', 'status', 'check', 'disconnect', 'invoice-tests', 'test-invoice', 'test-payment', 'readiness', 'setup-products', 'checkouts', 'reconcile'].includes(action)) return sendJson(res, 404, { error: 'Not found' })
+  if (!['connect', 'connect-payments', 'callback', 'status', 'check', 'disconnect', 'invoice-tests', 'test-invoice', 'test-payment', 'readiness', 'setup-products', 'checkouts', 'reconcile'].includes(action)) return sendJson(res, 404, { error: 'Not found' })
   const expectedMethod = ['status', 'callback', 'invoice-tests', 'readiness', 'checkouts'].includes(action) ? 'GET' : 'POST'
   if (req.method !== expectedMethod) { res.setHeader('Allow', expectedMethod); return sendJson(res, 405, { error: 'Method not allowed' }) }
   if (action === 'callback') {
@@ -88,10 +95,11 @@ export default async function handler(req, res) {
       let databaseReady = false
       try { connection = await getConnection(); databaseReady = Boolean(connection) } catch { /* Setup state is visible only to admins. */ }
       return sendJson(res, 200, { environment: config.environment, configured: !config.missing.length, missing: config.missing, databaseReady,
-        status: connection?.status || 'disconnected', companyName: connection?.company_name || null, redirectUri: config.redirectUri })
+        status: connection?.status || 'disconnected', companyName: connection?.company_name || null, redirectUri: config.redirectUri,
+        paymentsScopeGranted: await paymentsAccess().catch(() => false) })
     }
-    if (action === 'connect') {
-      const result = await beginConnection(user.id)
+    if (action === 'connect' || action === 'connect-payments') {
+      const result = await beginConnection(user.id, { payments: action === 'connect-payments' })
       res.setHeader('Set-Cookie', result.cookie)
       return sendJson(res, 200, { authorizationUrl: result.authorizationUrl })
     }

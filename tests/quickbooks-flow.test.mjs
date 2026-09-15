@@ -59,8 +59,8 @@ test.beforeEach(() => {
   }
 })
 test.afterEach(() => { globalThis.fetch = originalFetch })
-async function start() {
-  const result = await beginConnection('admin')
+async function start(options) {
+  const result = await beginConnection('admin', options)
   const state = new URL(result.authorizationUrl).searchParams.get('state')
   return { url: `/api/quickbooks/callback?state=${state}&code=test-code&realmId=123`, headers: { cookie: result.cookie.split(';')[0] } }
 }
@@ -114,4 +114,22 @@ test('an older authorization cannot overwrite a changed connection', async () =>
   const req = await start(); row.version = crypto.randomUUID()
   await assert.rejects(finishConnection(req), /connection_changed/)
   assert.equal(grants.length, 0)
+})
+test('Payments scope comes from consumed state and survives refresh', async () => {
+  const req = await start({ payments: true })
+  assert.deepEqual(states[0].requested_scopes, ['com.intuit.quickbooks.accounting', 'com.intuit.quickbooks.payment'])
+  await finishConnection(req)
+  const read = () => decryptTokens(row.encrypted_tokens, encryptionKey('ab'.repeat(32)), 'sandbox', '123')
+  assert.ok(read().scopes.includes('com.intuit.quickbooks.payment'))
+  row.access_expires_at = new Date(0).toISOString()
+  await checkConnection()
+  assert.ok(read().scopes.includes('com.intuit.quickbooks.payment'))
+  await start()
+  assert.ok(states[0].requested_scopes.includes('com.intuit.quickbooks.payment'), 'ordinary reconnect preserves Payments access')
+})
+test('callback query cannot promote an accounting connection to Payments', async () => {
+  const req = await start()
+  req.url += '&scope=com.intuit.quickbooks.payment'
+  await finishConnection(req)
+  assert.deepEqual(decryptTokens(row.encrypted_tokens, encryptionKey('ab'.repeat(32)), 'sandbox', '123').scopes, ['com.intuit.quickbooks.accounting'])
 })

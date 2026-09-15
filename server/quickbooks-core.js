@@ -7,6 +7,7 @@ export const ENDPOINTS = Object.freeze({
   revocation_endpoint: 'https://developer.api.intuit.com/v2/oauth2/tokens/revoke',
 })
 export const ACCOUNTING_SCOPE = 'com.intuit.quickbooks.accounting'
+export const PAYMENTS_SCOPE = 'com.intuit.quickbooks.payment'
 
 export class QuickBooksError extends Error {
   constructor(code, status = 503, tid) {
@@ -47,7 +48,8 @@ export function tokenRecord(data, now = Date.now()) {
     throw new QuickBooksError('invalid_token_response')
   }
   return {
-    tokens: { accessToken: data.access_token, refreshToken: data.refresh_token },
+    tokens: { accessToken: data.access_token, refreshToken: data.refresh_token,
+      ...(typeof data.scope === 'string' ? { scopes: data.scope.split(/\s+/).filter(Boolean) } : {}) },
     access_expires_at: new Date(now + data.expires_in * 1000).toISOString(),
     refresh_expires_at: new Date(now + data.x_refresh_token_expires_in * 1000).toISOString(),
   }

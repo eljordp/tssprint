@@ -1,0 +1,100 @@
+# Direct payments on tssprint.com
+
+Status: local implementation prepared and tested; direct payments are NOT enabled or deployed. Updated 2026-09-15.
+
+## Implementation progress
+
+- Added separate Payments OAuth permission, server-bound scope storage and preservation through refresh, plus an admin connection action. Two migrations are prepared but not applied.
+- Added the token-only Payments client and a direct-charge flow under the existing durable checkout lock. Captured charges are verified for identity, currency and amount before accounting finalization. Repeat submissions recover the original transaction; a lost charge response with no transaction ID requires review instead of another charge.
+- New direct checkouts disable hosted invoice payment and display tax and card fields inline. This first version calculates tax after a deliberate on-page action, avoiding invoice creation on every keystroke. Accounting still uses an invoice internally; customers do not navigate to it before card entry.
+- Known declines can retry another card up to three attempts on the same invoice. Unknown outcomes cannot expose a fresh Pay action.
+- The new flow stays behind `QUICKBOOKS_DIRECT_PAYMENTS_ENABLED`; that flag remains unset. Existing invoice checkout stays active.
+
+### Verified during implementation
+
+- Apple’s real demo opened its Apple Pay window in Chrome on this Mac and displayed **Scan Code with iPhone (iOS 18 or later)**. This verifies the browser handoff only, not a completed wallet transaction, TSS merchant validation, or Intuit wallet processing.
+- Intuit’s sandbox token endpoint returned HTTP 201 for its published dummy card, with a token present. Its preflight allowed the TSS origin and the request headers. No charge was requested; no token value was printed or saved.
+- Local browser fixture reached payment confirmation without leaving the site. The 390px mobile layout was visually checked. This fixture uses simulated provider responses, not real accounting or payment writes.
+- QuickBooks unit/integration tests and the production bundle build passed. See the current task’s verification output for the final count.
+
+### Still required before enabling production
+
+1. Sign in to the open Intuit Developer tab; the live session is currently signed out. Verify this app’s production Payments entitlement and reconnect the same company with both scopes.
+2. Apply both migrations, verify the actual provider charge/decline response contract, and test the accounting Payment record with `CCTransId`. Confirm deposit/fee reconciliation; do not assume the current recorded-payment metadata automatically handles it.
+3. Test the real charge-and-accounting sequence in a sandbox before the approved small production payment. The public charge route currently requires production checkout to be enabled; a staff-only sandbox exercise path must be added or the service functions exercised in a sandbox test runner. Do not switch the live company to sandbox to run this test.
+4. Resolve direct Apple Pay processing with Intuit. The public Tokens/Charges references and latest release notes inspected do not document an Apple Pay payload. This is an unresolved capability, not proof of universal non-support. No Apple Pay button has been added to the direct card form.
+5. Verify real order, receipt delivery and GA4 purchase, then enable the new flow. Browser simulation and token creation do not satisfy this final check.
+
+Additional primary references inspected in Chrome: [browser tokenization](https://developer.intuit.com/app/developer/qbpayments/docs/workflows/create-tokens), [charge contract](https://developer.intuit.com/app/developer/qbpayments/docs/api/resources/all-entities/charges), [payment/accounting workflow](https://developer.intuit.com/app/developer/qbpayments/docs/workflows/process-a-payment), [Accounting Payment](https://developer.intuit.com/app/developer/qbo/docs/api/accounting/all-entities/payment), [Payments release notes](https://developer.intuit.com/app/developer/qbpayments/docs/release-notes/quickbooks-payments-release-notes), and [Apple’s demo](https://applepaydemo.apple.com/apple-pay-js-api).
+
+## Outcome
+
+Customer flow: cart → one checkout with delivery, artwork summary, discounts, tax and payment → confirmation on tssprint.com. Remove the mandatory invoice review page and hosted QuickBooks payment redirect from the new direct-card journey. Keep QuickBooks as the intended payment processor and accounting system.
+
+The current implementation creates an invoice, navigates to `/payment-status`, then links to QuickBooks for payment. `server/quickbooks-api.js` requests only `com.intuit.quickbooks.accounting`. The Accounting API payment record is not the Payments API operation that charges a card.
+
+## Execution order
+
+### 1. Establish the supported payment integration
+
+- Verify this Intuit app has production Payments API access and the merchant account is eligible. The existing accounting connection alone does not prove either.
+- Add `com.intuit.quickbooks.payment` alongside accounting access, record granted scopes, and reconnect the owner when the implementation is ready for that connection. Keep credentials and refreshed tokens on the server.
+- Verify Intuit's current supported browser tokenization integration, authentication/CORS requirements, and applicable card-data handling requirements. Do not invent a hosted-fields SDK or expose OAuth tokens to the browser. Card numbers and security codes must not pass through TSS API bodies, logs, analytics, or storage.
+- Resolve Apple Pay support for this specific direct API integration before promising it. Verify wallet token acceptance, merchant validation, domain registration, and eligible-browser behavior. Intuit's hosted-invoice Apple Pay support is established; support for an embedded TSS implementation is not yet established.
+- If Intuit cannot support the required on-site wallet experience, document that precise limitation and the alternative processor option before changing processors. Do not substitute an invoice redirect behind an Apple Pay button.
+
+### 2. Put the final tax-inclusive amount on checkout
+
+- Reuse server-approved product pricing, discount validation, taxable product mappings, and customer delivery/pickup details.
+- Resolve how to obtain Intuit's tax calculation without creating a fresh customer/invoice for every address keystroke. First verify a supported tax-preview mechanism. If a controlled pending invoice is necessary, use one versioned preparation flow, with no online payment link, and manage superseded records explicitly.
+- Show subtotal, discount, delivery, tax and final total beside payment fields. Recalculate when relevant details change and invalidate the old payable amount.
+- Bind the charge to the server's current quote version, currency and order. Never trust a browser-supplied total or fall back to a guessed flat tax rate.
+
+### 3. Add direct charging and recovery
+
+- Add a separate Payments API client for tokenized charges and charge status. Preserve the existing encrypted connection and sanitized Intuit request-ID logging.
+- Persist a payment attempt before the external charge. Serialize submissions and use the provider's documented idempotency/request-ID semantics, including its retention limits.
+- Distinguish declined, processing/unknown, authorized, captured and refunded states. A timeout must trigger status recovery, not a fresh charge. If a result cannot be resolved automatically, keep the order in review and prevent blind retries.
+- Ensure a direct attempt and a hosted invoice cannot both collect payment for the same order. Preserve recovery of older hosted-invoice purchases without exposing both payment routes for new direct attempts.
+- Save the verified charge identifier and amount. Only confirmed payment should advance the order to payment received; proof approval and production remain separate.
+
+### 4. Finish the customer experience and accounting
+
+- Replace the invoice-review button in `QuickBooksPayment.tsx` with the supported card-entry flow and a clear `Pay $total` action. Keep validation errors next to the relevant fields and preserve customer details after a decline.
+- Where supported and verified, show the native Apple Pay button and sheet. Avoid intermediate screens or redundant customer-detail entry.
+- Show confirmation and an itemized receipt on TSS. Retain `/payment-status` for recovery and older invoice payments, not as a required prepayment step.
+- Verify whether a native Payments API charge automatically creates any accounting records. Explicitly create/link only the missing itemized accounting records, exactly once; avoid duplicate sales or payments. A delayed accounting sync must not ask an already-paid customer to pay again.
+- Reuse durable jobs for receipts, accounting recovery, cart conversion and purchase analytics. Report paid status independently from email, accounting and analytics delivery statuses.
+
+### 5. Verify and release
+
+- Use sandbox to exercise successful and declined cards, expired tokens, stale quotes, double-clicks, concurrent submissions, timeouts after charge, reconnect/refresh failures, and retries after accounting/email failures. Sandbox is for these destructive failure cases; production remains the destination.
+- Check desktop, mobile, keyboard operation, slow networks, refresh/back navigation, artwork persistence, and exact tax/discount totals. Verify Apple Pay with an eligible real device if supported.
+- Release behind a direct-payments flag. Keep the current payment path operational until the replacement passes; resolve in-flight attempts through their original route.
+- Complete one explicitly approved small live payment, with the user entering payment credentials. Verify the processor transaction, one saved order, matching QuickBooks records, received receipt, and purchase in GA4. Refund only when authorized.
+- Test customer analytics in a session that follows consent rules and is not excluded as staff. GA4 configuration or an accepted Measurement Protocol request alone does not prove a purchase appeared in reports.
+
+## Acceptance criteria
+
+- Card customers stay on tssprint.com through checkout and confirmation, apart from any issuer-required authentication.
+- The displayed tax-inclusive amount matches the verified charge and accounting total.
+- Repeated clicks, network failures and retries do not create duplicate charges or accounting entries.
+- One verified payment produces one order, with recoverable accounting, receipt and analytics jobs.
+- Apple Pay is advertised only after an actual supported on-site flow is verified; unresolved support is reported explicitly.
+- Existing orders, artwork, staff exclusions, tax enforcement and hosted-payment recovery continue to work.
+
+## Likely implementation areas
+
+`src/components/QuickBooksPayment.tsx`, `src/pages/Checkout.tsx`, `src/pages/PaymentStatus.tsx`, `src/lib/quickbooksCheckout.ts`; `server/quickbooks-api.js`, `server/quickbooks-core.js`, `server/quickbooks-checkout.js`, `server/quickbooks-invoices.js`, worker/delivery handlers; new direct-payments client/routes and private attempt migrations. Final file boundaries follow the confirmed API contract.
+
+## Evidence ledger
+
+Reviewed 2026-09-15. Sources describe provider capability, not approval of this particular merchant/app.
+
+| Source | Established | Still to verify |
+| --- | --- | --- |
+| [Intuit's official Payments API collection](https://www.postman.com/intuit-developer/intuit-developer-quickbooks-payment-api/overview) and [requests](https://www.postman.com/intuit-developer/intuit-developer-quickbooks-payment-api/collection/4884662-55f5b175-5f9d-4b03-8687-d544cddde270) | Card charging, tokenization and dedicated payment scope are available. | Exact tokenization/charge contract, merchant production entitlement, retry semantics and wallet support. |
+| [Intuit Payments OAuth documentation](https://developers.intuit.com/app/developer/qbpayments/docs/develop/authentication-and-authorization/oauth-2.0) | Payments access uses its own OAuth scope. | Current app's granted production scopes. |
+| [Intuit Apple Pay FAQ](https://quickbooks.intuit.com/learn-support/en-us/help-article/receive-payments/frequently-asked-questions-apple-pay-quickbooks/L1yOQUp7l_US_en_US) | Apple Pay is documented for eligible hosted e-invoice payments. | This is not evidence that the direct Payments API accepts an on-site Apple Pay token. |
+| [Apple Pay planning](https://developer.apple.com/apple-pay/planning/) | The payment provider must support the wallet-processing flow; Apple recommends immediate presentation of the payment sheet. | Intuit-specific integration and TSS domain/merchant setup. |
+| Local source inspection | Accounting-only OAuth, mandatory invoice review navigation, and invoice online-card payment enabled. | Production direct payments have not been implemented or verified. |

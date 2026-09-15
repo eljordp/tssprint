@@ -1,6 +1,6 @@
 import crypto from 'node:crypto'
 import { supabaseFetch } from './square-api.js'
-import { ACCOUNTING_SCOPE, DISCOVERY_URL, QuickBooksError, decryptTokens, digest, encryptTokens, encryptionKey, needsRefresh, nonce, readIntuitResponse, tokenRecord, validatedDiscovery, validNonce } from './quickbooks-core.js'
+import { ACCOUNTING_SCOPE, PAYMENTS_SCOPE, DISCOVERY_URL, QuickBooksError, decryptTokens, digest, encryptTokens, encryptionKey, needsRefresh, nonce, readIntuitResponse, tokenRecord, validatedDiscovery, validNonce } from './quickbooks-core.js'
 
 const clean = name => (process.env[name] || '').trim().replace(/^(['"])(.*)\1$/, '$2').replace(/(?:\\n|\\r)+$/g, '').trim()
 export function configuration() {
@@ -65,20 +65,24 @@ const cookieName = '__Secure-tss_qbo_state'
 export function stateCookie(value, maxAge = 600) {
   return `${cookieName}=${value}; HttpOnly; Secure; SameSite=Lax; Path=/api/quickbooks/callback; Max-Age=${maxAge}`
 }
-export async function beginConnection(userId) {
+export async function beginConnection(userId, { payments = false } = {}) {
   const config = requireConfig()
   const connection = await getConnection()
   if (!connection) throw new QuickBooksError('database_setup_required')
   const urls = await endpoints()
   const state = nonce()
   const browserNonce = nonce()
+  const existingScopes = connection.encrypted_tokens ? decryptTokens(connection.encrypted_tokens, encryptionKey(config.key), config.environment, connection.realm_id).scopes : []
+  const includePayments = payments || existingScopes?.includes(PAYMENTS_SCOPE)
+  const scopes = includePayments ? [ACCOUNTING_SCOPE, PAYMENTS_SCOPE] : [ACCOUNTING_SCOPE]
   await supabaseFetch(`/rest/v1/quickbooks_oauth_states?expires_at=lt.${encodeURIComponent(new Date().toISOString())}`, { method: 'DELETE' })
   await supabaseFetch('/rest/v1/quickbooks_oauth_states', { method: 'POST', body: JSON.stringify({
     state_hash: digest(state), browser_hash: digest(browserNonce), environment: config.environment,
     connection_version: connection.version, user_id: userId, expires_at: new Date(Date.now() + 600_000).toISOString(),
+    ...(includePayments ? { requested_scopes: scopes } : {}),
   }) })
   const url = new URL(urls.authorization_endpoint)
-  url.search = new URLSearchParams({ client_id: config.clientId, response_type: 'code', scope: ACCOUNTING_SCOPE, redirect_uri: config.redirectUri, state }).toString()
+  url.search = new URLSearchParams({ client_id: config.clientId, response_type: 'code', scope: scopes.join(' '), redirect_uri: config.redirectUri, state }).toString()
   return { authorizationUrl: url.toString(), cookie: stateCookie(browserNonce) }
 }
 export async function finishConnection(req) {
@@ -102,6 +106,9 @@ export async function finishConnection(req) {
     if (connection.version !== stateRow.connection_version) throw new QuickBooksError('connection_changed', 409)
     if (connection.realm_id && connection.status === 'connected' && connection.realm_id !== realmId) throw new QuickBooksError('different_company_connected', 409)
     const record = await tokenRequest(config, { grant_type: 'authorization_code', code, redirect_uri: config.redirectUri })
+    // OAuth 2.0 permits scope to be omitted when it equals the requested scope.
+    // Use the consumed, server-persisted state, never a callback query parameter.
+    record.tokens.scopes ??= stateRow.requested_scopes || [ACCOUNTING_SCOPE]
     await save({ realm_id: realmId, company_name: null, encrypted_tokens: encryptTokens(record.tokens, encryptionKey(config.key), config.environment, realmId),
       access_expires_at: record.access_expires_at, refresh_expires_at: record.refresh_expires_at, status: 'connected', connected_by: stateRow.user_id })
   })
@@ -125,6 +132,7 @@ async function accessConnection(rejectedVersion) {
       if (error.code === 'reconnect_required') await markDisconnected()
       throw error
     }
+    record.tokens.scopes ??= tokens.scopes || [ACCOUNTING_SCOPE]
     return save({ encrypted_tokens: encryptTokens(record.tokens, encryptionKey(config.key), config.environment, connection.realm_id), access_expires_at: record.access_expires_at, refresh_expires_at: record.refresh_expires_at })
   })
 }
@@ -187,6 +195,55 @@ export async function accountingRequest(path, { method = 'GET', body, requestId,
     return run(await accessConnection(connection.version))
   }
 }
+export async function paymentsAccess() {
+  const config = requireConfig()
+  const connection = await getConnection()
+  if (connection?.status !== 'connected' || !connection.encrypted_tokens) return false
+  const tokens = decryptTokens(connection.encrypted_tokens, encryptionKey(config.key), config.environment, connection.realm_id)
+  return Array.isArray(tokens.scopes) && tokens.scopes.includes(PAYMENTS_SCOPE)
+}
+
+// The Payments API is separate from QBO accounting's /payment resource.
+// Only a server-approved, tokenized charge can reach this adapter. No PAN/CVC.
+export async function paymentsRequest(path, { method = 'GET', body, requestId, realmId, environment } = {}) {
+  const config = requireConfig()
+  const chargeRead = /^\/charges\/[A-Za-z0-9_-]{1,100}$/.test(path)
+  const chargeWrite = path === '/charges' && method === 'POST'
+  if ((!chargeRead || method !== 'GET') && !chargeWrite) throw new QuickBooksError('invalid_payments_path', 400)
+  if (!/^[a-zA-Z0-9_-]{1,50}$/.test(requestId || '')) throw new QuickBooksError('invalid_request_id', 400)
+  if (environment !== config.environment || !/^\d{1,32}$/.test(realmId || '')) throw new QuickBooksError('connection_changed', 409)
+  if (chargeWrite) {
+    const allowed = ['token', 'currency', 'amount', 'capture', 'context', 'description']
+    if (!body || Object.keys(body).some(key => !allowed.includes(key)) || typeof body.token !== 'string' || !/^[A-Za-z0-9_+=/-]{10,512}$/.test(body.token) ||
+        body.currency !== 'USD' || !/^\d{1,5}\.\d{2}$/.test(body.amount) || Number(body.amount) <= 0 || body.capture !== true ||
+        body.context?.isEcommerce !== true || Object.keys(body.context).some(key => !['isEcommerce','mobile','tax'].includes(key)) ||
+        (body.context.mobile !== undefined && typeof body.context.mobile !== 'boolean') ||
+        (body.context.tax !== undefined && (typeof body.context.tax !== 'number' || !Number.isFinite(body.context.tax) || body.context.tax < 0 || body.context.tax > Number(body.amount))) ||
+        (body.description !== undefined && (typeof body.description !== 'string' || body.description.length > 4000))) {
+      throw new QuickBooksError('invalid_tokenized_charge', 400)
+    }
+  }
+  const run = async connection => {
+    if (connection.realm_id !== realmId) throw new QuickBooksError('different_company_connected', 409)
+    const tokens = decryptTokens(connection.encrypted_tokens, encryptionKey(config.key), environment, realmId)
+    if (!tokens.scopes?.includes(PAYMENTS_SCOPE)) throw new QuickBooksError('payments_reconnect_required', 409)
+    const host = environment === 'sandbox' ? 'sandbox.api.intuit.com' : 'api.intuit.com'
+    const response = await fetch(`https://${host}/quickbooks/v4/payments${path}`, {
+      method, redirect: 'error', signal: AbortSignal.timeout(15_000),
+      headers: { Authorization: `Bearer ${tokens.accessToken}`, Accept: 'application/json', 'Content-Type': 'application/json', 'Request-Id': requestId },
+      ...(chargeWrite ? { body: JSON.stringify(body) } : {}),
+    })
+    return readIntuitResponse(response, chargeWrite ? 'create_charge' : 'read_charge')
+  }
+  const connection = await accessConnection()
+  try { return await run(connection) }
+  catch (error) {
+    if (error.code !== 'unauthorized') throw error
+    // Keep exactly the same payload and Request-Id after token refresh.
+    return run(await accessConnection(connection.version))
+  }
+}
+
 export async function disconnectConnection() {
   return withLock(async (connection, save, config) => {
     if (connection.encrypted_tokens) {

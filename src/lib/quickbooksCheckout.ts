@@ -3,10 +3,16 @@ export type QuickBooksAttempt = { id: string; token: string; request: unknown }
 export type InvoiceCheckout = {
   id: string; status: string; invoiceNumber: string | null; orderId: string | null
   subtotal: number; discount: number; tax: number | null; total: number | null
+  paymentMode?: 'direct' | 'invoice'; chargeStatus?: string | null
   items: { id: string; name: string; category?: string; option: string; size: string; quantity: number; price: number; artwork?: CartItem['artwork']; addOns: { name: string; price: number }[] }[]
   email: string; customerName: string; deliveryMethod: string; invoiceLink: string | null; issue: string | null; lastChecked: string | null
 }
 const errors: Record<string, string> = {
+  direct_payments_unavailable: 'Direct card payment is not available yet. Your cart is saved.',
+  payments_reconnect_required: 'The shop needs to reconnect its card processor. Your card has not been submitted.',
+  charge_review_required: 'Your payment result is still being checked. Do not submit another payment. Contact the shop with this order reference.',
+  invoice_payment_conflict: 'Payment activity or settings changed for this order. Contact the shop before paying again.',
+  charge_mismatch: 'The payment needs a shop review. Do not submit another payment.',
   product_mapping_required: 'This product needs an item setup in QuickBooks. Contact the shop for an invoice.',
   checkout_validation_failed: 'Your cart price, product options or discount no longer match. Edit the item or reapply your promo code before paying.',
   tax_configuration_required: 'Tax calculation is unavailable. Contact the shop before paying.',
