@@ -1,5 +1,5 @@
-// Prepared Apple Pay contract. No live route calls this module until the
-// merchant setup, recovery flow and QuickBooks accounting sync are verified.
+// Exact, server-verified Apple Pay order contract. Accounting is imported
+// separately by the existing PayPal Connector; this module never posts a sale.
 import { buildPayPalOrderPayload } from './paypal-api.js'
 import { QuickBooksError } from './quickbooks-core.js'
 
@@ -15,7 +15,7 @@ const cash = value => ({ currency_code: 'USD', value: (value / 100).toFixed(2) }
 
 function expectedAmounts(row, merchantId) {
   const total = cents(row.total), tax = cents(row.tax), base = cents(row.checkout?.total)
-  if (row.payment_mode !== 'direct' || !row.invoice_id || !providerId(merchantId) ||
+  if (row.payment_mode !== 'wallet' || !row.estimate_id || !providerId(merchantId) ||
       !/^[0-9a-f-]{36}$/i.test(row.id || '') || !Number.isSafeInteger(total) || total <= 0 ||
       !Number.isSafeInteger(tax) || tax < 0 || !Number.isSafeInteger(base) || base + tax !== total) fail()
   return { total, tax }
@@ -54,6 +54,7 @@ export function verifiedWalletOrder(order, row, merchantId, expectedOrderId) {
   })) fail()
   if (expected.shipping && (unit.shipping?.name?.full_name !== expected.shipping.name.full_name ||
       Object.entries(expected.shipping.address).some(([key, value]) => unit.shipping?.address?.[key] !== value))) fail()
+  if (order.status === 'APPROVED' && !order.payment_source?.apple_pay) fail()
   const captures = unit.payments?.captures || []
   if (captures.length > 1 || (unit.payments?.authorizations || []).length || (unit.payments?.refunds || []).length) fail()
   if (!captures.length) {

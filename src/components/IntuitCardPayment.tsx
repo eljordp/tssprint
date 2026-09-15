@@ -1,3 +1,4 @@
+import { trackCartEvent, trackEvent } from '@/lib/analytics'
 import { useRef, useState } from 'react'
 import { tokenizeIntuitCard } from '@/lib/intuitCard'
 import { quickBooksRequest, type InvoiceCheckout, type QuickBooksAttempt } from '@/lib/quickbooksCheckout'
@@ -20,12 +21,15 @@ export default function IntuitCardPayment({ invoice, attempt, environment, disab
         onResult(await quickBooksRequest('checkout-status', { id: attempt.id, token: attempt.token }))
         return
       }
+      trackCartEvent('add_payment_info', invoice.items, { payment_type: 'card', payment_provider: 'quickbooks' })
+      trackEvent('payment_method_selected', { provider: 'quickbooks', payment_method: 'card' })
       const read = (name: string) => inputs.find(input => input.name === name)?.value.trim() || ''
       const paymentToken = await tokenizeIntuitCard({ name: read('cc-name'), number: read('cc-number').replace(/\s/g,''),
         expMonth: read('cc-exp-month'), expYear: read('cc-exp-year'), cvc: read('cc-csc'), address: { postalCode: read('cc-postal'), country: 'US' } }, environment)
       inputs.forEach(input => { input.value = '' })
       // Persist the fact of submission BEFORE contacting the charge endpoint.
       // A page reload must not expose another Pay action for an unknown result.
+      sessionStorage.setItem('tss_active_payment', `${attempt.id}.${attempt.token}`)
       sessionStorage.setItem(`tss_qb_charge_${attempt.id}`, 'submitted')
       setSubmitted(true)
       onResult(await quickBooksRequest('charge', { id: attempt.id, token: attempt.token, expectedTotal: invoice.total, paymentToken, paymentAttemptId: crypto.randomUUID() }))

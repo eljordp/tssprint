@@ -233,6 +233,7 @@ async function getPayPalAccessToken() {
       'Content-Type': 'application/x-www-form-urlencoded',
     },
     body: 'grant_type=client_credentials',
+    signal: AbortSignal.timeout(8000),
   })
   const text = await response.text()
   const data = parseJson(text)

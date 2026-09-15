@@ -524,7 +524,7 @@ function OrdersTab() {
     try {
       const response = provider === 'square'
         ? await adminApiFetch(`/api/square/verify-payment?paymentID=${encodeURIComponent(orderId)}`)
-        : await fetch(`/api/paypal/verify-order?orderID=${encodeURIComponent(orderId)}`)
+        : await adminApiFetch(`/api/paypal/verify-order?orderID=${encodeURIComponent(orderId)}`)
       const data = await response.json().catch(() => ({}))
       if (!response.ok) throw new Error(data.error || 'Could not verify PayPal order.')
 

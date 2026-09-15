@@ -533,9 +533,9 @@ function logCartMilestone(name: string) {
   logToSupabase('click_events', { path: window.location.pathname, element: name, event_type: name, visitor_id: identity.visitorId, session_id: identity.sessionId, attribution: identity.attribution })
 }
 
-export function trackCartEvent(name: string, items: AnalyticsCartItem[]) {
-  if (shouldSuppressAnalytics()) return
+export function trackCartEvent(name: string, items: AnalyticsCartItem[], details: { payment_type?: string; payment_provider?: string; shipping_tier?: string } = {}) {
+  if (shouldSuppressAnalytics() && !isGa4DebugSession()) return
   const value = +items.reduce((sum, item) => sum + (item.price + (item.addOns?.reduce((subtotal, addon) => subtotal + addon.price, 0) || 0)) * item.quantity, 0).toFixed(2)
-  sendGa4Event(name, { currency: 'USD', value, items: toGa4Items(items) })
+  sendGa4Event(name, { currency: 'USD', value, items: toGa4Items(items), ...details })
   logCartMilestone(name)
 }

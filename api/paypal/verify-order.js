@@ -1,3 +1,5 @@
+import { requireAdmin, supabaseFetch } from '../../server/square-api.js'
+import { recoverWalletPayment } from '../../server/paypal-wallet.js'
 import {
   getCompletedCapture,
   paypalFetch,
@@ -21,6 +23,8 @@ function isPayPalNotFound(error) {
 
 export default async function handler(req, res) {
   if (!['GET', 'POST'].includes(req.method)) return sendJson(res, 405, { error: 'Method not allowed' })
+  res.setHeader('Cache-Control', 'no-store')
+  try { await requireAdmin(req) } catch { return sendJson(res, 403, { error: 'Admin access required.' }) }
   if (!requirePayPalEnv(res)) return
 
   let orderID = ''
@@ -30,6 +34,13 @@ export default async function handler(req, res) {
     orderID = getOrderIdFromRequest(req, body)
     if (!orderID) return sendJson(res, 400, { error: 'Missing PayPal order ID.' })
 
+    if (!/^[A-Z0-9]{10,32}$/.test(orderID)) return sendJson(res, 400, { error: 'Invalid PayPal order ID.' })
+    const [wallet] = await supabaseFetch(`/rest/v1/quickbooks_checkouts?order_id=eq.${orderID}&payment_mode=eq.wallet`)
+    if (wallet) {
+      const result = await recoverWalletPayment(wallet)
+      const [saved] = await supabaseFetch(`/rest/v1/quickbooks_checkouts?id=eq.${wallet.id}`)
+      return sendJson(res, 200, { id: orderID, orderID, paypalStatus: saved.wallet_payment.status, paymentStatus: result.status === 'payment_recorded' ? 'captured' : ['REFUNDED','PARTIALLY_REFUNDED'].includes(saved.wallet_payment.status) ? 'refunded' : 'unverified', captured: result.status === 'payment_recorded', captureId: saved.wallet_payment.captureId, amount: saved.total.toFixed(2), currency: 'USD', verifiedAt: saved.last_checked_at })
+    }
     const paypalOrder = await paypalFetch(`/v2/checkout/orders/${encodeURIComponent(orderID)}`)
     const capture = getCompletedCapture(paypalOrder)
 

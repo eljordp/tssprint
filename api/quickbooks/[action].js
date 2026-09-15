@@ -15,6 +15,8 @@ import { setupWebsiteProducts } from '../../server/quickbooks-catalog.js'
 import { QB_PRODUCT_NAMES } from '../../server/quickbooks-checkout-core.js'
 import { directPaymentsEnabled, chargeCheckout } from '../../server/quickbooks-direct.js'
 
+import { walletConfiguration, createWalletOrder, captureWalletOrder } from '../../server/paypal-wallet.js'
+
 export const config = { api: { bodyParser: false } }
 const followUp = id => processQuickBooksDelivery(id).catch(() => console.warn('QuickBooks follow-up remains queued'))
 
@@ -31,14 +33,14 @@ export default async function handler(req, res) {
       return sendJson(res, 200, result)
     } catch (error) { return sendJson(res, error instanceof QuickBooksError ? error.status : 503, { error: error instanceof QuickBooksError ? error.code : 'worker_failed' }) }
   }
-  if (['checkout-config', 'checkout', 'charge', 'checkout-status', 'webhook'].includes(action)) {
+  if (['checkout-config', 'checkout', 'charge', 'checkout-status', 'wallet-create', 'wallet-capture', 'webhook'].includes(action)) {
     if (req.method !== (action === 'checkout-config' ? 'GET' : 'POST')) return sendJson(res, 405, { error: 'Method not allowed' })
     try {
       if (action === 'checkout-config') {
         let enabled = checkoutEnabled()
         if (enabled) { try { await checkoutContext() } catch { enabled = false } }
         const direct = enabled && await directPaymentsEnabled().catch(() => false)
-        return sendJson(res, 200, { enabled, direct, environment: configuration().environment, quickBooksOnly: quickBooksOnly(), categories: Object.keys(QB_PRODUCT_NAMES) })
+        return sendJson(res, 200, { enabled, direct, environment: configuration().environment, quickBooksOnly: quickBooksOnly(), applePay: walletConfiguration(), categories: Object.keys(QB_PRODUCT_NAMES) })
       }
       const raw = await boundedBody(req)
       if (action === 'webhook') {
@@ -55,9 +57,14 @@ export default async function handler(req, res) {
           try { await requireAdmin(req) } catch { throw new QuickBooksError('admin_access_required', 403) }
         }
         const ip = String(req.headers['x-forwarded-for'] || req.socket?.remoteAddress || 'unknown').split(',')[0].trim()
+        const wallet = body.checkout?.paymentMode === 'wallet'
+        if (wallet && !walletConfiguration().enabled) throw new QuickBooksError('wallet_unavailable', 409)
         const direct = body.checkout?.paymentMode === 'direct'
         if (direct && !await directPaymentsEnabled()) throw new QuickBooksError('direct_payments_unavailable', 409)
-        result = await prepareCheckout(body, digest(`${configuration().key}:${ip}`), { paymentMode: direct ? 'direct' : 'invoice' })
+        result = await prepareCheckout(body, digest(`${configuration().key}:${ip}`), { paymentMode: wallet ? 'wallet' : direct ? 'direct' : 'invoice' })
+      } else if (action === 'wallet-create' || action === 'wallet-capture') {
+        if (!checkoutEnabled() || !walletConfiguration().enabled) throw new QuickBooksError('wallet_unavailable', 409)
+        result = await (action === 'wallet-create' ? createWalletOrder : captureWalletOrder)(body)
       } else if (action === 'charge') {
         if (!checkoutEnabled() || !await directPaymentsEnabled()) throw new QuickBooksError('direct_payments_unavailable', 409)
         result = await chargeCheckout(body)

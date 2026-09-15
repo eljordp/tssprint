@@ -3,11 +3,15 @@ export type QuickBooksAttempt = { id: string; token: string; request: unknown }
 export type InvoiceCheckout = {
   id: string; status: string; invoiceNumber: string | null; orderId: string | null
   subtotal: number; discount: number; tax: number | null; total: number | null
-  paymentMode?: 'direct' | 'invoice'; chargeStatus?: string | null
+  paymentMode?: 'direct' | 'invoice' | 'wallet'; chargeStatus?: string | null; walletCanRetry?: boolean; walletOrderId?: string | null; paymentProvider?: string; estimateId?: string | null
   items: { id: string; name: string; category?: string; option: string; size: string; quantity: number; price: number; artwork?: CartItem['artwork']; addOns: { name: string; price: number }[] }[]
   email: string; customerName: string; deliveryMethod: string; invoiceLink: string | null; issue: string | null; lastChecked: string | null
 }
 const errors: Record<string, string> = {
+  wallet_unavailable: 'Apple Pay is unavailable. You can still pay by card.',
+  wallet_quote_expired: 'This price quote expired. Refresh your checkout total before paying.',
+  wallet_quote_changed: 'Your order total or delivery details changed. Review the checkout before paying.',
+  wallet_payment_mismatch: 'Your payment needs review. Do not pay again; check your payment status.',
   direct_payments_unavailable: 'Direct card payment is not available yet. Your cart is saved.',
   payments_reconnect_required: 'The shop needs to reconnect its card processor. Your card has not been submitted.',
   charge_review_required: 'Your payment result is still being checked. Do not submit another payment. Contact the shop with this order reference.',

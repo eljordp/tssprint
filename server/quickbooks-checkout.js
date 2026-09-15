@@ -5,7 +5,7 @@ import { QuickBooksError, digest, validNonce } from './quickbooks-core.js'
 import { normalizeCheckout } from './paypal-api.js'
 import { supabaseFetch } from './square-api.js'
 import { safeInvoiceLink } from './quickbooks-invoices.js'
-import { mappedInvoice, verifiedInvoicePayment } from './quickbooks-checkout-core.js'
+import { mappedInvoice, verifiedInvoicePayment, invoiceAmounts } from './quickbooks-checkout-core.js'
 
 const table = '/rest/v1/quickbooks_checkouts'
 const uuid = value => /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(value || '')
@@ -18,14 +18,14 @@ export async function checkoutContext() {
 }
 export function publicCheckout(row) {
   return {
-    id: row.id, status: row.status, invoiceNumber: row.invoice_number, orderId: row.order_id,
+    id: row.id, status: row.status, invoiceNumber: row.invoice_number, estimateId: row.estimate_id || null, orderId: row.order_id,
     subtotal: row.checkout.subtotal, discount: row.checkout.discount, tax: row.tax, total: row.total,
     // This response is protected by an unguessable token in the POST body.
     items: row.checkout.items, email: row.checkout.customer.email,
     deliveryMethod: row.checkout.customer.deliveryMethod, customerName: row.checkout.customer.firstName,
-    invoiceLink: row.payment_mode !== 'direct' && (row.status === 'awaiting_payment' || row.status === 'partially_paid') ? safeInvoiceLink(row.invoice_link) : null,
+    invoiceLink: row.payment_mode === 'invoice' && (row.status === 'awaiting_payment' || row.status === 'partially_paid') ? safeInvoiceLink(row.invoice_link) : null,
     lastChecked: row.last_checked_at, issue: row.last_error,
-    paymentMode: row.payment_mode || 'invoice', chargeStatus: row.direct_payment?.status || null,
+    paymentMode: row.payment_mode || 'invoice', chargeStatus: row.direct_payment?.status || row.wallet_payment?.status || null, walletOrderId: row.wallet_payment?.orderId || null, paymentProvider: row.payment_mode === 'wallet' ? 'paypal' : 'quickbooks', walletCanRetry: row.payment_mode === 'wallet' && !row.wallet_payment?.captureStartedAt && !row.order_id,
   }
 }
 export async function ownedCheckout(body, db = supabaseFetch) {
@@ -51,12 +51,12 @@ export async function prepareCheckout(body, rateKey, { db = supabaseFetch, norma
     }
     checkout.ga4 = /^\d{1,20}\.\d{1,20}$/.test(body.ga4?.clientId || '') ? { clientId: body.ga4.clientId, sessionId: /^\d{1,20}$/.test(body.ga4?.sessionId || '') ? body.ga4.sessionId : null, ...(body.ga4.debugMode === true ? { debugMode: true } : {}) } : null
     const ctx = await context()
-    await db(`${table}?on_conflict=id`, { method: 'POST', headers: { Prefer: 'resolution=ignore-duplicates,return=representation' }, body: JSON.stringify({ id: body.id, token_hash: digest(body.token), request_hash: requestHash, environment: ctx.environment, realm_id: ctx.realmId, checkout, cart_session: body.checkout.cartSession || null, ...(paymentMode === 'direct' ? { payment_mode: 'direct' } : {}) }) })
+    await db(`${table}?on_conflict=id`, { method: 'POST', headers: { Prefer: 'resolution=ignore-duplicates,return=representation' }, body: JSON.stringify({ id: body.id, token_hash: digest(body.token), request_hash: requestHash, environment: ctx.environment, realm_id: ctx.realmId, checkout, cart_session: body.checkout.cartSession || null, payment_mode: paymentMode }) })
     row = await ownedCheckout(body, db)
     if (row.request_hash !== requestHash || (row.payment_mode || 'invoice') !== paymentMode) throw new QuickBooksError('checkout_changed', 409)
   }
   return withCheckoutLock(row, async (record, save, ctx) => {
-    if (!record.invoice_id && Date.now() - Date.parse(record.created_at) > 23 * 3600000) throw new QuickBooksError('creation_review_required', 409)
+    if (!record.invoice_id && !record.estimate_id && Date.now() - Date.parse(record.created_at) > 23 * 3600000) throw new QuickBooksError('creation_review_required', 409)
     if (!record.invoice_payload) {
       const [settings, products] = await Promise.all([
         call('/preferences', ctx), readCatalog(call, ctx),
@@ -76,7 +76,23 @@ export async function prepareCheckout(body, rateKey, { db = supabaseFetch, norma
       }
       const invoice = mappedInvoice(record.checkout, products, record.customer_id, record.id)
       if (record.payment_mode === 'direct') invoice.AllowOnlineCreditCardPayment = false
+      if (record.payment_mode === 'wallet') {
+        for (const key of Object.keys(invoice)) if (key.startsWith('AllowOnline') || ['DueDate','BillEmailCc','BillEmailBcc'].includes(key)) delete invoice[key]
+        invoice.PrivateNote = `TSS Apple Pay tax quote ${record.id}; PayPal connector records the sale.`
+      }
       await save({ invoice_payload: invoice })
+    }
+    if (record.payment_mode === 'wallet') {
+      if (!record.estimate_id) {
+        const data = await call('/estimate', { ...ctx, method: 'POST', requestId: `tss-e-${record.id}`, body: record.invoice_payload })
+        if (!numericId(data.Estimate?.Id)) throw new QuickBooksError('invalid_estimate_response')
+        await save({ estimate_id: data.Estimate.Id })
+      }
+      const data = await call(`/estimate/${record.estimate_id}`, ctx)
+      const amounts = invoiceAmounts(data.Estimate, { ...record, invoice_id: record.estimate_id })
+      if (record.total !== null && (record.total !== amounts.total || record.tax !== amounts.tax)) throw new QuickBooksError('invoice_total_changed', 409)
+      await save({ ...amounts, status: record.order_id ? 'payment_recorded' : 'awaiting_payment', last_error: null, last_checked_at: new Date().toISOString() })
+      return publicCheckout(record)
     }
     if (!record.invoice_id) {
       // Do not reissue an ambiguous creation after the provider deduplication
@@ -104,7 +120,7 @@ export async function withCheckoutLock(row, run, { db = supabaseFetch, context =
   try { return await run(record, save, ctx) }
   catch (error) {
     const code = error instanceof QuickBooksError ? error.code : 'checkout_service_unavailable'
-    if (record.order_id && /mismatch|changed/.test(code)) await db(`/rest/v1/orders?id=eq.${encodeURIComponent(record.order_id)}&payment_provider=eq.quickbooks`, { method: 'PATCH', body: JSON.stringify({ payment_status: 'unverified' }) }).catch(() => {})
+    if (record.order_id && /mismatch|changed/.test(code)) await db(`/rest/v1/orders?id=eq.${encodeURIComponent(record.order_id)}&payment_provider=eq.${record.payment_mode === 'wallet' ? 'paypal' : 'quickbooks'}`, { method: 'PATCH', body: JSON.stringify({ payment_status: 'unverified' }) }).catch(() => {})
     await save({ last_error: code, ...(code.includes('mismatch') || code.includes('changed') || code.endsWith('review_required') || code === 'charge_evidence_required' ? { status: 'needs_review', invoice_link: null } : {}), next_check_at: new Date(Date.now() + 15 * 60000).toISOString() }).catch(() => {})
     throw error
   } finally { await db(`${table}?id=eq.${row.id}&lock_id=eq.${lockId}`, { method: 'PATCH', body: JSON.stringify({ lock_id: null, lock_expires_at: null }) }).catch(() => {}) }
@@ -134,6 +150,11 @@ export async function inspectInvoice(row, save, ctx, { db, call }) {
   }
 }
 export async function refreshCheckout(row, { db = supabaseFetch, call = accountingRequest, context = checkoutContext, force = false } = {}) {
+  if (row.payment_mode === 'wallet') {
+    if (!row.wallet_payment?.orderId || (row.status === 'payment_recorded' && row.order_id && !force)) return publicCheckout(row)
+    const { recoverWalletPayment } = await import('./paypal-wallet.js')
+    return recoverWalletPayment(row, { db })
+  }
   if (row.payment_mode === 'direct' && row.direct_payment) {
     const { recoverDirectPayment } = await import('./quickbooks-direct.js')
     return recoverDirectPayment(row, { db, call, context })
@@ -147,8 +168,8 @@ export async function reconcileCheckouts({ realmId, invoiceIds, deadline = Date.
   const ctx = await checkoutContext()
   if (realmId && realmId !== ctx.realmId) return 0
   if (invoiceIds && (!invoiceIds.length || invoiceIds.some(id => !numericId(id)))) return 0
-  const filter = invoiceIds ? `&invoice_id=in.(${invoiceIds.join(',')})` : `&next_check_at=lte.${encodeURIComponent(new Date().toISOString())}&status=neq.payment_recorded`
-  const rows = await supabaseFetch(`${table}?environment=eq.${ctx.environment}&realm_id=eq.${ctx.realmId}&invoice_id=not.is.null${filter}&order=next_check_at.asc&limit=${Math.max(1, Math.min(10, limit))}`)
+  const filter = invoiceIds ? `&invoice_id=in.(${invoiceIds.join(',')})` : `&next_check_at=lte.${encodeURIComponent(new Date().toISOString())}&and=(or(invoice_id.not.is.null,wallet_payment->>orderId.not.is.null),or(status.neq.payment_recorded,payment_mode.eq.wallet))`
+  const rows = await supabaseFetch(`${table}?environment=eq.${ctx.environment}&realm_id=eq.${ctx.realmId}${filter}&order=next_check_at.asc&limit=${Math.max(1, Math.min(10, limit))}`)
   let checked = 0
   for (const row of rows) {
     if (Date.now() >= deadline) break

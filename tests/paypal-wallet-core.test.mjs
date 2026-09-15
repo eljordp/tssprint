@@ -3,7 +3,7 @@ import assert from 'node:assert/strict'
 import { walletOrderPayload, verifiedWalletOrder } from '../server/paypal-wallet-core.js'
 
 const merchant = 'ABCDEFG123456', orderId = 'ABC12345678901234'
-const row = () => ({ id: 'aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee', payment_mode: 'direct', invoice_id: '3279', total: 104.25, tax: 9.25,
+const row = () => ({ id: 'aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee', payment_mode: 'wallet', estimate_id: '3279', total: 104.25, tax: 9.25,
   checkout: { subtotal: 100, discount: 5, total: 95, description: 'Print order', customer: { firstName: 'Test', lastName: 'Buyer', deliveryMethod: 'pickup' },
     items: [{ category: 'Stickers', name: 'Die cut stickers', option: '100 pieces', size: '2 × 2', material: 'Matte', shape: 'Die cut', price: 100, quantity: 1, addOns: [] }] } })
 const completed = r => ({ ...walletOrderPayload(r, merchant), id: orderId, status: 'COMPLETED', payment_source: { apple_pay: {} }, purchase_units: walletOrderPayload(r, merchant).purchase_units.map(unit => ({ ...unit, payments: { captures: [{ id: 'CAP12345678901234', status: 'COMPLETED', final_capture: true, amount: { currency_code: 'USD', value: '104.25' } }] } })) })
@@ -30,7 +30,7 @@ test('rejects changed itemization even when the aggregate total is unchanged', (
   }
 })
 test('approval and pending capture are not payment; duplicate captures require review', () => {
-  const r=row(), approved={...walletOrderPayload(r,merchant),id:orderId,status:'APPROVED'}
+  const r=row(), approved={...walletOrderPayload(r,merchant),id:orderId,status:'APPROVED',payment_source:{apple_pay:{}}}
   assert.equal(verifiedWalletOrder(approved,r,merchant,orderId).paid,false)
   const pending=completed(r); pending.purchase_units[0].payments.captures[0].status='PENDING'
   assert.equal(verifiedWalletOrder(pending,r,merchant,orderId).paid,false)
