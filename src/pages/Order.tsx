@@ -13,7 +13,7 @@ import PrintTrust from '@/components/PrintTrust'
 import { trackEvent } from '@/lib/analytics'
 import { cities } from '@/lib/cities'
 import { projects } from '@/lib/projects'
-import ServicePageIntro from '@/components/ServicePageIntro'
+import PageHero from '@/components/PageHero'
 import MobileOrderAction from '@/components/MobileOrderAction'
 import PortfolioStrip from '@/components/PortfolioStrip'
 import stkDieCut from '@/assets/optimized/projects/stickers-die-cut-stack-1000.webp'
@@ -134,6 +134,18 @@ const stickerProofProjects = stickerProofSlugs
   .filter((project): project is (typeof projects)[number] => Boolean(project))
 
 type StickerFormat = (typeof stickerFormats)[number]['value']
+
+function ShapeIcon({ shape }: { shape: string }) {
+  return (
+    <svg aria-hidden="true" className="w-5 h-5 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+      {shape === 'Square' && <rect x="5" y="5" width="14" height="14" rx="1" />}
+      {shape === 'Circle' && <circle cx="12" cy="12" r="7" />}
+      {shape === 'Rectangle' && <rect x="3" y="7" width="18" height="10" rx="1" />}
+      {shape === 'Die-Cut' && <path d="M12 3L21 12L12 21L3 12Z" />}
+      {shape === 'Kiss-Cut' && <path d="M12 3L21 12L12 21L3 12Z" strokeDasharray="3 2" />}
+    </svg>
+  )
+}
 
 // Render a single sticker (as placeholder or real artwork)
 function Sticker({ shape, artworkUrl, size = 96, dashed = false }: { shape: string; artworkUrl: string; size?: number; dashed?: boolean }) {
@@ -485,36 +497,11 @@ export default function Order({ embedded = false, initialShape = 'Die-Cut', init
       : `I'd like a quote for roll labels.\nLabels: ${effectiveQty}\nLabel size: ${size}\nMaterial: ${material}\nCore size / unwind direction / labeling machine: \n`,
   }
 
-  const configurator = (
-      <section id="configure" className="pt-4 pb-24 md:pb-12 scroll-mt-24">
-        <div className="section-container">
-          <fieldset className="max-w-6xl mx-auto mb-6">
-            <legend className="text-sm font-bold mb-3">Choose your sticker format</legend>
-            <div className="grid grid-cols-3 gap-2 sm:gap-3">
-              {stickerFormats.map(format => {
-                const FormatIcon = format.icon
-                return <button key={format.value} type="button" aria-pressed={mockupView === format.value}
-                  onClick={() => selectFormat(format.value)}
-                  className={`rounded-xl border p-3 text-left transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary ${mockupView === format.value ? 'border-primary bg-primary/10' : 'border-border bg-card hover:border-primary/50'}`}>
-                  <span className="relative flex flex-col sm:flex-row items-start sm:items-center gap-2 font-bold text-xs sm:text-sm"><FormatIcon size={18} aria-hidden="true" />{format.label}{mockupView === format.value && <Check size={16} className="absolute right-0 top-0 sm:static sm:ml-auto text-primary" aria-hidden="true" />}</span>
-                  <span className="sr-only">{format.description}</span>
-                </button>
-              })}
-            </div>
-            {mockupView !== 'handheld' && <div className="mt-3 rounded-xl border border-border p-4 text-sm" aria-live="polite">
-              <p className="font-semibold">{mockupView === 'sheet' ? 'One design on backing sheets · priced per sticker' : 'Priced per label, not per roll'}</p>
-              <p className="text-muted-foreground mt-1">{mockupView === 'sheet' ? 'The options below count individual stickers. For multiple designs or a specific number of whole sheets, request a sheet quote.' : 'For machine application, we need your core size and unwind direction before confirming compatibility.'}</p>
-              <Link to={`/contact?service=${mockupView === 'sheet' ? 'Sticker%20sheets' : 'Roll%20labels'}`} state={{ stickerQuote: formatQuote }} aria-disabled={artworkStatus === 'uploading'} onClick={event => { if (artworkStatus === 'uploading') event.preventDefault() }} className="inline-flex items-center gap-2 mt-2 text-primary font-bold underline underline-offset-4">
-                {mockupView === 'sheet' ? 'Get a multi-design sheet quote' : 'Request machine-compatible roll labels'}<ArrowRight size={16} aria-hidden="true" />
-              </Link>
-              {artworkStatus === 'uploading' && <p className="text-xs mt-2">Wait for your artwork to finish uploading if you want to include it in the quote.</p>}
-            </div>}
-          </fieldset>
-          <div className="max-w-6xl mx-auto grid grid-cols-1 md:grid-cols-2 items-start gap-6 lg:gap-8">
-            <div className="min-w-0 space-y-3 md:sticky md:top-24">
+  const artworkPanel = (
+            <div className={`min-w-0 space-y-3 ${embedded ? 'md:sticky md:top-24' : ''}`}>
             {/* Mockup preview */}
             <div className="bg-card border border-border rounded-2xl p-4 flex flex-col items-center">
-              <button type="button" onClick={() => chooseArtworkIntent('upload')} className="btn-primary w-full justify-center mb-3"><FileUp size={16} />{artworkFile || artworkUpload ? 'Change artwork' : 'Upload & preview'}</button>
+              <button id={embedded ? undefined : 'artwork-options'} type="button" onClick={() => chooseArtworkIntent('upload')} className="btn-primary w-full justify-center mb-3"><FileUp size={16} />{artworkFile || artworkUpload ? 'Change artwork' : 'Upload & preview'}</button>
               {/* Preview area */}
               <div className="flex-1 flex items-center justify-center w-full min-w-0 overflow-hidden min-h-[160px] md:min-h-[240px] py-4">
                 {artworkUrl ? <ResponsiveImage src={artworkUrl} alt={preview?.pages ? "PDF artwork — first page" : "Your artwork preview"} className="max-h-[320px] max-w-full object-contain rounded bg-white" /> : <StickerMockup shape={shape} artworkUrl={artworkUrl} variant={mockupView === 'handheld' ? 'single' : mockupView} /> }
@@ -594,16 +581,22 @@ export default function Order({ embedded = false, initialShape = 'Die-Cut', init
             </fieldset>
 
 <p className="text-xs text-muted-foreground">Artwork preview only. Your emailed proof confirms the cut, layout and finish.</p>
-            </div><div className="min-w-0 space-y-5"><div className="grid grid-cols-2 gap-3">
+            </div>
+  )
+  const inlineOptions = (<>
+<div className="grid grid-cols-2 gap-3">
 <label className="text-sm font-bold">Shape<select aria-label="Sticker shape" className="mt-2 w-full rounded-xl border border-border bg-card p-3" value={shape} onChange={e => { setShape(e.target.value); const sizes = getSizesForShape(e.target.value); if (!sizes.includes(size)) setSize(sizes[0]) }}>{shapeData.map(s => <option key={s.value} value={s.value}>{s.name}</option>)}</select></label>
 <label className="text-sm font-bold">Size<select aria-label="Sticker size" className="mt-2 w-full rounded-xl border border-border bg-card p-3" value={size} onChange={e => setSize(e.target.value)}>{getSizesForShape(shape).map(s => <option key={s} value={s}>{formatSizeForShape(s, shape)}</option>)}</select></label>
 
-</div><MaterialGuide value={material} onSelect={next => { setMaterial(next); trackEvent('configuration_change', { field: 'material', value: next }) }} />            {/* Quantity */}
-            <div>
+</div><MaterialGuide value={material} onSelect={next => { setMaterial(next); trackEvent('configuration_change', { field: 'material', value: next }) }} />
+  </>)
+  const quantityPanel = (<>
+            {/* Quantity */}
+            <div className="min-w-0">
               <h2 className="text-sm font-black uppercase tracking-wider mb-3">Quantity</h2>
               {mockupView !== 'handheld' && <p className="text-sm text-muted-foreground mb-3">{mockupView === 'sheet' ? 'Count individual stickers, not backing sheets. Size is for each sticker.' : 'Count individual labels, not rolls. Size is for each label.'}</p>}
               <p className="text-xs text-muted-foreground mb-3">Prices include your size and material. Savings vs. {MIN_QTY} pcs.</p>
-              <div className="grid grid-cols-2 gap-2">
+              <div className={embedded ? "grid grid-cols-2 gap-2" : "space-y-2"}>
                 {qtyOptions.map(q => {
                   const total = getQtyTotal(q)
                   const disc = getDiscount(q)
@@ -612,14 +605,15 @@ export default function Order({ embedded = false, initialShape = 'Die-Cut', init
                     <button
                       key={q}
                       onClick={() => { setQuantity(q); setCustomQty('') }}
-                      className={`w-full flex flex-col items-start justify-between px-3 py-3 rounded-xl text-sm font-medium border transition-all ${
+                      aria-pressed={!customQty && quantity === q}
+                      className={`w-full flex ${embedded ? 'flex-col items-start' : 'items-center gap-2'} justify-between px-3 py-3 rounded-xl text-sm font-medium border transition-all ${
                         isActive
                           ? 'border-primary bg-primary text-primary-foreground'
                           : 'border-border hover:border-primary/30'
                       }`}
                     >
                       <span>{q} pcs</span>
-                      <span className="flex items-center gap-2">
+                      <span className="flex flex-wrap justify-end items-center gap-1">
                         <span className="font-bold">${total}</span>
                         {disc > 0 && (
                           <span className={`text-xs font-semibold ${isActive ? 'text-primary-foreground/80' : 'text-green-400'}`}>
@@ -644,7 +638,7 @@ export default function Order({ embedded = false, initialShape = 'Die-Cut', init
                       placeholder={`Enter qty (${MIN_QTY}+)`}
                       value={customQty}
                       onChange={e => setCustomQty(e.target.value)}
-                      className="flex-1 bg-muted rounded-lg px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/20"
+                      className="min-w-0 w-full flex-1 bg-muted rounded-lg px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/20"
                     />
                     <span className="text-sm font-bold">
                       {quantityValid ? `$${getQtyTotal(effectiveQty)}` : '—'}
@@ -658,6 +652,9 @@ export default function Order({ embedded = false, initialShape = 'Die-Cut', init
                 </div>
               </div>
             </div>
+
+  </>)
+  const summaryPanel = (<>
             {/* Order Summary */}
             <div className="bg-card border border-border rounded-2xl p-6 flex flex-col">
               <h2 className="text-xs font-black uppercase tracking-[0.2em] text-center text-muted-foreground mb-4">
@@ -764,8 +761,68 @@ export default function Order({ embedded = false, initialShape = 'Die-Cut', init
                 Digital proof within 24 hours. Nothing prints until you approve.
               </p>
             </div>
-</div>
-          </div>
+  </>)
+
+  const configurator = (
+      <section id="configure" className={`${embedded ? 'pt-4' : 'pt-8 md:pt-12'} pb-24 md:pb-12 scroll-mt-24`}>
+        <div className="section-container">
+          <fieldset className="max-w-6xl mx-auto mb-6">
+            <legend className="text-sm font-bold mb-3">Choose your sticker format</legend>
+            <div className="grid grid-cols-3 gap-2 sm:gap-3">
+              {stickerFormats.map(format => {
+                const FormatIcon = format.icon
+                return <button key={format.value} type="button" aria-pressed={mockupView === format.value}
+                  onClick={() => selectFormat(format.value)}
+                  className={`rounded-xl border p-3 text-left transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary ${mockupView === format.value ? 'border-primary bg-primary/10' : 'border-border bg-card hover:border-primary/50'}`}>
+                  <span className="relative flex flex-col sm:flex-row items-start sm:items-center gap-2 font-bold text-xs sm:text-sm"><FormatIcon size={18} aria-hidden="true" />{format.label}{mockupView === format.value && <Check size={16} className="absolute right-0 top-0 sm:static sm:ml-auto text-primary" aria-hidden="true" />}</span>
+                  <span className="sr-only">{format.description}</span>
+                </button>
+              })}
+            </div>
+            {mockupView !== 'handheld' && <div className="mt-3 rounded-xl border border-border p-4 text-sm" aria-live="polite">
+              <p className="font-semibold">{mockupView === 'sheet' ? 'One design on backing sheets · priced per sticker' : 'Priced per label, not per roll'}</p>
+              <p className="text-muted-foreground mt-1">{mockupView === 'sheet' ? 'The options below count individual stickers. For multiple designs or a specific number of whole sheets, request a sheet quote.' : 'For machine application, we need your core size and unwind direction before confirming compatibility.'}</p>
+              <Link to={`/contact?service=${mockupView === 'sheet' ? 'Sticker%20sheets' : 'Roll%20labels'}`} state={{ stickerQuote: formatQuote }} aria-disabled={artworkStatus === 'uploading'} onClick={event => { if (artworkStatus === 'uploading') event.preventDefault() }} className="inline-flex items-center gap-2 mt-2 text-primary font-bold underline underline-offset-4">
+                {mockupView === 'sheet' ? 'Get a multi-design sheet quote' : 'Request machine-compatible roll labels'}<ArrowRight size={16} aria-hidden="true" />
+              </Link>
+              {artworkStatus === 'uploading' && <p className="text-xs mt-2">Wait for your artwork to finish uploading if you want to include it in the quote.</p>}
+            </div>}
+          </fieldset>
+          {embedded ? (
+            <div className="max-w-6xl mx-auto grid grid-cols-1 md:grid-cols-2 items-start gap-6 lg:gap-8">
+              {artworkPanel}
+              <div className="min-w-0 space-y-5">{inlineOptions}{quantityPanel}{summaryPanel}</div>
+            </div>
+          ) : (
+            <>
+              <div className="max-w-6xl mx-auto grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 lg:gap-8 mb-8">
+                <fieldset className="min-w-0">
+                  <legend className="text-sm font-black uppercase tracking-wider mb-3">Shape</legend>
+                  <div className="space-y-2">
+                    {shapeData.map(option => <button key={option.value} type="button" aria-pressed={shape === option.value}
+                      onClick={() => { setShape(option.value); const sizes = getSizesForShape(option.value); if (!sizes.includes(size)) setSize(sizes[0]) }}
+                      className={`w-full flex items-center gap-3 rounded-xl border px-4 py-3.5 text-sm font-semibold text-left focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary ${shape === option.value ? 'border-primary bg-primary/10 text-primary' : 'border-border hover:border-primary/40'}`}>
+                      <ShapeIcon shape={option.value} />{option.name}
+                    </button>)}
+                  </div>
+                </fieldset>
+                <MaterialGuide layout="classic" value={material} onSelect={next => { setMaterial(next); trackEvent('configuration_change', { field: 'material', value: next }) }} />
+                <fieldset className="min-w-0">
+                  <legend className="text-sm font-black uppercase tracking-wider mb-3">{shape === 'Circle' ? 'Diameter' : 'Size, inch (W × H)'}</legend>
+                  <div className="space-y-2">
+                    {getSizesForShape(shape).map(option => <button key={option} type="button" aria-pressed={size === option} onClick={() => setSize(option)}
+                      className={`w-full rounded-xl border px-4 py-3.5 text-sm font-semibold text-left focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary ${size === option ? 'border-primary bg-primary text-primary-foreground' : 'border-border hover:border-primary/40'}`}>
+                      {formatSizeForShape(option, shape)}
+                    </button>)}
+                  </div>
+                </fieldset>
+                {quantityPanel}
+              </div>
+              <div className="max-w-6xl mx-auto grid grid-cols-1 md:grid-cols-2 items-start gap-6 lg:gap-8">
+                {artworkPanel}{summaryPanel}
+              </div>
+            </>
+          )}
           <MobileOrderAction regionId="configure" price={quantityValid ? `$${totalPrice.toFixed(2)}` : '—'} detail={`${effectiveQty || 0} ${mockupView === 'roll' ? 'labels' : 'stickers'}`} label={added ? 'Saved!' : editingItem ? 'Save changes' : 'Continue to Checkout'} disabled={!quantityValid || (Boolean(artworkFile) && artworkStatus !== 'uploaded')} onClick={() => handleAddToCart(true)} />
           {/* Specs grid — trust signal, small, under the cart not blocking it */}
           <motion.div
@@ -788,7 +845,10 @@ export default function Order({ embedded = false, initialShape = 'Die-Cut', init
   if (embedded) return configurator
   return (
     <>
-      <div className="section-container pt-6 md:pt-8"><ServicePageIntro eyebrow="Custom Stickers" title="Upload. Preview. Make it yours." description="Choose your finish, size and quantity. Every order gets a proof before printing." /></div>
+      <PageHero eyebrow="Custom Stickers" title="Bay Area custom stickers, printed in Hayward."
+        subtitle="Choose your shape, material, size and quantity. Every order gets a digital proof before printing."
+        image={stkDieCut} imageAlt="Stack of custom die-cut stickers"
+        primaryCta={{ label: 'Configure Stickers', href: '#configure' }} secondaryCta={{ label: 'See Sticker Work', href: '#portfolio' }} />
       {configurator}
 
       <section className="py-12 md:py-16 border-t border-border/50">
