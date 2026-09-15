@@ -90,3 +90,10 @@ test('an approved non-Apple payment is rejected before capture',async()=>{
   const f=fixture();await createWalletOrder(f.body,f.deps);f.approve();f.remote.payment_source={paypal:{}}
   await assert.rejects(captureWalletOrder(f.body,f.deps));assert.equal(f.captures,0)
 })
+
+test('owner verification cannot create or capture a wallet above the one-dollar cap',async()=>{
+ const f=fixture();f.row.checkout.ownerTest=true;
+ await assert.rejects(createWalletOrder(f.body,f.deps),/owner_test_total_mismatch/);
+ await assert.rejects(captureWalletOrder(f.body,f.deps),/owner_test_total_mismatch/);
+ assert.equal(f.creates,0);assert.equal(f.captures,0);
+})

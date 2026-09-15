@@ -16,6 +16,7 @@ const pay = (path, options = {}) => paypalFetch(path, { ...options, signal: Abor
 const depsFor = deps => ({ ...deps, db: deps?.db || supabaseFetch, pay: deps?.pay || pay, call: deps?.call || accountingRequest, merchantId: deps?.merchantId || walletConfiguration().merchantId })
 const assertWallet = row => {
   if (row.payment_mode !== 'wallet' || row.invoice_id || row.direct_payment) throw new QuickBooksError('wallet_method_mismatch', 409)
+  if (row.checkout?.ownerTest && (row.total !== 1 || row.tax !== 0.10)) throw new QuickBooksError('owner_test_total_mismatch', 409)
 }
 async function checkQuote(row, ctx, call) {
   if (Date.now() - Date.parse(row.created_at) > 23 * 3600000) throw new QuickBooksError('wallet_quote_expired', 409)

@@ -6,7 +6,7 @@ function res() {
   return { headers: {}, statusCode: 0, body: '', setHeader(name, value) { this.headers[name] = value }, end(value = '') { this.body = value } }
 }
 test('connection settings and mutations require an admin session', async () => {
-  for (const action of ['status', 'connect', 'connect-payments', 'check', 'disconnect', 'invoice-tests', 'test-invoice', 'test-payment', 'setup-products']) {
+  for (const action of ['status', 'connect', 'connect-payments', 'check', 'disconnect', 'invoice-tests', 'test-invoice', 'test-payment', 'owner-payment-test', 'setup-products']) {
     const output = res()
     await handler({ method: ['status', 'invoice-tests'].includes(action) ? 'GET' : 'POST', url: `/api/quickbooks/${action}`, headers: {} }, output)
     assert.equal(output.statusCode, 403)

@@ -16,6 +16,7 @@ import { QB_PRODUCT_NAMES } from '../../server/quickbooks-checkout-core.js'
 import { directPaymentsEnabled, chargeCheckout } from '../../server/quickbooks-direct.js'
 
 import { walletConfiguration, createWalletOrder, captureWalletOrder } from '../../server/paypal-wallet.js'
+import { prepareOwnerPaymentTest } from '../../server/owner-payment-test.js'
 
 export const config = { api: { bodyParser: false } }
 const followUp = id => processQuickBooksDelivery(id).catch(() => console.warn('QuickBooks follow-up remains queued'))
@@ -76,7 +77,7 @@ export default async function handler(req, res) {
       return sendJson(res, known ? error.status : 503, { error: known ? error.code : 'checkout_service_unavailable' })
     }
   }
-  if (!['connect', 'connect-payments', 'callback', 'status', 'check', 'disconnect', 'invoice-tests', 'test-invoice', 'test-payment', 'readiness', 'setup-products', 'checkouts', 'reconcile'].includes(action)) return sendJson(res, 404, { error: 'Not found' })
+  if (!['connect', 'connect-payments', 'callback', 'status', 'check', 'disconnect', 'invoice-tests', 'test-invoice', 'test-payment', 'owner-payment-test', 'readiness', 'setup-products', 'checkouts', 'reconcile'].includes(action)) return sendJson(res, 404, { error: 'Not found' })
   const expectedMethod = ['status', 'callback', 'invoice-tests', 'readiness', 'checkouts'].includes(action) ? 'GET' : 'POST'
   if (req.method !== expectedMethod) { res.setHeader('Allow', expectedMethod); return sendJson(res, 405, { error: 'Method not allowed' }) }
   if (action === 'callback') {
@@ -97,6 +98,11 @@ export default async function handler(req, res) {
   try {
     const config = configuration()
     if (req.method === 'POST' && req.headers.origin !== config.origin) return sendJson(res, 403, { error: 'Use the admin page on the configured site.' })
+    if (action === 'owner-payment-test') {
+      if (!checkoutEnabled() || !walletConfiguration().enabled) throw new QuickBooksError('wallet_unavailable', 409)
+      if (!consumeRateLimit(req, { key: `owner-payment-test:${user.id}`, limit: 3, windowMs: 60000 }).allowed) throw new QuickBooksError('rate_limited', 429)
+      return sendJson(res, 200, await prepareOwnerPaymentTest(JSON.parse((await boundedBody(req)).toString('utf8')), user))
+    }
     if (action === 'status') {
       let connection = null
       let databaseReady = false

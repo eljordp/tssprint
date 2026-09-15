@@ -10,16 +10,19 @@ export function orderEmailPayload(row, kind, env) {
   const cash = value => `$${Number(value).toFixed(2)}`
   const lines = row.checkout.items.map(item => `<tr><td style="padding:14px 0;border-bottom:1px solid #e8ecef;font-size:14px;line-height:22px"><strong style="color:#15191d">${escape(item.category === 'Stickers' ? item.name : item.category || item.name)}</strong><br>${escape(item.option)} · ${escape(item.size)}${item.quantity > 1 ? ` · ${item.quantity} batches` : ''}${item.addOns.length ? `<br>${escape(item.addOns.map(a => a.name).join(', '))}` : ''}</td><td valign="top" align="right" style="padding:14px 0 14px 12px;border-bottom:1px solid #e8ecef;white-space:nowrap;font-size:14px;font-weight:bold">${cash(item.unitPrice * item.quantity)}</td></tr>`).join('')
   const details = `<p style="margin:0 0 20px;font-size:13px;color:#68747d;overflow-wrap:anywhere">${wallet ? 'Apple Pay payment received' : `Invoice ${escape(row.invoice_number)}`}<br>Order ${escape(row.order_id)}</p><table role="presentation" width="100%" cellspacing="0" cellpadding="0">${lines}</table><p style="margin:20px 0;font-size:14px;line-height:24px">Subtotal: ${cash(row.checkout.subtotal)}<br>Discount: −${cash(row.checkout.discount)}<br>Tax: ${cash(row.tax)}</p><p style="margin:0 0 28px;padding:16px;background:#edf8fc;border-radius:8px;font-size:20px;color:#101418"><strong>Total: ${cash(row.total)}</strong></p>`
-  const next = '<h2 style="margin:24px 0 8px;font-size:18px;line-height:24px;color:#101418">What happens next</h2><p style="margin:0 0 16px">We review your artwork and send a proof for approval. Production starts after you approve it.</p>'
+  const next = row.checkout.ownerTest
+    ? '<h2 style="margin:24px 0 8px;font-size:18px;line-height:24px;color:#101418">Owner payment test — no production</h2><p>This is a real $1 verification payment. Do not print, ship or fulfill this test order.</p>'
+    : '<h2 style="margin:24px 0 8px;font-size:18px;line-height:24px;color:#101418">What happens next</h2><p style="margin:0 0 16px">We review your artwork and send a proof for approval. Production starts after you approve it.</p>'
   const staff = kind === 'staff_email'
   const body = staff
     ? `<p style="margin:0 0 20px">${escape(c.firstName)} ${escape(c.lastName)} · ${escape(c.email)}</p>${details}${next}`
+    : row.checkout.ownerTest ? `<p>Thanks. Your $1 test payment is confirmed and saved.</p>${details}${next}`
     : `<p style="margin:0 0 20px">Thanks, ${escape(c.firstName)}. Your payment is confirmed and your order is saved.</p>${details}${next}<p style="margin:0 0 16px">${c.deliveryMethod === 'pickup' ? 'Pickup is at 23673 Connecticut St, Hayward. Wait for your ready-for-pickup message.' : `Delivery: ${escape(c.address)}, ${escape(c.city)}, ${escape(c.state)} ${escape(c.zip)}`}</p><p style="margin:0">Sending artwork later or need design help? Reply with your order reference and we’ll help.</p>`
   return { from: env.FROM_EMAIL,
     to: staff ? (env.CONTACT_NOTIFICATION_EMAILS || env.CONTACT_OWNER_EMAIL || 'mrjxrdip@icloud.com,thestickersmith@gmail.com').split(',').map(s => s.trim()).filter(Boolean) : [c.email],
     reply_to: staff ? c.email : 'thestickersmith@gmail.com',
-    subject: staff ? `Website order received · ${reference}` : `Order received · The Sticker Smith · ${reference}`,
-    html: brandedEmail({ preview: `Payment recorded. Artwork review and proof approval come next. Reference ${reference}.`, eyebrow: 'Payment recorded', title: staff ? 'New website order.' : 'Your print project is in.', body,
+    subject: row.checkout.ownerTest ? `Owner $1 payment test · no production · ${reference}` : staff ? `Website order received · ${reference}` : `Order received · The Sticker Smith · ${reference}`,
+    html: brandedEmail({ preview: row.checkout.ownerTest ? `Owner test payment recorded. No production. Reference ${reference}.` : `Payment recorded. Artwork review and proof approval come next. Reference ${reference}.`, eyebrow: 'Payment recorded', title: row.checkout.ownerTest ? 'Payment test received.' : staff ? 'New website order.' : 'Your print project is in.', body,
       actionUrl: staff ? 'https://tssprint.com/admin?tab=orders' : `mailto:thestickersmith@gmail.com?subject=${encodeURIComponent(`Order ${row.order_id}`)}`,
       actionLabel: staff ? 'Review order & artwork' : 'Contact us about this order' }),
   }
@@ -73,6 +76,7 @@ export async function processQuickBooksDelivery(checkoutId = null, { db = supaba
 export function purchaseAnalyticsPayload(row, createdAt) {
   return { client_id: row.checkout.ga4.clientId, timestamp_micros: Date.parse(createdAt) * 1000, events: [{ name: 'purchase', params: {
           transaction_id: row.order_id, payment_type: row.payment_mode === 'wallet' ? 'apple_pay' : 'card', payment_provider: row.payment_mode === 'wallet' ? 'paypal' : 'quickbooks', currency: 'USD', value: row.checkout.total, tax: Number(row.tax), shipping: 0,
+          ...(row.checkout.ownerTest ? { test_mode: true } : {}),
           ...(row.checkout.ga4.sessionId ? { session_id: Number(row.checkout.ga4.sessionId) } : {}), engagement_time_msec: 1,
           ...(row.checkout.ga4.debugMode === true ? { debug_mode: true, traffic_type: 'internal' } : {}),
           ...(row.checkout.promoCode ? { coupon: row.checkout.promoCode } : {}),
