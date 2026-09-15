@@ -204,3 +204,12 @@ Next: finish password handoff, reconcile recovery/admin tracking, then broader m
 ### Password recovery completed — September 15, 00:48 PDT
 
 User saved the new password; the live account page displayed “Password updated. Log in with your new password.” The user then logged in, and the same browser displayed My Account / Welcome back, Jordi P. Reopening the actual delivered reset link in a separate tab correctly showed “This link is missing, invalid or expired” and Request a new reset link, with no password-entry form. This closes the password save/login and used-link checks previously marked pending. Agent did not enter, read, or record passwords. No additional email sent or deployment required. Remaining next work: recovery-source/admin/GA4 reconciliation and broader mobile cart/accessibility/performance checks; ratings unchanged.
+
+
+### Both follow-ups shipped — September 15, 01:10 PDT
+
+Live release **dpl_BXbVEVKWJ6L5YL3vkieFZN8NcYZE**, combined application **22eef01**. Cart edits now return to the original cart item; mobile has one persistent total/Checkout action and larger edit targets. Multi-item changes, pricing/batch totals, removal, checkout contact/pickup persistence and private PDF attachment retention were verified. 29 focused combined tests pass; scoped lint/build and 33-route prerender pass. Temporary test cart items removed; no payment, invoice, new email or upload.
+
+Admin → Reports → Sales & traffic → Cart recovery now separates Customer carts and Test carts. Expand Recovery details for cart/source IDs, email acceptance, restoration time and payment reference. Test status remains sticky on later saves and is inherited through restoration. The second controlled email source/destination are reconciled in live admin (accepted23:50:06, restored23:51:27 September14; no payment). The first source's failed restoration sync remains unproven; detailed limits and IDs are in the ledger. Customer list still includes old explicitly unverified/empty records, which must not be interpreted as a clean abandonment history.
+
+Next: GA4 receipt/attribution and missing milestone verification; authorized full payment/receipt/admin reconciliation after payment readiness; broader accessibility/device/performance and exact material evidence. Keep intentional entry gate, direct email proof process and the deferred602-entry Drive review unchanged. Current ratings remain customer7.75, tracking6 provisional, admin7.5 provisional.
