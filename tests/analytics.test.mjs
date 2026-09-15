@@ -11,7 +11,7 @@ const code = ts.transpileModule(source, { compilerOptions: { module: ts.ModuleKi
 function setup({ staff = false, debug = false, prerender = false, serializedScript = false } = {}) {
   const exports = {}, scripts = [], storage = new Map(staff ? [['tss_analytics_optout', '1']] : [])
   const store = { getItem: key => storage.get(key) ?? null, setItem: (key, value) => storage.set(key, value) }
-  const window = { __prerender: prerender, location: { pathname: '/stickers', search: debug ? '?utm_source=codex&utm_medium=verification&analytics_debug=1' : '', href: 'https://tssprint.com/stickers' } }
+  const window = { __prerender: prerender, location: { origin: 'https://tssprint.com', pathname: '/stickers', search: debug ? '?utm_source=codex&utm_medium=verification&analytics_debug=1' : '', href: 'https://tssprint.com/stickers' } }
   const context = { exports, window, URLSearchParams, URL, console, crypto, localStorage: store, sessionStorage: store, navigator: { userAgent: 'test' }, document: { title: 'Stickers', referrer: '', getElementById: () => serializedScript || scripts[0], createElement: () => ({}), head: { appendChild: script => scripts.push(script) } }, require: name => name === '@vercel/analytics' ? { track() {} } : { supabase: { from: () => ({ insert: async () => ({}) }) } } }
   vm.runInNewContext(code, context)
   return { api: exports, window, scripts }
@@ -61,4 +61,29 @@ test('explicit debug session marks events as internal and includes commerce data
 test('the app has one GA initializer; no earlier bootstrap can shadow its queue', () => {
   const main = readFileSync(new URL('../src/main.tsx', import.meta.url), 'utf8')
   assert.doesNotMatch(main, /ga-bootstrap/)
+})
+
+test('GA4 preserves UTM attribution without sending unrelated URL parameters', () => {
+  const { api, window } = setup()
+  window.location.search = '?utm_source=google&utm_medium=organic&utm_campaign=gbp&utm_content=website&email=private%40example.com&restore=secret-token'
+  api.trackPageView('/stickers')
+  const config = window.dataLayer.find(c => c[0] === 'config')[2]
+  const event = window.dataLayer.find(c => c[1] === 'page_view')[2]
+  for (const params of [config, event]) {
+    assert.equal(params.campaign_source, 'google')
+    assert.equal(params.campaign_medium, 'organic')
+    assert.equal(params.campaign_name, 'gbp')
+    assert.equal(params.campaign_content, 'website')
+    assert.equal(params.page_location, 'https://tssprint.com/stickers')
+    assert.doesNotMatch(JSON.stringify(params), /private|secret-token/)
+  }
+})
+
+test('campaign values reject email addresses and excessive lengths', () => {
+  const { api, window } = setup()
+  window.location.search = '?utm_source=private%40example.com&utm_campaign=' + 'x'.repeat(201)
+  api.trackEvent('view_item')
+  const event = window.dataLayer.find(c => c[1] === 'view_item')[2]
+  assert.equal(event.campaign_source, undefined)
+  assert.equal(event.campaign_name, undefined)
 })

@@ -197,6 +197,23 @@ function isGa4DebugSession() {
   return typeof window !== 'undefined' && new URLSearchParams(window.location.search).get('analytics_debug') === '1'
 }
 
+// Keep campaign attribution while excluding unrelated query parameters (such
+// as cart recovery tokens and email addresses) from GA4 page URLs.
+function ga4CampaignParams(): Record<string, string> {
+  const query = new URLSearchParams(window.location.search)
+  const fields: Record<string, string> = {
+    utm_source: 'campaign_source', utm_medium: 'campaign_medium',
+    utm_campaign: 'campaign_name', utm_id: 'campaign_id',
+    utm_content: 'campaign_content', utm_term: 'campaign_term',
+  }
+  const campaign: Record<string, string> = {}
+  for (const [utm, field] of Object.entries(fields)) {
+    const value = query.get(utm)?.trim()
+    if (value && value.length <= 200 && !/[@\r\n]/.test(value)) campaign[field] = value
+  }
+  return campaign
+}
+
 export function shouldSuppressAnalytics() {
   if (typeof window === 'undefined') return false
 
@@ -250,7 +267,7 @@ function initGa4() {
   // GA4 independently of script insertion so hydrated pages still send events.
   if (!window.__tssGa4Configured) {
     window.gtag('js', new Date())
-    window.gtag('config', GA4_MEASUREMENT_ID, { send_page_view: false, page_location: window.location.origin + window.location.pathname })
+    window.gtag('config', GA4_MEASUREMENT_ID, { send_page_view: false, page_location: window.location.origin + window.location.pathname, ...ga4CampaignParams() })
     window.__tssGa4Configured = true
   }
 }
@@ -260,6 +277,7 @@ function sendGa4Event(name: string, params: Ga4Params = {}) {
   initGa4()
   if (!window.gtag || !GA4_MEASUREMENT_ID) return
   window.gtag('event', name, {
+    ...ga4CampaignParams(),
     ...params,
     page_location: window.location.origin + window.location.pathname,
     ...(isGa4DebugSession() ? { debug_mode: true, traffic_type: 'internal' } : {}),

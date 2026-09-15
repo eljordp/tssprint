@@ -20,6 +20,10 @@ export type ContactRequest = {
 export type ContactSubmitResult = {
   success?: boolean
   message?: string
+  leadSaved?: boolean
+  subscription?: 'not_requested' | 'saved' | 'failed'
+  notification?: 'accepted' | 'failed'
+  customerSync?: 'saved' | 'failed'
 }
 
 export type SubscribeRequest = {
@@ -104,17 +108,14 @@ export async function subscribeEmail(data: SubscribeRequest): Promise<ContactSub
 
 async function upsertCustomer(data: ContactRequest) {
   const { firstName, lastName } = splitName(data.name)
-  try {
-    await supabase.rpc('get_or_create_customer', {
+  const { error } = await supabase.rpc('get_or_create_customer', {
       _email: data.email.trim(),
       _first_name: firstName,
       _last_name: lastName,
       _phone: data.phone?.trim() || null,
       _source: data.source || 'contact',
-    })
-  } catch {
-    // CRM is helpful, but the lead record is the source of truth.
-  }
+  })
+  if (error) throw error
 }
 
 export async function submitContactRequest(data: ContactRequest): Promise<ContactSubmitResult> {
@@ -140,39 +141,47 @@ export async function submitContactRequest(data: ContactRequest): Promise<Contac
     if (error) throw error
     markRecentlySubmitted(fingerprint)
 
-    await upsertCustomer(data)
+    // Count the saved lead independently of optional downstream services.
+    try {
+      trackLeadSubmission({
+        source: payload.source,
+        service: payload.service,
+        subscribed: !!data.subscribe,
+        tags: data.tags,
+      })
+    } catch {
+      console.warn('Contact saved, but lead tracking could not be recorded.')
+    }
 
-    if (data.subscribe) {
-      await subscribeEmail({
+    const [customer, subscription, notification] = await Promise.allSettled([
+      upsertCustomer(data),
+      data.subscribe ? subscribeEmail({
         email: payload.email,
         name: payload.name,
         phone: payload.phone || undefined,
         source: payload.source,
         service: payload.service || undefined,
         tags: data.tags || [payload.service || 'lead'].filter(Boolean),
-      })
-    }
-
-    try {
-      await sendContactEmail({
+      }) : Promise.resolve(),
+      sendContactEmail({
         name: payload.name,
         email: payload.email,
         phone: payload.phone || undefined,
         service: payload.service || undefined,
         message: data.artwork ? `${data.message.trim()}\nArtwork attached: ${data.artwork.fileName}. Available in Admin → Inquiries.` : data.message.trim(),
-      })
-    } catch (error) {
-      console.warn('Contact saved, but email delivery failed:', error)
+      }),
+    ])
+    if (customer.status === 'rejected') console.warn('Contact saved, but customer sync failed.')
+    if (subscription.status === 'rejected') console.warn('Contact saved, but mailing-list subscription failed.')
+    if (notification.status === 'rejected') console.warn('Contact saved, but notification request failed.')
+
+    return {
+      success: true,
+      leadSaved: true,
+      customerSync: customer.status === 'fulfilled' ? 'saved' : 'failed',
+      subscription: !data.subscribe ? 'not_requested' : subscription.status === 'fulfilled' ? 'saved' : 'failed',
+      notification: notification.status === 'fulfilled' ? 'accepted' : 'failed',
     }
-
-    trackLeadSubmission({
-      source: payload.source,
-      service: payload.service,
-      subscribed: !!data.subscribe,
-      tags: data.tags,
-    })
-
-    return { success: true }
   } finally {
     recentSubmissions.delete(fingerprint)
   }
