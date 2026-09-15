@@ -7,8 +7,9 @@ export type ArtworkSelection = {
   artwork?: CartItem['artwork']
 }
 
-export default function ProductionArtwork({ size, onChange }: {
+export default function ProductionArtwork({ size, onChange, purpose = 'order' }: {
   size: string
+  purpose?: 'order' | 'quote'
   onChange: (value: ArtworkSelection) => void
 }) {
   const input = useRef<HTMLInputElement>(null)
@@ -98,9 +99,9 @@ export default function ProductionArtwork({ size, onChange }: {
         <button type="button" onClick={() => input.current?.click()} className="btn-primary w-full justify-center"><Upload size={16} />{file ? 'Change artwork' : 'Choose artwork'}</button>
         <div aria-live="polite" className="text-xs">
           {status === 'uploading' && <p className="flex items-center gap-2"><LoaderCircle size={14} className="animate-spin" />Uploading production file…</p>}
-          {status === 'uploaded' && <p className="text-green-400 break-words">✓ {file?.name} uploaded — ready to attach to your cart.</p>}
+          {status === 'uploaded' && <p className="text-green-400 break-words">✓ {file?.name} uploaded — ready to attach to your {purpose === 'quote' ? 'request' : 'cart'}.</p>}
           {status === 'error' && <p role="alert" className="text-red-400">{error} <button type="button" className="underline" onClick={() => file && void upload(file)}>Retry upload</button></p>}
-          {status === 'idle' && <p className="text-muted-foreground">No file yet. You can send artwork after ordering.</p>}
+          {status === 'idle' && <p className="text-muted-foreground">No file yet. You can send artwork {purpose === 'quote' ? 'with your project follow-up' : 'after ordering'}.</p>}
         </div>
         <details className="text-xs text-muted-foreground"><summary className="cursor-pointer">File types & proof details · up to 50 MB</summary><p className="mt-2">PNG, JPG, SVG and WebP preview. PDF, AI and other production files accepted. For front and back, upload one PDF containing both pages.</p><p className="mt-2">Preview shows your file, without cropping. Final size, bleed, placement and finishes are checked in your proof.</p></details>
         {file && <button type="button" onClick={sendLater} className="text-sm text-muted-foreground underline underline-offset-4">Remove file / send artwork later</button>}

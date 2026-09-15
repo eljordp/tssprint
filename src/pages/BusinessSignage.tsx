@@ -1,10 +1,10 @@
-import { useCallback, useState } from 'react'
+import { useState } from 'react'
 import { motion } from 'framer-motion'
 import { CheckCircle, Clock, Shield, Wrench, Zap } from 'lucide-react'
 import ProductOrder from '@/components/ProductOrder'
 import EstimateForm from '@/components/EstimateForm'
 import PortfolioStrip from '@/components/PortfolioStrip'
-import ArtworkMockup from '@/components/ArtworkMockup'
+import type { ArtworkSelection } from '@/components/ProductionArtwork'
 import ServicePageIntro from '@/components/ServicePageIntro'
 import atlasPizza from '@/assets/projects/atlas-pizza-signage.jpeg'
 import elevated925 from '@/assets/projects/elevated925-storefront.jpg'
@@ -12,9 +12,6 @@ import plu2o from '@/assets/projects/plu2o-dispensary.jpg'
 import barbershop from '@/assets/projects/curated-barbershop.jpeg'
 import safewayInstall from '@/assets/projects/safeway-install.jpeg'
 import weddingSignage from '@/assets/projects/wedding-display-signage-1.jpeg'
-import storefrontBlank from '@/assets/optimized/mockups/signage-storefront-blank-1100.webp'
-import wallInteriorBlank from '@/assets/optimized/mockups/signage-wall-interior-blank-1100.webp'
-import aFrameBlank from '@/assets/optimized/mockups/signage-a-frame-blank-1100.webp'
 
 const features = [
   'Storefront & Building Signs',
@@ -55,17 +52,8 @@ const signageFaqs = [
 ]
 
 export default function BusinessSignage() {
-  const [activeMockup, setActiveMockup] = useState('storefront')
   const [estimateSelection, setEstimateSelection] = useState('')
-  const handleCategoryChange = useCallback((categoryName: string) => {
-    const map: Record<string, string> = {
-      'Storefront Graphics': 'storefront',
-      'A-Frame Signs': 'aframe',
-      'Retractable Banners': 'retractable',
-      'Wall Graphics': 'wall',
-    }
-    setActiveMockup(map[categoryName] ?? 'storefront')
-  }, [])
+  const [artwork, setArtwork] = useState<ArtworkSelection>({ status: 'idle' })
 
   return (
     <>
@@ -79,7 +67,8 @@ export default function BusinessSignage() {
           <div id="shop" className="scroll-mt-24 mb-12">
             <ProductOrder
               categoryNames={['Storefront Graphics', 'A-Frame Signs', 'Retractable Banners', 'Wall Graphics']}
-              onCategoryChange={handleCategoryChange}
+              artworkFirst
+              onArtworkChange={setArtwork}
               checkoutMode="estimate"
               onEstimateRequest={setEstimateSelection}
             />
@@ -138,43 +127,6 @@ export default function BusinessSignage() {
 
         </div>
       </section>
-      <section className="py-12 md:py-20 border-t border-border/50">
-        <div className="section-container">
-          <ArtworkMockup
-            service="Signage"
-            title="See your signage in place"
-            subtitle="Upload your logo — we'll preview it on a storefront, wall, or sidewalk sign."
-            activeKey={activeMockup}
-            onActiveKeyChange={setActiveMockup}
-            scenes={[
-              {
-                key: 'storefront',
-                label: 'Storefront',
-                base: storefrontBlank,
-                slot: { left: 13, top: 13, width: 75, height: 30 },
-              },
-              {
-                key: 'wall',
-                label: 'Interior Wall',
-                base: wallInteriorBlank,
-                slot: { left: 28, top: 20, width: 55, height: 40 },
-              },
-              {
-                key: 'aframe',
-                label: 'A-Frame',
-                base: aFrameBlank,
-                slot: { left: 31, top: 23, width: 36, height: 52 },
-              },
-              {
-                key: 'retractable',
-                label: 'Retractable Banner',
-                variant: 'retractable-banner',
-                slot: { left: 36, top: 13, width: 28, height: 58 },
-              },
-            ]}
-          />
-        </div>
-      </section>
       <section id="portfolio" className="py-12 md:py-20 border-t border-border/50 scroll-mt-24">
         <div className="section-container">
           <PortfolioStrip
@@ -210,6 +162,7 @@ export default function BusinessSignage() {
       <section id="quote" className="py-12 md:py-20 border-t border-border/50 scroll-mt-24">
         <div className="section-container">
           <EstimateForm
+            artworkSelection={artwork}
             service="Business Signage"
             title="Get a Custom Signage Estimate"
             subtitle="Storefront, wall, window — tell us the scope and we'll reply with availability, questions, and an exact estimate."

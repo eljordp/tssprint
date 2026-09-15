@@ -2,6 +2,7 @@ import { useState, type FormEvent } from 'react'
 import { motion } from 'framer-motion'
 import { CheckCircle, Send } from 'lucide-react'
 import { submitContactRequest } from '@/lib/contactSubmit'
+import type { ArtworkSelection } from '@/components/ProductionArtwork'
 
 export type EstimateField =
   | { name: string; label: string; type: 'text'; placeholder?: string; required?: boolean }
@@ -9,6 +10,7 @@ export type EstimateField =
   | { name: string; label: string; type: 'textarea'; placeholder?: string; required?: boolean }
 
 type Props = {
+  artworkSelection?: ArtworkSelection
   service: string
   eyebrow?: string
   title?: string
@@ -24,6 +26,7 @@ export default function EstimateForm({
   subtitle = "Every project is different. Send the scope and we'll reply by email with availability, questions, and an exact estimate.",
   fields,
   initialProject,
+  artworkSelection,
 }: Props) {
   const [name, setName] = useState('')
   const [email, setEmail] = useState('')
@@ -32,13 +35,14 @@ export default function EstimateForm({
   const [notes, setNotes] = useState('')
   const [emailOptIn, setEmailOptIn] = useState(false)
   const [status, setStatus] = useState<'idle' | 'sending' | 'sent' | 'error'>('idle')
+  const artworkBlocked = artworkSelection?.status === 'uploading' || artworkSelection?.status === 'error'
 
   const setField = (name: string, value: string) =>
     setCustomValues((prev) => ({ ...prev, [name]: value }))
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault()
-    if (!name || !email) return
+    if (!name || !email || artworkBlocked) return
     setStatus('sending')
 
     // Build a readable message from the custom fields
@@ -54,6 +58,7 @@ export default function EstimateForm({
 
     try {
       await submitContactRequest({
+        artwork: artworkSelection?.artwork,
         name,
         email,
         phone: phone || undefined,
@@ -82,7 +87,7 @@ export default function EstimateForm({
         </div>
         <h3 className="text-2xl font-black mb-2">Request received.</h3>
         <p className="text-muted-foreground">
-          We sent a confirmation to <span className="text-foreground font-semibold">{email}</span>.
+          Your request has been saved with <span className="text-foreground font-semibold">{email}</span> as the reply address.
           The request is in the lead queue. JP or the team will reply by email with availability and next steps for your {service.toLowerCase()} estimate.
         </p>
       </motion.div>
@@ -105,6 +110,8 @@ export default function EstimateForm({
       </div>
 
       <form onSubmit={handleSubmit} noValidate className="space-y-4">
+        {artworkSelection?.artwork && <p className="text-sm text-green-400 break-words">Artwork attached: {artworkSelection.artwork.fileName}</p>}
+        {artworkBlocked && <p role="alert" className="text-sm text-primary">Finish the artwork upload or choose send later before submitting.</p>}
         {initialProject && (
           <div className="rounded-xl border border-primary/25 bg-primary/10 px-4 py-3 text-sm" aria-live="polite">
             <p className="mb-1 text-xs font-bold uppercase tracking-wider text-primary">Your selected starting point</p>
@@ -200,7 +207,7 @@ export default function EstimateForm({
 
         <button
           type="submit"
-          disabled={status === 'sending' || !name || !email}
+          disabled={artworkBlocked || status === 'sending' || !name || !email}
           className="btn-primary w-full justify-center disabled:opacity-50 disabled:cursor-not-allowed"
         >
           {status === 'sending' ? (

@@ -1,8 +1,11 @@
 import { sendContactEmail } from './email'
 import { supabase } from './supabase'
 import { getAnalyticsIdentity, trackLeadSubmission } from './analytics'
+import type { CartItem } from '@/context/CartContext'
+import { appendQuoteArtwork } from './quoteArtwork'
 
 export type ContactRequest = {
+  artwork?: CartItem['artwork']
   name: string
   email: string
   phone?: string
@@ -121,7 +124,7 @@ export async function submitContactRequest(data: ContactRequest): Promise<Contac
     email: data.email.trim().toLowerCase(),
     phone: data.phone?.trim() || null,
     service: data.service || null,
-    message: data.message.trim(),
+    message: appendQuoteArtwork(data.message.trim(), data.artwork),
     source: data.source || 'contact',
     visitor_id: identity.visitorId,
     session_id: identity.sessionId,
@@ -156,7 +159,7 @@ export async function submitContactRequest(data: ContactRequest): Promise<Contac
         email: payload.email,
         phone: payload.phone || undefined,
         service: payload.service || undefined,
-        message: payload.message,
+        message: data.artwork ? `${data.message.trim()}\nArtwork attached: ${data.artwork.fileName}. Available in Admin → Inquiries.` : data.message.trim(),
       })
     } catch (error) {
       console.warn('Contact saved, but email delivery failed:', error)

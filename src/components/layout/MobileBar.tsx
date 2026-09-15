@@ -8,7 +8,8 @@ const HIDE_ON = new Set([
   '/contact',
   '/order-confirmation',
   '/account',
-  '/services/business-print',
+  '/services/business-print', '/services/business-signage', '/services/event-displays', '/services/vehicle-graphics',
+  '/stickers', '/mylar', '/die-cut-stickers', '/sticker-sheets', '/roll-labels', '/holographic-stickers', '/custom-labels',
 ])
 
 export default function MobileBar() {

@@ -1,6 +1,7 @@
-import { useState, useCallback, useEffect } from 'react'
+import MobileOrderAction from '@/components/MobileOrderAction'
+import { useState, useCallback, useRef, useEffect } from 'react'
 import { motion } from 'framer-motion'
-import { Upload, X, Package, Sparkles, Box, ShoppingCart, Check } from 'lucide-react'
+import { X, Package, Sparkles, Box, ShoppingCart, Check } from 'lucide-react'
 import { useCart } from '@/context/CartContext'
 import { supabase } from '@/lib/supabase'
 import { getPricing, loadPricing, type ProductCategory, type AddOn } from '@/lib/pricing'
@@ -147,6 +148,8 @@ export default function MylarPackaging() {
   const [uploadedFile, setUploadedFile] = useState<File | null>(null)
   const [previewUrl, setPreviewUrl] = useState<string | null>(null)
   const [artworkUpload, setArtworkUpload] = useState<ArtworkAttachment | null>(null)
+  const artworkGeneration = useRef(0)
+  useEffect(() => () => { artworkGeneration.current += 1 }, [])
   const [artworkStatus, setArtworkStatus] = useState<'idle' | 'uploading' | 'uploaded' | 'error'>('idle')
   const [artworkError, setArtworkError] = useState('')
   const [isDragging, setIsDragging] = useState(false)
@@ -177,6 +180,7 @@ export default function MylarPackaging() {
   const isJar = item?.size.toLowerCase().includes('jar')
 
   const uploadArtwork = useCallback(async (file: File) => {
+    const generation = ++artworkGeneration.current
     setArtworkStatus('uploading')
     setArtworkError('')
     setArtworkUpload(null)
@@ -193,6 +197,7 @@ export default function MylarPackaging() {
       })
       const data = await response.json().catch(() => ({}))
       if (!response.ok) throw new Error(data.error || 'Could not prepare artwork upload.')
+      if (generation !== artworkGeneration.current) return
 
       const { error } = await supabase.storage
         .from(data.bucket)
@@ -200,6 +205,7 @@ export default function MylarPackaging() {
           contentType: file.type || data.contentType || 'application/octet-stream',
         })
       if (error) throw error
+      if (generation !== artworkGeneration.current) return
 
       setArtworkUpload({
         bucket: data.bucket,
@@ -211,6 +217,7 @@ export default function MylarPackaging() {
       })
       setArtworkStatus('uploaded')
     } catch (error) {
+      if (generation !== artworkGeneration.current) return
       setArtworkStatus('error')
       setArtworkError(error instanceof Error ? error.message : 'Artwork upload failed.')
     }
@@ -226,6 +233,7 @@ export default function MylarPackaging() {
   }, [uploadArtwork])
 
   const clearArtworkFile = useCallback(() => {
+    artworkGeneration.current += 1
     setUploadedFile(null)
     setArtworkUpload(null)
     setArtworkStatus('idle')
@@ -259,7 +267,7 @@ export default function MylarPackaging() {
   }
 
   const handleAddToCart = () => {
-    if (!item || !qtyTier) return
+    if (!item || !qtyTier || !Number.isInteger(quantity) || quantity < 1) return
     if (uploadedFile && artworkStatus !== 'uploaded') return
     const cartAddOns = addOns
       .filter(a => selectedAddOns.has(a.name))
@@ -290,16 +298,65 @@ export default function MylarPackaging() {
 
   return (
     <>
-      <section id="configure" className="pt-6 md:pt-10 pb-8 md:pb-16 scroll-mt-24">
-        <div className="section-container max-w-5xl mx-auto">
+      <section id="configure" className="pt-6 md:pt-10 pb-24 md:pb-16 scroll-mt-24">
+        <div className="section-container max-w-6xl mx-auto">
           <ServicePageIntro
             eyebrow="Custom Mylar"
-            title="Custom Mylar Bags & Product Packaging"
-            description="Price pouch sizes, finishes, artwork uploads, and launch-run packaging before sending the job to proof."
+            title="Custom Mylar & Packaging"
+            description="Upload your artwork, preview your packaging and choose your print run."
           />
-          {/* Calculator Section */}
-          <div className="grid gap-6 lg:grid-cols-[1.4fr_1fr]">
-            {/* LEFT: Controls */}
+          <div className="grid md:grid-cols-2 gap-6 items-start">
+            <div className="space-y-3 md:sticky md:top-24">            {/* Upload Card */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}
+              className={`flex flex-col justify-center rounded-2xl border bg-card p-4 text-center transition-colors ${isDragging ? 'border-primary ring-2 ring-primary/20' : 'border-border'}`}
+              onDragOver={handleDragOver}
+              onDragLeave={handleDragLeave}
+              onDrop={handleDrop}
+            >
+              <div className="flex flex-col items-center gap-3">
+                <div>
+                  <p className="text-base font-medium text-foreground">Upload artwork for proof</p>
+                  <p className="mt-1 text-sm text-muted-foreground">Optional now. PNG, JPG, SVG, PDF, AI, EPS, PSD, TIFF, HEIC, and WebP accepted.</p>
+                </div>
+                <div className="flex flex-wrap items-center justify-center gap-3">
+                  <label className="inline-flex cursor-pointer items-center gap-2 rounded-full bg-primary px-5 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90 transition-colors">
+                    <span>Upload file</span>
+                    <input type="file" accept="image/*,.pdf,.ai,.eps,.svg,.psd,.tif,.tiff,.heic,.webp" className="hidden" onChange={handleFileChange} />
+                  </label>
+                  {uploadedFile && (
+                    <button onClick={clearArtworkFile} className="inline-flex items-center gap-1.5 rounded-full border border-border px-4 py-2 text-xs text-muted-foreground hover:bg-muted transition-colors">
+                      <X className="h-3.5 w-3.5" /> Clear
+                    </button>
+                  )}
+                </div>
+                {uploadedFile && <p className="text-xs text-muted-foreground">Selected: <span className="font-medium text-foreground">{uploadedFile.name}</span></p>}
+                {artworkStatus === 'uploading' && <p className="text-xs text-primary">Uploading artwork for proof...</p>}
+                {artworkStatus === 'uploaded' && <p className="text-xs text-green-400">Artwork attached to this order.</p>}
+                {artworkStatus === 'error' && <p className="text-xs text-red-400">{artworkError}</p>}
+              </div>
+            </motion.div>
+
+            {/* Mockup Preview */}
+            <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.15 }} className="rounded-2xl border border-border bg-card p-6">
+              <div className="flex justify-center gap-1 mb-4">
+                {mockupTabs.map(tab => (
+                  <button key={tab.id} onClick={() => setActiveMockup(tab.id)} className={`flex items-center gap-1.5 rounded-full px-4 py-2 text-xs font-medium transition-colors ${activeMockup === tab.id ? 'bg-primary text-primary-foreground' : 'bg-muted text-muted-foreground hover:text-foreground'}`}>
+                    <tab.icon className="h-3.5 w-3.5" /> {tab.label}
+                  </button>
+                ))}
+              </div>
+              <div className="rounded-xl bg-muted/50 border border-border">
+                {activeMockup === 'pouch' && <PouchMockup previewUrl={previewUrl} pouchColor={pouchColor} finish={finish} scale={scale} />}
+                {activeMockup === 'foil' && <FoilMockup previewUrl={previewUrl} scale={scale} />}
+                {activeMockup === 'jar' && <JarMockup previewUrl={previewUrl} />}
+              </div>
+              <p className="mt-3 text-center text-xs text-muted-foreground">
+                {previewUrl ? 'Your design preview' : uploadedFile ? 'File selected. Image and SVG files can preview live' : 'Upload artwork to see it mocked up'} — {item?.size ?? 'Select a size'}
+              </p>
+            </motion.div>
+<p className="text-xs text-muted-foreground">Placement preview only. Your production proof confirms the final layout.</p></div>
+            <div className="space-y-4">            {/* LEFT: Controls */}
             <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }} className="space-y-6 rounded-2xl border border-border bg-card p-5 md:p-6">
               {/* Pouch Size */}
               <div className="space-y-3">
@@ -347,6 +404,8 @@ export default function MylarPackaging() {
                 <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Quantity</p>
                 <input
                   type="number"
+                  aria-label="Packaging quantity"
+                  step={1}
                   min={1}
                   className="w-full rounded-lg border border-border bg-muted px-4 py-2.5 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"
                   value={quantity}
@@ -374,8 +433,8 @@ export default function MylarPackaging() {
             <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.25 }} className="space-y-4">
               {/* Calculator Results */}
               <div className="rounded-2xl border border-border bg-card p-5 md:p-6">
-                <h2 className="text-lg font-semibold mb-3 text-center">Instant Price Estimate</h2>
-                <p className="text-xs text-muted-foreground mb-4 text-center">Use this as a quick ballpark. We'll dial in exact pricing once we see your artwork.</p>
+                <h2 className="text-lg font-semibold mb-3 text-center">Order Summary</h2>
+                <p className="text-xs text-muted-foreground mb-4 text-center">Your selected print batch and add-ons.</p>
 
                 {qtyTier && quantity > 0 && (
                   <div className="rounded-xl bg-muted px-4 py-4 text-sm space-y-2">
@@ -404,7 +463,7 @@ export default function MylarPackaging() {
                   </div>
                 )}
                 <p className="mt-3 text-[10px] text-muted-foreground text-center">
-                  Final quote may adjust for finishing, rush timelines, and compliance.
+                  Custom requirements outside these options need a separate quote.
                 </p>
               </div>
 
@@ -413,7 +472,7 @@ export default function MylarPackaging() {
                 <div className="rounded-2xl border border-primary/30 bg-primary/5 p-5">
                   <button
                     onClick={handleAddToCart}
-                    disabled={Boolean(uploadedFile) && artworkStatus !== 'uploaded'}
+                    disabled={!Number.isInteger(quantity) || (Boolean(uploadedFile) && artworkStatus !== 'uploaded')}
                     className={`btn-primary w-full disabled:opacity-50 disabled:cursor-not-allowed ${added ? 'bg-green-600' : ''}`}
                   >
                     {added ? (
@@ -439,63 +498,9 @@ export default function MylarPackaging() {
                 </a>
               </div>
             </motion.div>
+</div>
           </div>
-
-          {/* Upload + Mockup Preview */}
-          <div className="grid gap-6 lg:grid-cols-2 mt-10">
-            {/* Upload Card */}
-            <motion.div
-              initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}
-              className={`flex flex-col justify-center rounded-2xl border bg-card p-6 md:p-8 text-center transition-colors ${isDragging ? 'border-primary ring-2 ring-primary/20' : 'border-border'}`}
-              onDragOver={handleDragOver}
-              onDragLeave={handleDragLeave}
-              onDrop={handleDrop}
-            >
-              <div className="flex flex-col items-center gap-4">
-                <div className="flex h-14 w-14 items-center justify-center rounded-full bg-muted">
-                  <Upload className="h-6 w-6 text-muted-foreground" />
-                </div>
-                <div>
-                  <p className="text-base font-medium text-foreground">Upload artwork for proof</p>
-                  <p className="mt-1 text-sm text-muted-foreground">Optional now. PNG, JPG, SVG, PDF, AI, EPS, PSD, TIFF, HEIC, and WebP accepted.</p>
-                </div>
-                <div className="flex flex-wrap items-center justify-center gap-3">
-                  <label className="inline-flex cursor-pointer items-center gap-2 rounded-full bg-primary px-5 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90 transition-colors">
-                    <span>Upload file</span>
-                    <input type="file" accept="image/*,.pdf,.ai,.eps,.svg,.psd,.tif,.tiff,.heic,.webp" className="hidden" onChange={handleFileChange} />
-                  </label>
-                  {uploadedFile && (
-                    <button onClick={clearArtworkFile} className="inline-flex items-center gap-1.5 rounded-full border border-border px-4 py-2 text-xs text-muted-foreground hover:bg-muted transition-colors">
-                      <X className="h-3.5 w-3.5" /> Clear
-                    </button>
-                  )}
-                </div>
-                {uploadedFile && <p className="text-xs text-muted-foreground">Selected: <span className="font-medium text-foreground">{uploadedFile.name}</span></p>}
-                {artworkStatus === 'uploading' && <p className="text-xs text-primary">Uploading artwork for proof...</p>}
-                {artworkStatus === 'uploaded' && <p className="text-xs text-green-400">Artwork attached to this order.</p>}
-                {artworkStatus === 'error' && <p className="text-xs text-red-400">{artworkError}</p>}
-              </div>
-            </motion.div>
-
-            {/* Mockup Preview */}
-            <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.15 }} className="rounded-2xl border border-border bg-card p-6">
-              <div className="flex justify-center gap-1 mb-4">
-                {mockupTabs.map(tab => (
-                  <button key={tab.id} onClick={() => setActiveMockup(tab.id)} className={`flex items-center gap-1.5 rounded-full px-4 py-2 text-xs font-medium transition-colors ${activeMockup === tab.id ? 'bg-primary text-primary-foreground' : 'bg-muted text-muted-foreground hover:text-foreground'}`}>
-                    <tab.icon className="h-3.5 w-3.5" /> {tab.label}
-                  </button>
-                ))}
-              </div>
-              <div className="rounded-xl bg-muted/50 border border-border">
-                {activeMockup === 'pouch' && <PouchMockup previewUrl={previewUrl} pouchColor={pouchColor} finish={finish} scale={scale} />}
-                {activeMockup === 'foil' && <FoilMockup previewUrl={previewUrl} scale={scale} />}
-                {activeMockup === 'jar' && <JarMockup previewUrl={previewUrl} />}
-              </div>
-              <p className="mt-3 text-center text-xs text-muted-foreground">
-                {previewUrl ? 'Your design preview' : uploadedFile ? 'File selected. Image and SVG files can preview live' : 'Upload artwork to see it mocked up'} — {item?.size ?? 'Select a size'}
-              </p>
-            </motion.div>
-          </div>
+          <MobileOrderAction regionId="configure" price={`$${totalPrice.toFixed(2)}`} detail={`${quantity} pieces`} label={added ? 'Added!' : 'Add to Cart'} disabled={!qtyTier || !Number.isInteger(quantity) || quantity < 1 || (Boolean(uploadedFile) && artworkStatus !== 'uploaded')} onClick={handleAddToCart} />
         </div>
       </section>
       <section id="quote" className="py-12 md:py-20 border-t border-border/50 scroll-mt-24">

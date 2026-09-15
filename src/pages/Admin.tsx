@@ -1,3 +1,5 @@
+import QuoteArtworkDownload from '@/components/QuoteArtworkDownload'
+import { readQuoteArtwork } from '@/lib/quoteArtwork'
 import { useState, useEffect, useRef, useCallback } from 'react'
 import { motion } from 'framer-motion'
 import {
@@ -1021,7 +1023,7 @@ function InquiriesTab() {
                     </p>
                   </div>
                   <div className="flex items-center gap-3 shrink-0">
-                    <span className="hidden sm:inline text-sm text-muted-foreground line-clamp-1 max-w-xs">{inquiry.message}</span>
+                    <span className="hidden sm:inline text-sm text-muted-foreground line-clamp-1 max-w-xs">{readQuoteArtwork(inquiry.message).message}</span>
                     {isOpen ? <ChevronUp size={18} className="text-muted-foreground" /> : <ChevronDown size={18} className="text-muted-foreground" />}
                   </div>
                 </button>
@@ -1058,7 +1060,8 @@ function InquiriesTab() {
 
                     <div>
                       <h4 className="text-xs font-bold uppercase text-muted-foreground mb-2">Message</h4>
-                      <p className="whitespace-pre-wrap rounded-xl bg-muted/30 p-4 text-sm leading-relaxed">{inquiry.message}</p>
+                      <p className="whitespace-pre-wrap rounded-xl bg-muted/30 p-4 text-sm leading-relaxed">{readQuoteArtwork(inquiry.message).message}</p>
+                      <QuoteArtworkDownload message={inquiry.message} />
                     </div>
 
                     <div className="flex flex-wrap gap-2 pt-2 border-t border-border">

@@ -1,18 +1,15 @@
+import { useState } from 'react'
 import { motion } from 'framer-motion'
 import { CheckCircle, Clock, Shield, Wrench, Zap } from 'lucide-react'
 import EstimateForm from '@/components/EstimateForm'
 import PortfolioStrip from '@/components/PortfolioStrip'
-import ArtworkMockup from '@/components/ArtworkMockup'
+import ProductionArtwork, { type ArtworkSelection } from '@/components/ProductionArtwork'
 import ServicePageIntro from '@/components/ServicePageIntro'
 import albertsonsVan from '@/assets/projects/albertsons-van.jpeg'
 import bhogalTruck from '@/assets/projects/bhogal-construction.jpeg'
 import procareFleet from '@/assets/projects/procare-fleet.jpeg'
 import safewayTruck from '@/assets/projects/safeway-truck.jpeg'
 import safewayInstall from '@/assets/projects/safeway-install.jpeg'
-import sedanBlank from '@/assets/mockups/vehicle-sedan-blank.jpg'
-import vanBlank from '@/assets/mockups/vehicle-van-blank.jpg'
-import boxTruckBlank from '@/assets/mockups/vehicle-box-truck-blank.jpg'
-import workVanBlank from '@/assets/mockups/vehicle-work-van-blank.jpg'
 
 const features = [
   'Full Vehicle Wraps',
@@ -68,6 +65,7 @@ const vehicleFaqs = [
 ]
 
 export default function VehicleGraphics() {
+  const [artwork, setArtwork] = useState<ArtworkSelection>({ status: 'idle' })
   return (
     <>
       <section id="quote" className="pt-6 md:pt-10 pb-8 md:pb-16 scroll-mt-24">
@@ -77,7 +75,10 @@ export default function VehicleGraphics() {
             title="Vehicle Graphics in Hayward & the Bay Area"
             description="Get pricing for wraps, lettering, decals, and fleet branding without reading a long sales page first."
           />
+          <div className="max-w-6xl mx-auto grid md:grid-cols-2 gap-6 items-start">
+          <div className="md:sticky md:top-24"><ProductionArtwork size="Vehicle artwork · final placement confirmed in your proof" purpose="quote" onChange={setArtwork} /></div>
           <EstimateForm
+            artworkSelection={artwork}
             service="Vehicle Graphics"
             title="Get a Vehicle Graphics Estimate"
             subtitle="Send the vehicle and wrap type. We will price the real job, not make you read a sales page first."
@@ -99,6 +100,7 @@ export default function VehicleGraphics() {
               { name: 'inspiration', label: 'Reference links (Dropbox, Google Drive, Instagram)', type: 'text', placeholder: 'Paste a link' },
             ]}
           />
+          </div>
         </div>
       </section>
       <section className="py-8 md:py-16 border-t border-border/50">
@@ -154,77 +156,6 @@ export default function VehicleGraphics() {
               ))}
             </div>
           </motion.div>
-        </div>
-      </section>
-      <section className="py-12 md:py-20 border-t border-border/50">
-        <div className="section-container">
-          <ArtworkMockup
-            service="Vehicle"
-            title="See your brand on the vehicle"
-            subtitle="Upload your logo — we'll show you how it looks on different vehicles before you commit."
-            scenes={[
-              {
-                key: 'van',
-                label: 'Ford Transit Van',
-                base: vanBlank,
-                slot: {
-                  left: 39,
-                  top: 35,
-                  width: 48,
-                  height: 22,
-                  radius: '12px',
-                  clipPath: 'polygon(2% 12%, 96% 8%, 100% 55%, 94% 93%, 8% 94%, 0 70%)',
-                  imageFit: 'cover',
-                  artworkPadding: 0,
-                },
-              },
-              {
-                key: 'sedan',
-                label: 'Sedan',
-                base: sedanBlank,
-                slot: {
-                  left: 24,
-                  top: 47,
-                  width: 52,
-                  height: 18,
-                  radius: '18px',
-                  clipPath: 'polygon(4% 30%, 38% 20%, 98% 18%, 100% 70%, 88% 92%, 20% 92%, 0 72%)',
-                  imageFit: 'cover',
-                  artworkPadding: 0,
-                },
-              },
-              {
-                key: 'box',
-                label: 'Box Truck',
-                base: boxTruckBlank,
-                slot: {
-                  left: 33,
-                  top: 31,
-                  width: 50,
-                  height: 31,
-                  radius: '3px',
-                  clipPath: 'polygon(0 0, 99% 0, 100% 94%, 2% 96%)',
-                  imageFit: 'cover',
-                  artworkPadding: 0,
-                },
-              },
-              {
-                key: 'sprinter',
-                label: 'Work Van',
-                base: workVanBlank,
-                slot: {
-                  left: 13,
-                  top: 34,
-                  width: 49,
-                  height: 24,
-                  radius: '12px',
-                  clipPath: 'polygon(4% 18%, 98% 9%, 100% 58%, 89% 92%, 7% 94%, 0 75%)',
-                  imageFit: 'cover',
-                  artworkPadding: 0,
-                },
-              },
-            ]}
-          />
         </div>
       </section>
       <section id="portfolio" className="py-12 md:py-20 border-t border-border/50 scroll-mt-24">

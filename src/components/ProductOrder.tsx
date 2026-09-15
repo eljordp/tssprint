@@ -8,6 +8,7 @@ import ProductionArtwork, { type ArtworkSelection } from '@/components/Productio
 
 interface Props {
   artworkFirst?: boolean
+  onArtworkChange?: (value: ArtworkSelection) => void
   categoryNames: string[]
   onCategoryChange?: (categoryName: string) => void
   checkoutMode?: 'cart' | 'estimate'
@@ -60,7 +61,7 @@ function createCartItemId(categoryName: string, size: string) {
   return `${categoryName}-${size}-${Date.now()}`
 }
 
-export default function ProductOrder({ categoryNames, onCategoryChange, checkoutMode = 'cart', onEstimateRequest, artworkFirst = false }: Props) {
+export default function ProductOrder({ categoryNames, onCategoryChange, checkoutMode = 'cart', onEstimateRequest, artworkFirst = false, onArtworkChange }: Props) {
   const { addItem } = useCart()
   const [pricing, setPricing] = useState(() => getPricing())
 
@@ -161,6 +162,7 @@ export default function ProductOrder({ categoryNames, onCategoryChange, checkout
   }
 
   const handleEstimateRequest = () => {
+    if (artworkBlocked) return
     const summary = [
       `${category.name}: ${item.size}`,
       effectiveQty > 1 ? `Quantity: ${effectiveQty}` : null,
@@ -174,6 +176,7 @@ export default function ProductOrder({ categoryNames, onCategoryChange, checkout
   const resetSelections = (catIdx: number) => {
     if (catIdx === activeCategory) return
     setArtwork({ status: 'idle' })
+    onArtworkChange?.({ status: 'idle' })
     setActiveCategory(catIdx)
     setSelectedItem(0)
     setSelectedQtyIndex(0)
@@ -224,7 +227,7 @@ export default function ProductOrder({ categoryNames, onCategoryChange, checkout
       )}
 
       <div className="grid md:grid-cols-2 gap-6 md:gap-8 items-start">
-        {artworkFirst && <div className="md:sticky md:top-24"><ProductionArtwork key={category.name} size={item.size} onChange={setArtwork} /></div>}
+        {artworkFirst && <div className="md:sticky md:top-24"><ProductionArtwork key={category.name} size={item.size} purpose={checkoutMode === 'estimate' ? 'quote' : 'order'} onChange={value => { setArtwork(value); onArtworkChange?.(value) }} /></div>}
         <div className={artworkFirst ? 'space-y-4' : 'contents'}>
         {/* Product selection */}
         <div className="space-y-6">
@@ -392,7 +395,7 @@ export default function ProductOrder({ categoryNames, onCategoryChange, checkout
         {/* Order summary */}
         <div>
           <div className="bg-card border border-border rounded-2xl p-6 sticky top-24">
-            {artworkFirst && <p className="text-xs text-muted-foreground mb-3">{artwork.artwork ? 'Production artwork attached' : artworkBlocked ? 'Finish uploading or choose send later' : 'Artwork: send after ordering'}</p>}
+            {artworkFirst && <p className="text-xs text-muted-foreground mb-3">{artwork.artwork ? 'Production artwork attached' : artworkBlocked ? 'Finish uploading or choose send later' : checkoutMode === 'estimate' ? 'Artwork can follow with your project details' : 'Artwork: send after ordering'}</p>}
             <h3 className="font-bold text-lg mb-4">{checkoutMode === 'estimate' ? 'Estimate Summary' : 'Order Summary'}</h3>
             <div className="space-y-2 text-sm mb-6">
               <div className="flex justify-between">
@@ -434,7 +437,7 @@ export default function ProductOrder({ categoryNames, onCategoryChange, checkout
                 <button
                   type="button"
                   onClick={handleEstimateRequest}
-                  disabled={bulk && customQty <= 0}
+                  disabled={artworkBlocked || (bulk && customQty <= 0)}
                   className="btn-primary w-full justify-center disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   Get Exact Estimate <ArrowRight size={18} />
@@ -460,7 +463,7 @@ export default function ProductOrder({ categoryNames, onCategoryChange, checkout
       </div>
       {artworkFirst && orderVisible && <div className="md:hidden fixed bottom-0 left-0 right-0 z-40 bg-card border-t border-border px-4 pt-3 pb-[max(12px,env(safe-area-inset-bottom))] flex items-center gap-4">
         <div className="shrink-0"><p className="font-bold text-lg">${totalPrice.toFixed(2)}</p><p className="text-xs text-muted-foreground">{effectiveQty} pcs · ${(totalPrice / effectiveQty).toFixed(2)}/ea</p></div>
-        <button type="button" onClick={handleAddToCart} disabled={artworkBlocked} className="btn-primary flex-1 justify-center disabled:opacity-50">{added ? 'Added!' : artwork.status === 'uploading' ? 'Uploading…' : 'Add to Cart'}</button>
+        <button type="button" onClick={checkoutMode === "estimate" ? handleEstimateRequest : handleAddToCart} disabled={artworkBlocked || (bulk && customQty <= 0)} className="btn-primary flex-1 justify-center disabled:opacity-50">{artwork.status === 'uploading' ? 'Uploading…' : checkoutMode === 'estimate' ? 'Get Estimate' : added ? 'Added!' : 'Add to Cart'}</button>
       </div>}
     </motion.div>
   )
