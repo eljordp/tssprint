@@ -1,3 +1,4 @@
+import { quickBooksOnly, taxEnabledPaymentMessage } from '../../server/payment-policy.js'
 import { markCartPaid } from '../../server/cart-api.js'
 import { hasPaidOrder } from '../../server/checkout-pricing.js'
 import {
@@ -21,6 +22,7 @@ export default async function handler(req, res) {
     if (!orderID) return sendJson(res, 400, { error: 'Missing PayPal order ID.' })
 
     const approved = await paypalFetch(`/v2/checkout/orders/${encodeURIComponent(orderID)}`)
+    if (quickBooksOnly() && !getCompletedCapture(approved)) return sendJson(res, 409, { error: taxEnabledPaymentMessage })
     const checkout = await normalizeCheckout(body, { hasPaidOrder: email => hasPaidOrder(email, orderID) })
     assertPayPalCheckout(approved, checkout)
     const capture = getCompletedCapture(approved) ? approved : await paypalFetch(`/v2/checkout/orders/${encodeURIComponent(orderID)}/capture`, {

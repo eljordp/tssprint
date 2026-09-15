@@ -10,6 +10,7 @@ import { acceptWebhook, boundedBody, processWebhookEvents } from '../../server/q
 import { consumeRateLimit } from '../../server/request-guards.js'
 import { digest } from '../../server/quickbooks-core.js'
 import { claimWorker, runWorker, workerHealth } from '../../server/quickbooks-worker.js'
+import { quickBooksOnly } from '../../server/payment-policy.js'
 import { QB_PRODUCT_NAMES } from '../../server/quickbooks-checkout-core.js'
 
 export const config = { api: { bodyParser: false } }
@@ -34,7 +35,7 @@ export default async function handler(req, res) {
       if (action === 'checkout-config') {
         let enabled = checkoutEnabled()
         if (enabled) { try { await checkoutContext() } catch { enabled = false } }
-        return sendJson(res, 200, { enabled, categories: Object.keys(QB_PRODUCT_NAMES) })
+        return sendJson(res, 200, { enabled, quickBooksOnly: quickBooksOnly(), categories: Object.keys(QB_PRODUCT_NAMES) })
       }
       const raw = await boundedBody(req)
       if (action === 'webhook') {

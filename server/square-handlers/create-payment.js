@@ -1,3 +1,4 @@
+import { quickBooksOnly, taxEnabledPaymentMessage } from '../payment-policy.js'
 import { markCartPaid } from '../cart-api.js'
 import { normalizeCheckout, checkoutFingerprint } from '../paypal-api.js'
 import {
@@ -19,6 +20,7 @@ function validAttemptId(value) {
 
 export default async function handler(req, res) {
   if (req.method !== 'POST') return sendJson(res, 405, { error: 'Method not allowed' })
+  if (quickBooksOnly()) return sendJson(res, 409, { error: taxEnabledPaymentMessage })
   if (!requireEnv(res)) return
 
   try {
