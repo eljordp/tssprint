@@ -1,3 +1,4 @@
+import assamBackdrop from '@/assets/optimized/projects/instagram-assam-convention-backdrop.webp'
 import magdreStacks from '@/assets/optimized/projects/drive-magdre-die-cut-stacks.webp'
 import otaiMockup from '@/assets/optimized/projects/drive-otai-event-mockup.webp'
 import oliveLandArtwork from '@/assets/optimized/projects/drive-olive-land-pita-artwork.webp'
@@ -81,9 +82,15 @@ export type Project = {
   caseStudySlug?: string
   hideOnMobile?: boolean
   imageKind?: 'Artwork' | 'Illustration' | 'Design mockup'
+  imageFit?: 'contain'
 }
 
 export const projects: Project[] = [
+  {
+    slug: 'assam-convention-backdrop', image: assamBackdrop, imageFit: 'contain', title: 'Assam Convention — Event Backdrop',
+    client: '47th Assam Convention', category: 'Events', scope: '8×10 ft backdrop printing and installation', year: '2026',
+    description: 'A finished backdrop printed and installed by The Sticker Smith at DoubleTree San Jose for the 47th Assam Convention. The photograph shows the printed graphic and supporting frame in the event space. Your estimate confirms the size, frame and installation scope for your own event.',
+  },
   {
     slug: 'magdre-die-cut-stacks', image: magdreStacks, title: 'MagDre — Die-Cut Sticker Stacks',
     client: 'MagDre', category: 'Stickers', scope: 'Illustrated die-cut stickers',

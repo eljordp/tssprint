@@ -41,11 +41,11 @@ export default function ProjectModal({ project, onClose }: Props) {
             </button>
 
             <div className="grid md:grid-cols-[1.2fr_1fr] gap-0">
-              <div className="relative bg-black aspect-square md:aspect-auto md:min-h-[400px]">
+              <div className={`relative bg-black ${project.imageFit === 'contain' ? 'aspect-[4/3]' : 'aspect-square'} md:aspect-auto md:min-h-[400px]`}>
                 <img
                   src={project.image}
                   alt={project.title}
-                  className={`absolute inset-0 w-full h-full ${project.imageKind ? 'object-contain bg-white' : 'object-cover'}`}
+                  className={`absolute inset-0 w-full h-full ${project.imageKind ? 'object-contain bg-white' : project.imageFit === 'contain' ? 'object-contain' : 'object-cover'}`}
                 />
               </div>
 

@@ -1,3 +1,4 @@
+import assamBackdrop from '@/assets/optimized/projects/instagram-assam-convention-backdrop.webp'
 import otaiMockup from '@/assets/optimized/projects/drive-otai-event-mockup.webp'
 import { useState } from 'react'
 import { motion } from 'framer-motion'
@@ -138,6 +139,7 @@ export default function EventCanopies() {
             title="Events We've Shown Up For"
             subtitle="Trade shows, weddings, pop-ups — full booth and floor setups."
             projects={[
+              { src: assamBackdrop, alt: 'Assam Convention printed backdrop installed on its frame at DoubleTree San Jose', caption: 'Assam Convention · installed backdrop', fit: 'contain', href: '/projects?project=assam-convention-backdrop' },
               { src: otaiMockup, alt: 'OTAI coordinated banner and table-cover design mockup', caption: 'OTAI · design mockup', fit: 'contain', href: '/projects?project=otai-event-design-mockup' },
               { src: eventBooth, alt: 'Sticker Smith event booth setup', caption: 'Event booth setup' },
               { src: featherFlags, alt: 'Feather flags setup', caption: 'Feather flags' },

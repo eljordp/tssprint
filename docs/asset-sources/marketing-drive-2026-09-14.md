@@ -58,3 +58,15 @@ This is a focused gap review, not a second complete library audit.
 **Photographs:** same design on actual matte and gloss stock, plus clear/paper/raised finish if offered; one finished printed pouch with detail; one multi-design sheet; actual postcard/magnet; printed table cover. The Assam Convention original clip/still can close the backdrop gap, so a new backdrop shoot is not necessary if that source is available. Daylight, neutral background, full product plus a close-up; preserve real surface reflections. No new AI photos or promotional video are required.
 
 Current selection remains the already-labeled site artwork/reference images until genuine matching replacements are available. Do not claim these source gaps are closed merely because a related image exists.
+
+
+## Instagram backdrop photo selected — September 14, approximately 22:04–22:11 PDT
+
+User authorized using suitable Instagram work. **Correction to the prior export limitation:** the first carousel slide at [Assam Convention](https://www.instagram.com/thestickersmith/p/DagSItHEvWb/) contains a downloadable **3024×4032 photograph**, not just video. Browser asset export succeeded for that photo; the earlier failed video export is no longer a blocker for this product example.
+
+- Classification: actual finished shop installation; shop caption identifies 8×10 ft backdrop printed/installed at DoubleTree San Jose for the 47th Assam Convention. This does not establish today's catalog material model, frame model or installation inclusions.
+- Original: `src/assets/projects/instagram-assam-convention-backdrop.jpg` (1,392,177 bytes), preserved unchanged. Instagram filename `741643424_18460010776114359_3387806068399771517_n.jpg`; source post published July 7, 2026.
+- Website derivative: `src/assets/optimized/projects/instagram-assam-convention-backdrop.webp`, 1200×900, 116,390 bytes. EXIF orientation applied, RGB conversion, crop rectangle `(0,450,3024,2718)`, Lanczos resize, WebP quality86/method6. Crop removes excess wall/floor and keeps the graphic/frame visible. No generated elements, surface smoothing or aesthetic retouching.
+- Replaces the unrelated OTAI mockup specifically for **Backdrops & Displays**. OTAI stays honestly labeled for Table Covers. Also appears in the event gallery and a linked Assam project detail. The phone detail uses contain-fit to preserve the entire graphic/frame, independently of artwork/mockup classification.
+- Decision basis: a relevant physical project helps customers understand scale and the print/frame distinction. The source has adequate resolution; shop lighting and natural fabric folds remain visible. Do not present it as a studio material sample or imply every backdrop includes installation.
+- Local browser checks: desktop and390px product selection, loaded photo, complete mobile detail crop, and project-to-inquiry handoff. Inquiry retains the project name; no quote or customer message submitted. Build/prerender and scoped lint passed, with final stage/live evidence recorded in the main ledger.
