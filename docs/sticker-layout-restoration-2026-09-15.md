@@ -60,3 +60,8 @@ Deployment and final live checks will be recorded below.
 Promoted September 15 at approximately 09:41 Pacific. Vercel deployment `dpl_8LLPCZMPdqkuDfEUxf3H1JJx3aGT`, https://tssprint-el2o6sjr3-jordis-projects-94d2df39.vercel.app, READY and assigned to https://tssprint.com. Built application 1292570; main sticker change 5e0e1a3. Final source also incorporates e1af68c's removal of four unused snapshot copies; those extra unused files in the prebuilt artifact do not affect page rendering.
 
 Compared with the live baseline e1af68c, application source differs only in Order.tsx and MaterialGuide.tsx. Normalized visible text in all other prerendered routes is identical. Final live browser: restored heading, zero configurator selects, matte-only image by default; Gloss switches to gloss-only image and selected state; 3-inch size updates 100-piece price to $80.60. No production cart, artwork upload, message, order or payment created by this task.
+
+
+## Authorized functional repairs after restoration
+
+The user subsequently confirmed keeping Cal’s old layout while repairing previews and cart behavior. The mobile audit merged the historical source, then updated the isolated components: PDF/image rendering in both preview tools; saved artwork/cart editing; async-upload cancellation; precise quantity totals; responsive image loading; readable selected-button text and heading semantics. Historical component files therefore no longer claim byte-for-byte identity, while their arrangement and controls remain the restored version. See `mobile-audit-2026-09-15.md` for staged/live verification and score evidence.
