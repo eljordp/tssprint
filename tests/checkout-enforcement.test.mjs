@@ -1,8 +1,8 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
 import { Readable } from 'node:stream'
-import { defaultPricing } from '../src/lib/pricingCatalog.ts'
-import { getStickerPrice } from '../src/lib/stickerPricing.ts'
+import { defaultPricing } from '../src/lib/pricingCatalog.js'
+import { getStickerPrice } from '../src/lib/stickerPricing.js'
 import { normalizeCheckout, buildPayPalOrderPayload, assertPayPalCheckout } from '../server/paypal-api.js'
 import { priceItem, approvedDiscount, loadServerPricing } from '../server/checkout-pricing.js'
 
@@ -123,4 +123,20 @@ test('quote endpoint validates without calling any payment provider', async () =
     assert.equal(calls.length, 1)
     assert.match(calls[0], /pricing_configs/)
   } finally { globalThis.fetch = oldFetch; if (oldKey === undefined) delete process.env.VITE_SUPABASE_ANON_KEY; else process.env.VITE_SUPABASE_ANON_KEY = oldKey; if (oldUrl === undefined) delete process.env.VITE_SUPABASE_URL; else process.env.VITE_SUPABASE_URL = oldUrl }
+})
+
+
+test('PayPal gets stable product names, piece counts and separately priced upgrades', async () => {
+  const request = body()
+  request.items[0].addOns = [{ name: 'Soft-Touch', price: 25 }]
+  request.items[0].quantity = 2
+  Object.assign(request, { promoCode: 'WELCOME15', promoDiscount: 27, total: 153 })
+  const quote = await normalizeCheckout(request, dependencies)
+  const unit = buildPayPalOrderPayload(quote).purchase_units[0]
+  assert.equal(unit.items[0].name, 'Business Cards')
+  assert.match(unit.items[0].description, /250 pcs/)
+  assert.equal(unit.items[1].name, 'Business Cards — Soft-Touch')
+  assert.equal(unit.items.reduce((sum, item) => sum + Number(item.unit_amount.value) * Number(item.quantity), 0), 180)
+  assert.equal(unit.amount.breakdown.discount.value, '27.00')
+  assert.equal(unit.amount.value, '153.00')
 })

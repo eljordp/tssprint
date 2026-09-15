@@ -207,7 +207,7 @@ export async function normalizeCheckout(body, dependencies = {}) {
     total,
     promoCode: sanitizeText(body?.promoCode).toUpperCase() || null,
     description: truncate(
-      body?.orderDescription || items.map((item) => `${item.name} (${item.option}, ${item.size}) x${item.quantity}`).join(', '),
+      items.map((item) => `${item.name} (${item.option}, ${item.size}) x${item.quantity}`).join(', '),
       127
     ),
     visitorId: truncate(body?.visitorId, 120) || null,
@@ -279,14 +279,28 @@ export function buildPayPalOrderPayload(checkout) {
     custom_id: checkoutFingerprint(checkout),
     description: checkout.description,
     amount,
-    items: checkout.items.map((item) => ({
-      name: item.name,
-      unit_amount: { currency_code: CURRENCY, value: moneyString(item.unitPrice) },
-      quantity: String(item.quantity),
-      description: truncate(`${item.option} · ${item.size}`, 127),
-      category: 'PHYSICAL_GOODS',
-    })),
+    items: checkout.items.flatMap((item) => [
+      {
+        // Stable names can map to QuickBooks products/services. A quantity of
+        // one means one print batch; its physical piece count is in the detail.
+        name: item.category || item.name,
+        sku: truncate(`${item.category || item.name}:${item.size}:${item.material || ''}:${item.shape || ''}`, 127),
+        unit_amount: { currency_code: CURRENCY, value: moneyString(item.price) },
+        quantity: String(item.quantity),
+        description: truncate([item.option, item.size, item.material, item.shape].filter(Boolean).join(' · '), 127),
+        category: 'PHYSICAL_GOODS',
+      },
+      ...item.addOns.map(addOn => ({
+        name: truncate(`${item.category || item.name} — ${addOn.name}`, 127),
+        unit_amount: { currency_code: CURRENCY, value: moneyString(addOn.price) },
+        quantity: String(item.quantity),
+        description: truncate(`${addOn.name} · ${item.option} · ${item.size}`, 127),
+        category: 'PHYSICAL_GOODS',
+      })),
+    ]),
   }
+
+  if (purchaseUnit.items.length > 100) throw checkoutError('Please split this order into smaller carts.')
 
   if (checkout.customer.deliveryMethod === 'shipping') {
     purchaseUnit.shipping = {

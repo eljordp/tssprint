@@ -1,5 +1,5 @@
-import { defaultPricing, normalizePricingConfig } from '../src/lib/pricingCatalog.ts'
-import { getStickerPrice, isValidStickerQuantity } from '../src/lib/stickerPricing.ts'
+import { defaultPricing, normalizePricingConfig } from '../src/lib/pricingCatalog.js'
+import { getStickerPrice, isValidStickerQuantity } from '../src/lib/stickerPricing.js'
 
 const CART_CATEGORIES = new Set(['Mylar Packaging', 'Event Displays', 'Backdrops & Displays', 'Table Covers', 'Retractable Banners', 'Business Cards', 'A-Frame Signs', 'Flyers & Door Hangers', 'Postcards', 'Vehicle Magnets'])
 const TOTAL_TIERS = new Set(['Business Cards', 'Flyers & Door Hangers', 'Postcards'])
