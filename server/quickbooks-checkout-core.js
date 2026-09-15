@@ -1,8 +1,10 @@
 import { QuickBooksError } from './quickbooks-core.js'
+import { WEBSITE_PRODUCTS } from './quickbooks-catalog.js'
 import { invoicePayload, invoicePaymentState } from './quickbooks-invoices.js'
 
 export const moneyCents = value => typeof value === 'number' && Number.isFinite(value) ? Math.round(value * 100) : NaN
 export const QB_PRODUCT_NAMES = Object.freeze({
+  ...Object.fromEntries(WEBSITE_PRODUCTS.map(product => [product.category, product.name])),
   Stickers: 'Stickers:Vinyl Stickers', 'Business Cards': 'Custom Card Stock',
   'Flyers & Door Hangers': 'Custom Card Stock', Postcards: 'Custom Card Stock',
   'Vehicle Magnets': 'Vehicle Magnets', 'Retractable Banners': 'Custom Banners',

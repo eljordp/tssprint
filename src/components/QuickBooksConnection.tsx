@@ -14,6 +14,10 @@ type Status = {
 }
 type Readiness = { currency: string | null; salesTaxEnabled: boolean | null; automatedSalesTax: boolean | null; onlinePayments: boolean | null; autoEmail: boolean | null; items: { id: string; name: string; type: string; taxable: boolean | null; incomeAccount: string | null }[] }
 const messages: Record<string, string> = {
+  website_product_conflict: 'A website product already exists with different tax or income settings. Review it in QuickBooks before retrying.',
+  product_income_account_required: 'The existing Custom Card Stock product must have a product-income account before setup.',
+  tax_configuration_required: 'Enable automated sales tax in QuickBooks before setting up these products.',
+  invalid_product_response: 'QuickBooks did not confirm the product settings. Recheck the catalog and retry setup.',
   sandbox_only: 'This test is available only for the sandbox company.',
   invoice_busy: 'The same invoice test is already running. Try again shortly.',
   invoice_mapping_required: 'The sandbox needs an active service item before testing.',
@@ -116,6 +120,19 @@ export default function QuickBooksConnection() {
           <dt>Online card preference</dt><dd>{readiness.onlinePayments === null ? 'Not reported — verify on an invoice' : readiness.onlinePayments ? 'Enabled' : 'Disabled'}</dd>
           <dt>Automatic invoice email</dt><dd>{readiness.autoEmail === null ? 'Not reported' : readiness.autoEmail ? 'Enabled' : 'Disabled'}</dd>
         </dl>
+        <div className="rounded-lg border border-border p-4 space-y-3">
+          <h4 className="font-semibold">Website product tax setup</h4>
+          <p className="text-sm text-muted-foreground">Creates any missing Website Mylar Packaging, Website Canopies and Website Table Covers items as taxable goods, using the same product-income account as Custom Card Stock. QuickBooks calculates the order’s tax from its sales-tax settings and delivery address.</p>
+          <button className="btn-primary disabled:opacity-50" disabled={busy} onClick={async () => {
+            setBusy(true); setMessage('')
+            try {
+              const result = await request('setup-products', 'POST')
+              setMessage(`Verified ${result.products.length} taxable website products. Income account: ${result.incomeAccount}.`)
+              setReadiness(await request('readiness'))
+            } catch (error) { setMessage(error instanceof Error ? error.message : 'Product setup needs a retry.') }
+            finally { setBusy(false) }
+          }}>Set up taxable website products</button>
+        </div>
         <h4 className="font-semibold">Available products and services</h4>
         <ul className="space-y-2 text-sm">{readiness.items.map(item => <li key={item.id} className="rounded-lg border border-border p-3"><strong>{item.name}</strong> · {item.type}<br />Income account: {item.incomeAccount || 'Not reported'} · Taxable: {item.taxable === null ? 'Not reported' : item.taxable ? 'Yes' : 'No'}</li>)}</ul>
       </section>}
