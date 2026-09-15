@@ -4,7 +4,7 @@ Created September 14, 2026, 21:09 PDT. Status: approved and in progress. Cart ed
 
 ## Current completion plan — September 14, 22:24 PDT
 
-This section supersedes the original execution order below; earlier checkpoints remain history. Status: proposed in response to the user's request to plan remaining work. No application changes or deployment in this planning pass. Current application baseline is `7e54d3d`, incorporating operations `84a330b`; last verified customer-interface assessment is 7.75/10. The 602 Drive entries remain inventoried, **not fully visually reviewed**, and a full review is deferred at the user's explicit direction. Use known shortlisted sources only when a specific gap warrants it. No routine messages to the other task.
+This section supersedes the original execution order below; earlier checkpoints remain history. Status: approved by the user; first implementation batch shipped. The original planning pass made no application changes. See the execution update below for current state. Current application baseline is `7e54d3d`, incorporating operations `84a330b`; last verified customer-interface assessment is 7.75/10. The 602 Drive entries remain inventoried, **not fully visually reviewed**, and a full review is deferred at the user's explicit direction. Use known shortlisted sources only when a specific gap warrants it. No routine messages to the other task.
 
 ### 1. Make sticker formats clear and consistent
 
@@ -150,3 +150,17 @@ Each checkpoint gets a concise progress update. Planning approval does not mean 
 
 
 September14, approximately22:11PDT follow-up: user approved Instagram imagery. The first Assam carousel slide yielded a full-resolution real photo; added to backdrop selector, event gallery and project detail. This closes the actual-backdrop-image gap. Original and exact crop/source are retained in the source record. Pouch/material stock and other unmatched photos remain unresolved; no unrelated claims were inferred from this event photo.
+
+
+## Execution update — September 14, 22:45 PDT
+
+First batch deployed as combined `ff1d13d` / `dpl_34TS8CmkWxEBt7rxCHPAe33PjnqR`; includes the newer policy release9833c85. Details and dated evidence are in the ledger.
+
+- **Phase1 implemented to available facts:** visible format choices, consistent defaults, honest units and multi-design/machine-roll quote handoff with retained artwork. True per-sheet instant pricing and precise manufacturing compatibility still require verified shop facts.
+- **Phase2 first reporting repair shipped:** independent page reach, ordered session milestones, optional upload outcomes, bounded pagination/completeness. Live authenticated data loads passed. Paid-transaction linkage, GA4 processed filters and historical QA separation remain pending; the current small sample is not sales-performance evidence.
+- **Phase3 partly shipped:** sticker/support-page copy and FAQ cleanup plus accurate image labels. Existing policy pages/disclosures merged from the other task. Remaining asset/stock gaps unchanged; full602-entry review deferred.
+- **Phase4 additional verification passed:** actual staged quote artwork retention/reload; sheet-to-roll cart edit/reload without duplication; empty-file errors/retry/send-later recovery; eight live admin sections and new reports. No new quote/email/payment sent. Actual recovery-link recipient completion and interrupted/expired file exercises remain open.
+- **Phase5 dependency advanced:** production QuickBooks environment confirmed active, connection still disconnected; payment task has the combined release reference.
+- **Phase6 partial:** 60 tests, scoped lint, 33-route prerender, narrow-screen format checks and eight live HTTP paths passed. This is not real-device or full accessibility/performance certification.
+
+Next independent implementation/verification work: remaining upload failure cases and saved-cart/recovery completion using controlled records; collect only missing stock/pricing facts from existing records or one consolidated shop response. Do not repeat completed format/cart implementation or start a full media-library audit.
