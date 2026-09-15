@@ -23,3 +23,9 @@ User requested the older sticker ordering layout, visible choices instead of dro
 - No application source changes outside Order.tsx and MaterialGuide.tsx relative to the latest underlying site release; regenerated page assets are build output.
 
 Deployment and final live checks will be recorded below.
+
+## Live release
+
+Promoted September 15 at approximately 09:41 Pacific. Vercel deployment `dpl_8LLPCZMPdqkuDfEUxf3H1JJx3aGT`, https://tssprint-el2o6sjr3-jordis-projects-94d2df39.vercel.app, READY and assigned to https://tssprint.com. Built application 1292570; main sticker change 5e0e1a3. Final source also incorporates e1af68c's removal of four unused snapshot copies; those extra unused files in the prebuilt artifact do not affect page rendering.
+
+Compared with the live baseline e1af68c, application source differs only in Order.tsx and MaterialGuide.tsx. Normalized visible text in all other prerendered routes is identical. Final live browser: restored heading, zero configurator selects, matte-only image by default; Gloss switches to gloss-only image and selected state; 3-inch size updates 100-piece price to $80.60. No production cart, artwork upload, message, order or payment created by this task.
