@@ -371,7 +371,7 @@ export default function StudioMockup({
                 onClick={() => setActiveKey(s.key)}
                 className={`px-4 py-2 rounded-full text-sm font-semibold border transition-all ${
                   active
-                    ? 'bg-primary text-white border-primary'
+                    ? 'bg-primary text-primary-foreground border-primary'
                     : 'bg-card border-border text-muted-foreground hover:text-foreground hover:border-primary/30'
                 }`}
               >

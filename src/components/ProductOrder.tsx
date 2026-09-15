@@ -281,7 +281,7 @@ function ProductOrderForm({ categoryNames, onCategoryChange, checkoutMode = 'car
                       }}
                       className={`px-4 py-2 rounded-full text-sm font-semibold transition-all ${
                         activeGroup === gi
-                          ? 'bg-primary text-white'
+                          ? 'bg-primary text-primary-foreground'
                           : 'bg-card border border-border text-muted-foreground hover:text-foreground hover:border-primary/30'
                       }`}
                     >

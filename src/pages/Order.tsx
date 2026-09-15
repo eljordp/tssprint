@@ -599,7 +599,7 @@ export default function Order({ embedded = false, initialShape = 'Die-Cut', init
 
 </div><MaterialGuide value={material} onSelect={next => { setMaterial(next); trackEvent('configuration_change', { field: 'material', value: next }) }} />            {/* Quantity */}
             <div>
-              <h3 className="text-sm font-black uppercase tracking-wider mb-3">Quantity</h3>
+              <h2 className="text-sm font-black uppercase tracking-wider mb-3">Quantity</h2>
               {mockupView !== 'handheld' && <p className="text-sm text-muted-foreground mb-3">{mockupView === 'sheet' ? 'Count individual stickers, not backing sheets. Size is for each sticker.' : 'Count individual labels, not rolls. Size is for each label.'}</p>}
               <p className="text-xs text-muted-foreground mb-3">Prices include your size and material. Savings vs. {MIN_QTY} pcs.</p>
               <div className="grid grid-cols-2 gap-2">
@@ -613,7 +613,7 @@ export default function Order({ embedded = false, initialShape = 'Die-Cut', init
                       onClick={() => { setQuantity(q); setCustomQty('') }}
                       className={`w-full flex flex-col items-start justify-between px-3 py-3 rounded-xl text-sm font-medium border transition-all ${
                         isActive
-                          ? 'border-primary bg-primary text-white'
+                          ? 'border-primary bg-primary text-primary-foreground'
                           : 'border-border hover:border-primary/30'
                       }`}
                     >
@@ -621,7 +621,7 @@ export default function Order({ embedded = false, initialShape = 'Die-Cut', init
                       <span className="flex items-center gap-2">
                         <span className="font-bold">${total}</span>
                         {disc > 0 && (
-                          <span className={`text-xs font-semibold ${isActive ? 'text-white/70' : 'text-green-400'}`}>
+                          <span className={`text-xs font-semibold ${isActive ? 'text-primary-foreground/80' : 'text-green-400'}`}>
                             Save {disc}%/ea
                           </span>
                         )}
@@ -659,9 +659,9 @@ export default function Order({ embedded = false, initialShape = 'Die-Cut', init
             </div>
             {/* Order Summary */}
             <div className="bg-card border border-border rounded-2xl p-6 flex flex-col">
-              <h3 className="text-xs font-black uppercase tracking-[0.2em] text-center text-muted-foreground mb-4">
+              <h2 className="text-xs font-black uppercase tracking-[0.2em] text-center text-muted-foreground mb-4">
                 Order Summary
-              </h3>
+              </h2>
               <div className="text-center mb-4">
                 <p className="text-xl font-black">{quantityValid ? `${effectiveQty} ${mockupView === 'roll' ? 'labels' : 'stickers'}` : 'Choose a valid quantity'}</p>
                 <p className="text-sm text-muted-foreground">{shapeLabel} &middot; {formatSizeForShape(size, shape)}</p>

@@ -1,5 +1,13 @@
-@import url('https://fonts.googleapis.com/css2?family=Noto+Sans:wght@400;500;600;700;900&display=swap');
 @import "tailwindcss";
+
+/* Same Noto Sans face, served locally to avoid an external stylesheet round trip. */
+@font-face {
+  font-family: 'Noto Sans';
+  font-style: normal;
+  font-display: swap;
+  font-weight: 100 900;
+  src: url('@fontsource-variable/noto-sans/files/noto-sans-latin-wght-normal.woff2') format('woff2');
+}
 
 @theme {
   --color-background: hsl(220 15% 8%);
@@ -7,14 +15,14 @@
   --color-card: hsl(220 12% 11%);
   --color-card-foreground: hsl(0 0% 98%);
   --color-primary: hsl(199 89% 64%);
-  --color-primary-foreground: hsl(0 0% 100%);
+  --color-primary-foreground: hsl(220 15% 8%);
   --color-primary-glow: hsl(199 89% 55%);
   --color-secondary: hsl(220 12% 14%);
   --color-secondary-foreground: hsl(0 0% 98%);
   --color-muted: hsl(220 10% 18%);
   --color-muted-foreground: hsl(220 10% 68%);
   --color-accent: hsl(199 89% 64%);
-  --color-accent-foreground: hsl(0 0% 100%);
+  --color-accent-foreground: hsl(220 15% 8%);
   --color-destructive: hsl(0 62% 50%);
   --color-border: hsl(220 10% 16%);
   --color-input: hsl(220 10% 16%);
@@ -155,3 +163,21 @@ select.input-base { cursor: pointer; }
     transition-duration: 0.01ms !important;
   }
 }
+
+:where(a, button, input, select, textarea, [tabindex]):focus-visible {
+  outline: 2px solid var(--color-ring);
+  outline-offset: 4px;
+}
+.skip-link {
+  position: fixed;
+  top: 8px;
+  left: 8px;
+  z-index: 100;
+  transform: translateY(-200%);
+  padding: 12px 18px;
+  border-radius: 8px;
+  background: var(--color-primary);
+  color: var(--color-primary-foreground);
+  font-weight: 700;
+}
+.skip-link:focus { transform: translateY(0); }

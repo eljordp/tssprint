@@ -118,26 +118,26 @@ export default function Footer() {
             </form>
           </div>
           <div>
-            <h4 className="font-bold text-sm uppercase tracking-wider mb-5 text-foreground">Products</h4>
+            <h2 className="font-bold text-sm uppercase tracking-wider mb-5 text-foreground">Products</h2>
             <ul className="space-y-3">
               {footerLinks.products.map((link) => (<li key={link.label}><Link to={link.href} className="text-sm text-muted-foreground hover:text-foreground transition-colors">{link.label}</Link></li>))}
             </ul>
           </div>
           <div>
-            <h4 className="font-bold text-sm uppercase tracking-wider mb-5 text-foreground">Services</h4>
+            <h2 className="font-bold text-sm uppercase tracking-wider mb-5 text-foreground">Services</h2>
             <ul className="space-y-3">
               {footerLinks.services.map((link) => (<li key={link.label}><Link to={link.href} className="text-sm text-muted-foreground hover:text-foreground transition-colors">{link.label}</Link></li>))}
             </ul>
           </div>
           <div>
-            <h4 className="font-bold text-sm uppercase tracking-wider mb-5 text-foreground">Support</h4>
+            <h2 className="font-bold text-sm uppercase tracking-wider mb-5 text-foreground">Support</h2>
             <ul className="space-y-3">
               {footerLinks.support.map((link) => (<li key={link.label}><Link to={link.href} className="text-sm text-muted-foreground hover:text-foreground transition-colors">{link.label}</Link></li>))}
             </ul>
           </div>
         </div>
         <div className="mt-12 pt-8 border-t border-border">
-          <h4 className="font-bold text-sm uppercase tracking-wider mb-5 text-foreground">East Bay Service Area</h4>
+          <h2 className="font-bold text-sm uppercase tracking-wider mb-5 text-foreground">East Bay Service Area</h2>
           <ul className="flex flex-wrap gap-x-5 gap-y-2">
             {footerLinks.serviceArea.map((link) => (
               <li key={link.label}>

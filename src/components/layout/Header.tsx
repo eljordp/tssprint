@@ -1,9 +1,10 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { Link, useLocation } from 'react-router-dom'
 import { Menu, X, ChevronDown, Search, User } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useAuth } from '@/context/AuthContext'
 import { useCart } from '@/context/CartContext'
+import { useModalFocus } from '@/hooks/useModalFocus'
 import SearchModal from '@/components/SearchModal'
 import tssLogo from '@/assets/tss-logo-new.png'
 
@@ -31,6 +32,8 @@ export default function Header() {
   const [openDropdown, setOpenDropdown] = useState<string | null>(null)
   const [hoveredService, setHoveredService] = useState<string | null>(null)
   const [isSearchOpen, setIsSearchOpen] = useState(false)
+  const mobileMenuRef = useModalFocus(isMobileMenuOpen, () => setIsMobileMenuOpen(false))
+  const servicesToggleRef = useRef<HTMLButtonElement>(null)
   const location = useLocation()
   const { user } = useAuth()
   const { items } = useCart()
@@ -68,9 +71,17 @@ export default function Header() {
   }, [location])
 
   useEffect(() => {
+    const desktop = window.matchMedia('(min-width: 1024px)')
+    const closeOnDesktop = () => { if (desktop.matches) setIsMobileMenuOpen(false) }
+    desktop.addEventListener('change', closeOnDesktop)
+    return () => desktop.removeEventListener('change', closeOnDesktop)
+  }, [])
+
+  useEffect(() => {
     const handleKey = (e: KeyboardEvent) => {
       if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
         e.preventDefault()
+        setIsMobileMenuOpen(false)
         setIsSearchOpen(true)
       }
     }
@@ -84,19 +95,23 @@ export default function Header() {
         <div className="section-container">
           <nav className="flex items-center justify-between h-16 md:h-18">
             <Link to="/" className="flex items-center group">
-              <img src={tssLogo} alt="The Sticker Smith" className="h-10 md:h-12 w-auto transition-transform group-hover:scale-105" />
+              <img src={tssLogo} alt="The Sticker Smith" width={400} height={224} className="h-10 md:h-12 w-auto transition-transform group-hover:scale-105" />
             </Link>
             <div className="hidden lg:flex items-center gap-1">
               {navLinks.map((link) => (
-                <div key={link.label} className="relative" onMouseEnter={() => { if (link.submenu) setOpenDropdown(link.label) }} onMouseLeave={() => { setOpenDropdown(null); setHoveredService(null) }}>
+                <div key={link.label} className="relative" onMouseEnter={() => { if (link.submenu) setOpenDropdown(link.label) }} onMouseLeave={(event) => { if (!event.currentTarget.contains(document.activeElement)) { setOpenDropdown(null); setHoveredService(null) } }}
+                  onBlur={(event) => { if (!event.currentTarget.contains(event.relatedTarget)) { setOpenDropdown(null); setHoveredService(null) } }}
+                  onKeyDown={(event) => { if (event.key === 'Escape' && openDropdown) { event.preventDefault(); setOpenDropdown(null); setHoveredService(null); servicesToggleRef.current?.focus() } }}>
+                  <div className="flex items-center">
                   <Link to={link.href} className={`nav-link flex items-center gap-1 px-4 py-2 rounded-lg hover:bg-white/5 ${isActiveLink(link.href) ? 'active' : ''}`}>
                     {link.label}
-                    {link.submenu && <ChevronDown size={14} className="opacity-50" />}
                   </Link>
+                  {link.submenu && <button ref={servicesToggleRef} type="button" aria-label="Show services" aria-expanded={openDropdown === link.label} aria-controls="services-menu" onClick={() => setOpenDropdown(openDropdown === link.label ? null : link.label)} className="min-h-11 min-w-11 flex items-center justify-center rounded-lg hover:bg-white/5"><ChevronDown size={14} /></button>}
+                  </div>
                   {link.submenu && (
                     <AnimatePresence>
                       {openDropdown === link.label && (
-                        <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: 8 }} transition={{ duration: 0.15 }} className="absolute top-full left-0 mt-1 w-56 bg-card border border-border rounded-xl overflow-hidden shadow-lg z-50">
+                        <motion.div id="services-menu" initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: 8 }} transition={{ duration: 0.15 }} className="absolute top-full left-0 mt-1 w-56 bg-card border border-border rounded-xl overflow-hidden shadow-lg z-50">
                           {link.submenu.map((sub) => (
                             <div key={sub.label} className="relative" onMouseEnter={() => setHoveredService(sub.label)} onMouseLeave={() => setHoveredService(null)}>
                               <Link to={sub.href} className={`flex items-center justify-between px-4 py-3 text-sm transition-colors ${hoveredService === sub.label ? 'text-foreground bg-white/5' : 'text-muted-foreground hover:text-foreground hover:bg-white/5'}`}>
@@ -150,17 +165,17 @@ export default function Header() {
               <Link to="/contact" className="btn-primary text-sm px-6 py-2.5">Start My Project</Link>
             </div>
             <div className="flex items-center gap-2 lg:hidden">
-              <button onClick={() => setIsSearchOpen(true)} className="p-2 text-muted-foreground hover:text-foreground transition-colors" aria-label="Search">
+              <button onClick={() => setIsSearchOpen(true)} className="p-3 text-muted-foreground hover:text-foreground transition-colors" aria-label="Search">
                 <Search size={20} />
               </button>
-              <Link to="/account" className={`p-2 transition-colors ${user ? 'text-primary' : 'text-muted-foreground hover:text-foreground'}`} aria-label="Account">
+              <Link to="/account" className={`p-3 transition-colors ${user ? 'text-primary' : 'text-muted-foreground hover:text-foreground'}`} aria-label="Account">
                 <User size={20} />
               </Link>
-              <Link to="/cart" className="relative p-2 text-muted-foreground hover:text-foreground transition-colors" aria-label="Shopping cart">
+              <Link to="/cart" className="relative p-3 text-muted-foreground hover:text-foreground transition-colors" aria-label="Shopping cart">
                 <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="8" cy="21" r="1"/><circle cx="19" cy="21" r="1"/><path d="M2.05 2.05h2l2.66 12.42a2 2 0 0 0 2 1.58h9.78a2 2 0 0 0 1.95-1.57l1.65-7.43H5.12"/></svg>
                 {cartCount > 0 && <span className="absolute -top-0.5 -right-0.5 w-5 h-5 rounded-full bg-primary text-primary-foreground text-[10px] flex items-center justify-center font-bold">{cartCount}</span>}
               </Link>
-              <button className="p-2 text-foreground hover:text-primary transition-colors" onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)} aria-label="Toggle menu">
+              <button className="p-3 text-foreground hover:text-primary transition-colors" onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)} aria-label="Toggle menu" aria-expanded={isMobileMenuOpen} aria-controls="mobile-navigation">
                 {isMobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
               </button>
             </div>
@@ -169,9 +184,10 @@ export default function Header() {
       </header>
       <AnimatePresence>
         {isMobileMenuOpen && (
-          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 z-40 lg:hidden">
+          <motion.div ref={mobileMenuRef} id="mobile-navigation" role="dialog" aria-modal="true" aria-label="Main navigation" tabIndex={-1} initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 z-[60] lg:hidden">
             <div className="absolute inset-0 bg-background/98 backdrop-blur-md" onClick={() => setIsMobileMenuOpen(false)} />
-            <motion.nav initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -20 }} className="relative pt-20 px-6 flex flex-col gap-1 max-h-screen overflow-y-auto pb-32">
+            <motion.nav initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -20 }} className="relative pt-6 px-6 flex flex-col gap-1 max-h-screen overflow-y-auto pb-32">
+              <button type="button" className="self-end p-3 rounded-lg hover:bg-white/5" aria-label="Close menu" onClick={() => setIsMobileMenuOpen(false)}><X size={24} /></button>
               {navLinks.map((link, index) => (
                 <motion.div key={link.label} initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: index * 0.05 }}>
                   <Link to={link.href} className={`block text-xl font-semibold py-3 border-b border-border/30 transition-colors ${isActiveLink(link.href) ? 'text-primary' : 'text-foreground hover:text-primary'}`}>{link.label}</Link>

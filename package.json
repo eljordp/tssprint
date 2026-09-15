@@ -17,6 +17,7 @@
     "test:cart-editing": "node --experimental-strip-types --test tests/product-cart-editing.test.ts"
   },
   "dependencies": {
+    "@fontsource-variable/noto-sans": "^5.3.0",
     "@paypal/react-paypal-js": "^9.0.1",
     "@supabase/supabase-js": "^2.99.0",
     "@tailwindcss/vite": "^4.2.0",
