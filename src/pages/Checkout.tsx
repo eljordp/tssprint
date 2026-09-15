@@ -5,6 +5,7 @@ import { motion } from 'framer-motion'
 import { PayPalScriptProvider, PayPalButtons } from '@paypal/react-paypal-js'
 import { ArrowLeft, Lock, ShieldCheck, Tag, X, Check, MapPin, Truck } from 'lucide-react'
 import { useCart } from '@/context/CartContext'
+import PaymentDisclosure from '@/components/PaymentDisclosure'
 import SquareCardPayment from '@/components/SquareCardPayment'
 import { checkoutSchema, type CheckoutFormErrors } from '@/lib/validation'
 import { supabase } from '@/lib/supabase'
@@ -718,6 +719,10 @@ export default function Checkout() {
                   <Lock size={14} aria-hidden="true" /> {squareAvailable ? 'Secure card checkout by Square or continue with PayPal' : 'Secure checkout with PayPal'}
                 </div>
 
+                <div className="mb-6 space-y-2">
+                  <PaymentDisclosure />
+                  <p className="text-xs text-muted-foreground">Review our <Link to="/terms" className="text-primary underline">Terms &amp; EULA</Link> and <Link to="/privacy" className="text-primary underline">Privacy Policy</Link> before paying.</p>
+                </div>
                 {!formValid && (
                   <p className="text-sm text-muted-foreground mb-4 bg-muted/50 rounded-xl p-4">
                     Enter your contact and delivery details to enable payment.

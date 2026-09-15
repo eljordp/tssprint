@@ -2,6 +2,7 @@ import { useState, type FormEvent } from 'react'
 import { Link } from 'react-router-dom'
 import { toast } from 'sonner'
 import tssLogo from '@/assets/tss-logo-new.png'
+import PaymentDisclosure from '@/components/PaymentDisclosure'
 import { cities } from '@/lib/cities'
 import { subscribeEmail } from '@/lib/contactSubmit'
 
@@ -161,6 +162,6 @@ export default function Footer() {
           </div>
         </div>
       </div>
-    <div className="section-container pb-6 text-sm"><Link to="/order-help" className="text-primary">Proofs, delivery & order help</Link></div></footer>
+    <div className="section-container pb-8 space-y-4"><nav aria-label="Policies and order help" className="flex flex-wrap gap-x-6 gap-y-2 text-sm"><Link to="/order-help" className="text-primary py-2">Proofs, delivery &amp; order help</Link><Link to="/terms" className="text-muted-foreground hover:text-foreground py-2">Terms &amp; EULA</Link><Link to="/privacy" className="text-muted-foreground hover:text-foreground py-2">Privacy Policy</Link></nav><PaymentDisclosure /></div></footer>
   )
 }
