@@ -41,6 +41,14 @@ function extractAll(html, regex) {
 const freshScripts = extractAll(freshIndex, /<script[^>]+src="\/assets\/[^"]+\.js"[^>]*><\/script>/g)
 const freshStyles = extractAll(freshIndex, /<link[^>]+href="\/assets\/[^"]+\.css"[^>]*>/g)
 const freshTags = [...freshScripts, ...freshStyles].join('\n    ')
+// The three prerendered entry pages can paint without a stylesheet round trip.
+// Keep the full cascade intact; other routes continue using the cached CSS asset.
+const entryCss = (await Promise.all(freshStyles.map(async tag => {
+  const href = tag.match(/href="([^"]+)"/)?.[1]
+  return href ? readFile(path.join(DEST, href), 'utf8') : ''
+}))).join('\n').replace(/<\/style/gi, '<\\/style')
+const entryTags = [...freshScripts, `<style data-entry-css>${entryCss}</style>`].join('\n    ')
+
 
 if (freshScripts.length === 0) {
   console.error('[apply-prerendered] no <script src="/assets/*.js"> found in fresh dist/index.html — aborting')
@@ -85,8 +93,11 @@ function patchHtml(html, route) {
   // Route chunks may be merged or removed between builds. Vite's fresh runtime
   // handles their preloads; serialized preload tags must not pin old chunks.
   html = html.replace(/<link\b(?=[^>]*\brel="modulepreload")[^>]*>\s*/g, '')
-  // Inject the fresh ones right before </head>.
-  html = html.replace(/<\/head>/i, `    ${freshTags}\n${routePreloads(manifest, route)}\n  </head>`)
+  html = html.replace(/<style data-entry-css>[\s\S]*?<\/style>\s*/g, '')
+  const tags = html.includes('data-react-ssr="true"') ? entryTags : freshTags
+  // Inject the current build's cascade and asset references together.
+  html = html.replace(/<\/head>/i, `    ${tags}\n${routePreloads(manifest, route)}\n  </head>`)
+
   // Rewrite any remaining hashed asset references (images, fonts, media) to the
   // fresh build's filenames, matched by base name. Unknown refs pass through.
   html = html.replace(/\/assets\/([A-Za-z0-9._-]+)/g, (full, file) => {

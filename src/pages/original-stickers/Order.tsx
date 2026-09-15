@@ -3,6 +3,7 @@ import { Link, useSearchParams, useNavigate } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import { ShoppingCart, Sparkles, FileUp, Check, Clock, MapPin, Shield, Zap, Palette, Droplets, Sticker as StickerIcon, Hand, PanelsTopLeft, ScrollText, ArrowRight, Send } from 'lucide-react'
 import { useCart } from '@/context/CartContext'
+import { trackEvent } from '@/lib/analytics'
 import ResponsiveImage from '@/components/ResponsiveImage'
 import { createArtworkPreview, readArtworkPreview, saveArtworkPreview, type ArtworkPreview } from '@/lib/artworkPreview'
 import { getPricing, loadPricing, getBasePrice, getMaterialMultiplier, getSizeMultiplier } from '@/lib/pricing'
@@ -243,12 +244,15 @@ export default function Order() {
 
   const [pricingConfig, setPricingConfig] = useState(() => getPricing())
   const queryString = searchParams.toString()
+  useEffect(() => { trackEvent('view_item', { product: 'custom-stickers' }) }, [])
 
   useEffect(() => {
     if (!editingItem?.configuration) return
     const config = editingItem.configuration
     setShape(config.shape); setMaterial(config.material); setSize(config.size)
-    setCustomQty(String(config.pieces)); setMockupView(config.format)
+    setQuantity(config.pieces)
+    setCustomQty(qtyOptions.includes(config.pieces) ? '' : String(config.pieces))
+    setMockupView(config.format)
     setRushAddon(Boolean(config.rush)); setDesignAddon(Boolean(config.design))
     setArtworkIntent(editingItem.artworkIntent === 'uploaded' ? 'upload' : editingItem.artworkIntent || null)
     setArtworkUpload(editingItem.artwork || null)
@@ -337,7 +341,7 @@ export default function Order() {
     const pu = getBasePrice(qty, pricingConfig) * matMult * sizeMult
     return Math.round((1 - pu / refPerUnit) * 100)
   }
-  const getQtyTotal = (qty: number) => +(getBasePrice(qty, pricingConfig) * matMult * sizeMult * qty).toFixed(2)
+  const getQtyTotal = (qty: number) => (getBasePrice(qty, pricingConfig) * matMult * sizeMult * qty).toFixed(2)
 
   const materialLabel = materialData.find(m => m.value === material)?.label || material
   const shapeLabel = shapeData.find(s => s.value === shape)?.name || shape
@@ -349,6 +353,7 @@ export default function Order() {
 
   const uploadArtwork = async (file: File) => {
     const generation = ++artworkGeneration.current
+    trackEvent('artwork_upload_started')
     setArtworkStatus('uploading')
     setArtworkError('')
     setArtworkUpload(null)
@@ -386,9 +391,11 @@ export default function Order() {
         uploadedAt: new Date().toISOString(),
       })
       setArtworkStatus('uploaded')
+      trackEvent('artwork_upload_succeeded')
     } catch (error) {
       if (generation !== artworkGeneration.current) return
       setArtworkStatus('error')
+      trackEvent('artwork_upload_failed')
       setArtworkError(error instanceof Error ? error.message : 'Artwork upload failed.')
     }
   }
@@ -403,6 +410,7 @@ export default function Order() {
   }
 
   const chooseArtworkIntent = (intent: ArtworkIntent) => {
+    trackEvent('artwork_option_selected', { option: intent })
     setArtworkIntent(intent)
     setArtworkChoiceError('')
     setDesignAddon(intent === 'design_help')
@@ -426,6 +434,8 @@ export default function Order() {
   const handleAddToCart = () => {
     if (effectiveQty < MIN_QTY || submittedRef.current) return
     if (!artworkIntent) {
+      trackEvent('artwork_choice_required')
+      document.getElementById('artwork-options')?.focus()
       setArtworkChoiceError('Choose how you will provide artwork before adding this order.')
       return
     }
@@ -633,6 +643,7 @@ export default function Order() {
               <div className="space-y-3 w-full max-w-xs">
                 <button
                   type="button"
+                  id="artwork-options"
                   onClick={() => chooseArtworkIntent('upload')}
                   className={`w-full flex items-center justify-center gap-2.5 px-5 py-4 rounded-xl border text-sm font-medium transition-all ${
                     artworkIntent === 'upload'
