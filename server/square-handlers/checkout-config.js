@@ -1,3 +1,4 @@
+import { quickBooksOnly } from '../payment-policy.js'
 import {
   getSquareConnection,
   missingServerEnv,
@@ -11,6 +12,7 @@ export default async function handler(req, res) {
   if (req.method !== 'GET') return sendJson(res, 405, { error: 'Method not allowed' })
   res.setHeader('Cache-Control', 'no-store')
 
+  if (quickBooksOnly()) return sendJson(res, 200, { available: false, reason: 'use_quickbooks' })
   try {
     const missing = missingServerEnv()
     if (missing.length > 0) {

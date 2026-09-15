@@ -1,3 +1,4 @@
+import { quickBooksOnly, taxEnabledPaymentMessage } from '../../server/payment-policy.js'
 import {
   buildPayPalOrderPayload,
   normalizeCheckout,
@@ -9,6 +10,7 @@ import {
 
 export default async function handler(req, res) {
   if (req.method !== 'POST') return sendJson(res, 405, { error: 'Method not allowed' })
+  if (quickBooksOnly()) return sendJson(res, 409, { error: taxEnabledPaymentMessage })
   if (!requirePayPalEnv(res)) return
 
   try {

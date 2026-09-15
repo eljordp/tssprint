@@ -40,3 +40,13 @@ Apple Pay is offered by the hosted invoice on eligible Safari / Apple Wallet set
 - Configure and verify GA4 Measurement Protocol purchase delivery; transport acceptance alone is not report verification.
 - Resolve existing PayPal/Square paths that currently omit separate tax before presenting them beside taxed QuickBooks checkout.
 - Complete catalog mappings for remaining purchasable categories, then authorized real card payment, eligible-device Apple Pay, receipt and paid-order checks.
+
+## 2026-09-15 — automatic recovery verified live
+
+- Production release 75e3ac4: https://tssprint-az17rlc7u-jordis-projects-94d2df39.vercel.app, promoted to tssprint.com.
+- Installed 20260915090000_quickbooks_worker.sql and scheduled tss-quickbooks-recovery every 2 minutes. It dispatches only when work is due; each worker request has an expiring, single-use token and private database leases.
+- Rollback-only database assertions passed for anonymous/authenticated access denial, wrong/expired/reused worker tokens, concurrent event leases, and expired lease recovery.
+- Replayed the existing unpaid invoice 3275 as event recovery-verification-20260915, deliberately locking only that verification checkout. At 07:58 UTC the scheduled worker returned HTTP 200 and left the event pending with checkout_busy. After releasing the test lock, the next scheduled worker processed it at 08:00:02 UTC. Two attempts, error cleared, invoice still awaiting_payment, no paid order and zero follow-up jobs. No payment was made or email sent.
+- Admin now reports scheduler status, most recent run and pending/review follow-up counts.
+- New invoices use the customer's name, payment due on the order date, and an unpaid memo that does not imply payment received. Existing invoice 3275 was not rewritten.
+- Public QuickBooks launch, GA4 acknowledgement/key and a real customer purchase remain separate checks. A worker HTTP 200 or unpaid invoice does not prove processor settlement or inbox delivery.

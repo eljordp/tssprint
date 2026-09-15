@@ -56,6 +56,18 @@ export default function Checkout() {
   const [paymentError, setPaymentError] = useState('')
   const [processing, setProcessing] = useState(false)
   const [squareAvailable, setSquareAvailable] = useState(false)
+  const [paymentConfig, setPaymentConfig] = useState<{ enabled: boolean; quickBooksOnly: boolean } | null>(null)
+  const qbPreview = new URLSearchParams(window.location.search).get('qb_preview') === '1'
+  const onlyQuickBooks = paymentConfig?.quickBooksOnly === true || qbPreview
+  useEffect(() => {
+    const controller = new AbortController()
+    fetch('/api/quickbooks/checkout-config', { signal: controller.signal }).then(async response => {
+      if (!response.ok) throw new Error('Payment settings unavailable')
+      const data = await response.json()
+      setPaymentConfig({ enabled: data.enabled === true, quickBooksOnly: data.quickBooksOnly === true })
+    }).catch(error => { if (error.name !== 'AbortError') setPaymentError('Payment settings could not load. Refresh this page or contact the shop before paying.') })
+    return () => controller.abort()
+  }, [])
   const [quoteState, setQuoteState] = useState<{ key: string; error: string; valid: boolean }>({ key: '', error: '', valid: false })
   const [promoInput, setPromoInput] = useState('')
   const [promoError, setPromoError] = useState('')
@@ -660,7 +672,7 @@ export default function Checkout() {
                     </div>
                   )}
                   <div className="flex justify-between text-muted-foreground"><span>{customerInfo.deliveryMethod === 'pickup' ? 'Pickup' : 'Shipping'}</span><span className="text-green-400">Free</span></div>
-                  <div className="flex justify-between text-xl font-black pt-2 border-t border-border"><span>Total</span><span className="text-primary">${finalTotal.toFixed(2)}</span></div>
+                  <div className="flex justify-between text-xl font-black pt-2 border-t border-border"><span>{onlyQuickBooks ? 'Total before tax' : 'Total'}</span><span className="text-primary">${finalTotal.toFixed(2)}</span></div>
                 </div>
                 <details className="mt-4 border-t border-border pt-3">
                   <summary className="cursor-pointer text-sm text-muted-foreground">{promoCode ? `Discount applied: ${promoCode} · Change` : 'Have a promo code?'}</summary>
@@ -708,7 +720,7 @@ export default function Checkout() {
                 </details>
                 <div className="mt-6 flex items-center gap-2 text-xs text-muted-foreground">
                   <ShieldCheck size={16} className="text-green-400 shrink-0" aria-hidden="true" />
-                  <span>{squareAvailable ? 'Card details are handled by Square; PayPal remains available as a separate option.' : 'Payment details are handled securely by PayPal.'}</span>
+                  <span>{onlyQuickBooks ? 'Card and wallet payments are handled securely by QuickBooks.' : squareAvailable ? 'Card details are handled by Square; PayPal remains available as a separate option.' : 'Payment details are handled securely by PayPal.'}</span>
                 </div>
               </div>
             </div>
@@ -717,7 +729,7 @@ export default function Checkout() {
               <div className="bg-card border border-border rounded-2xl p-6">
                 <h2 className="text-xl font-bold mb-2">Payment</h2>
                 <div className="flex items-center gap-2 text-sm text-muted-foreground mb-6">
-                  <Lock size={14} aria-hidden="true" /> {squareAvailable ? 'Secure card checkout by Square or continue with PayPal' : 'Secure checkout with PayPal'}
+                  <Lock size={14} aria-hidden="true" /> {onlyQuickBooks ? 'Secure payment with QuickBooks' : squareAvailable ? 'Secure card checkout by Square or continue with PayPal' : 'Secure checkout with PayPal'}
                 </div>
 
                 <div className="mb-6 space-y-2">
@@ -739,9 +751,11 @@ export default function Checkout() {
                   </div>
                 )}
 
-                <QuickBooksPayment disabled={!formValid || !quoteReady || processing} payload={checkoutPayload} onBusy={setProcessing} onError={setPaymentError} />
+                {!paymentConfig && !paymentError && <p role="status" className="mb-4 text-sm">Loading secure payment options…</p>}
+                {onlyQuickBooks && paymentConfig && !paymentConfig.enabled && !qbPreview && <p role="alert" className="mb-4 text-sm">Online payment is temporarily unavailable. <a href="mailto:thestickersmith@gmail.com" className="text-primary underline">Contact the shop for an invoice.</a></p>}
+                <QuickBooksPayment categories={items.map(item => item.category || '')} disabled={!formValid || !quoteReady || processing} payload={checkoutPayload} onBusy={setProcessing} onError={setPaymentError} />
 
-                <SquareCardPayment
+                {paymentConfig && !onlyQuickBooks && <><SquareCardPayment
                   amount={finalTotal}
                   customer={customerInfo}
                   disabled={!formValid || !quoteReady || processing}
@@ -805,7 +819,7 @@ export default function Checkout() {
                   !squareAvailable && <div className="text-sm text-destructive bg-destructive/10 rounded-xl p-4" role="alert">
                     Online checkout is temporarily unavailable. Please contact us to complete your order.
                   </div>
-                )}
+                )}</>}
               </div>
             </div>
           </div>
@@ -813,7 +827,7 @@ export default function Checkout() {
       </section>
   )
 
-  if (!PAYPAL_CLIENT_ID) return checkoutContent
+  if (!PAYPAL_CLIENT_ID || !paymentConfig || onlyQuickBooks) return checkoutContent
 
   return (
     <PayPalScriptProvider options={{ clientId: PAYPAL_CLIENT_ID, currency: 'USD' }}>
