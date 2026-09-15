@@ -3,7 +3,10 @@ import { validatePromoCode, loadPromoCodes, applyPromoCode, type PromoResult, AU
 import { getAnalyticsIdentity, trackAddToCart, trackCartEvent, shouldSuppressAnalytics } from '@/lib/analytics'
 import { cartRequest, getCartCredentials, resetCartCredentials } from '@/lib/cartSession'
 
+import type { ProductConfiguration } from '@/lib/productCartEditing'
+
 export interface CartItem {
+  productConfiguration?: ProductConfiguration
   pieceCount?: number
   configuration?: { shape: string; material: string; size: string; pieces: number; format: 'handheld' | 'sheet' | 'roll'; rush: boolean; design: boolean }
   id: string

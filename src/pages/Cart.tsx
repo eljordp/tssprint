@@ -1,3 +1,4 @@
+import { cartEditHref } from '@/lib/productCartEditing'
 import { useState, useEffect, useRef, type FormEvent } from 'react'
 import { Link } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
@@ -74,7 +75,7 @@ export default function Cart() {
             <div key={item.id} id={`item-${item.id}`} className="scroll-mt-24 bg-card border border-border rounded-2xl p-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
               <div className="min-w-0">
                 <h3 className="font-bold break-words">{item.name}</h3>
-                {item.configuration && <Link className="inline-block mt-2 text-xs font-bold text-primary" to={`/stickers?edit=${encodeURIComponent(item.id)}#configure`}>Edit size, finish, quantity or artwork</Link>}
+                {cartEditHref(item) && <Link className="inline-block mt-2 text-xs font-bold text-primary" to={cartEditHref(item)!}>Edit size, finish, quantity or artwork</Link>}
                 <p className="text-sm text-muted-foreground">{item.option} · {item.size}</p>
                 <p className="text-xs text-muted-foreground mt-1">{item.quantity} {item.quantity === 1 ? 'batch' : 'batches'}{item.pieceCount ? ` · ${item.pieceCount * item.quantity} pieces total` : ''}. Changing batches repeats this exact configuration.</p>
                 {item.addOns?.length ? (

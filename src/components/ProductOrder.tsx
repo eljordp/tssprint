@@ -1,9 +1,11 @@
+import { Link, useNavigate, useSearchParams } from 'react-router-dom'
+import { resolveProductEdit, type ProductConfiguration } from '@/lib/productCartEditing'
 import { trackEvent } from '@/lib/analytics'
 import { useEffect, useRef, useState } from 'react'
 import { motion } from 'framer-motion'
 import { ShoppingCart, Check, Plus, Sparkles, ArrowRight } from 'lucide-react'
-import { useCart } from '@/context/CartContext'
-import { getPricing, loadPricing, type ProductCategory, type ProductTier } from '@/lib/pricing'
+import { useCart, type CartItem } from '@/context/CartContext'
+import { getPricing, loadPricing, type ProductCategory, type ProductTier, type PricingConfig } from '@/lib/pricing'
 
 import ProductExample from '@/components/ProductExample'
 import ProductExampleMedia from '@/components/ProductExampleMedia'
@@ -65,33 +67,46 @@ function createCartItemId(categoryName: string, size: string) {
   return `${categoryName}-${size}-${Date.now()}`
 }
 
-export default function ProductOrder({ categoryNames, onCategoryChange, checkoutMode = 'cart', onEstimateRequest, artworkFirst = false, onArtworkChange }: Props) {
-  const { addItem } = useCart()
-  const trackedCategory = categoryNames.join('|')
-  useEffect(() => { trackEvent('view_item', { product: trackedCategory }) }, [trackedCategory])
+export default function ProductOrder(props: Props) {
+  const { items } = useCart()
+  const [searchParams] = useSearchParams()
+  const editId = props.checkoutMode === 'estimate' ? null : searchParams.get('edit')
+  const editingItem = items.find(item => item.id === editId)
+  const returnTo = searchParams.get('returnTo') === 'checkout' ? '/checkout' : '/cart'
   const [pricing, setPricing] = useState(() => getPricing())
-
+  const [loaded, setLoaded] = useState(false)
   useEffect(() => {
     let active = true
-    loadPricing().then((config) => {
-      if (active) setPricing(config)
-    })
+    loadPricing().then(config => { if (active) { setPricing(config); setLoaded(true) } })
     return () => { active = false }
   }, [])
+  if (editId && !loaded) return <p role="status" className="p-6">Loading your saved options…</p>
+  const editConfig = editingItem && resolveProductEdit(editingItem, pricing.products.filter(c => props.categoryNames.includes(c.name)))
+  if (editId && (!editConfig || editConfig.kind !== 'catalog')) return <div role="alert" className="p-6 rounded-xl border border-border"><p>{editingItem ? 'We could not restore these product options. Your original item is still in the cart. Contact the shop or remove it only when you are ready to replace it.' : 'This item is no longer in your cart.'}</p><Link to="/cart" className="btn-primary mt-4">Back to cart</Link></div>
+  return <ProductOrderForm key={editId || 'new'} {...props} pricing={pricing} editingItem={editingItem} editConfig={editConfig || undefined} returnTo={returnTo} />
+}
 
+function ProductOrderForm({ categoryNames, onCategoryChange, checkoutMode = 'cart', onEstimateRequest, artworkFirst = false, onArtworkChange, pricing, editingItem, editConfig, returnTo }: Props & { pricing: PricingConfig; editingItem?: CartItem; editConfig?: ProductConfiguration; returnTo: string }) {
+  const { addItem, replaceItem } = useCart()
+  const navigate = useNavigate()
+  const trackedCategory = categoryNames.join('|')
+  useEffect(() => { trackEvent('view_item', { product: trackedCategory }) }, [trackedCategory])
   const categories = categoryNames
     .map(name => pricing.products.find(p => p.name === name))
     .filter((c): c is ProductCategory => !!c)
 
-  const [activeCategory, setActiveCategory] = useState(0)
-  const [selectedItem, setSelectedItem] = useState(0)
-  const [selectedQtyIndex, setSelectedQtyIndex] = useState(0)
-  const [customQty, setCustomQty] = useState(250)
-  const [selectedAddOns, setSelectedAddOns] = useState<Set<string>>(new Set())
+  const initialCategory = Math.max(0, categories.findIndex(c => c.name === editConfig?.category))
+  const initialItem = Math.max(0, categories[initialCategory]?.items.findIndex(v => v.size === editConfig?.variant) ?? 0)
+  const [activeCategory, setActiveCategory] = useState(initialCategory)
+  const [selectedItem, setSelectedItem] = useState(initialItem)
+  const [selectedQtyIndex, setSelectedQtyIndex] = useState(Math.max(0, categories[initialCategory]?.items[initialItem]?.quantities.findIndex(q => q.qty === editConfig?.pieces) ?? 0))
+  const [customQty, setCustomQty] = useState(editConfig?.pieces || 250)
+  const [selectedAddOns, setSelectedAddOns] = useState<Set<string>>(() => new Set(editConfig?.addOns || []))
   const [added, setAdded] = useState(false)
-  const [activeGroup, setActiveGroup] = useState(0)
+  const [optionNotice, setOptionNotice] = useState('')
+  const [activeGroup, setActiveGroup] = useState(Math.max(0, groupItems(categories[initialCategory]?.items || []).findIndex(g => g.items.some(v => v.globalIndex === initialItem))))
 
-  const [artwork, setArtwork] = useState<ArtworkSelection>({ status: 'idle' })
+  const [artwork, setArtwork] = useState<ArtworkSelection>({ status: editingItem?.artwork ? 'uploaded' : 'idle', artwork: editingItem?.artwork })
   const orderRegion = useRef<HTMLDivElement>(null)
   const [orderVisible, setOrderVisible] = useState(false)
   useEffect(() => {
@@ -145,7 +160,8 @@ export default function ProductOrder({ categoryNames, onCategoryChange, checkout
     })
   }
 
-  const quantityInvalid = !Number.isInteger(effectiveQty) || effectiveQty < 1 || effectiveQty > 100000
+  const minimumQty = bulk ? Math.min(...item.quantities.map(q => q.qty)) : 1
+  const quantityInvalid = !Number.isInteger(effectiveQty) || effectiveQty < minimumQty || effectiveQty > 100000
   const artworkBlocked = artworkFirst && (artwork.status === 'uploading' || artwork.status === 'error')
   const handleAddToCart = () => {
     if (artworkBlocked || quantityInvalid) return
@@ -153,11 +169,12 @@ export default function ProductOrder({ categoryNames, onCategoryChange, checkout
       .filter(a => selectedAddOns.has(a.name))
       .map(a => ({ name: a.name, price: +(a.value * (isPerUnit ? effectiveQty : 1)).toFixed(2) }))
 
-    addItem({
-      id: createCartItemId(category.name, item.size),
+    const nextItem = {
+      id: editingItem?.id || createCartItemId(category.name, item.size),
+      productConfiguration: { version: 1 as const, kind: 'catalog' as const, category: category.name, variant: item.size, pieces: effectiveQty, addOns: [...selectedAddOns] },
       name: `${category.name} — ${item.size}`,
       category: category.name,
-      artworkIntent: 'send_later',
+      artworkIntent: 'send_later' as const,
       pieceCount: effectiveQty,
       size: item.size,
       option: effectiveQty > 1 ? `${effectiveQty} pcs` : '1',
@@ -165,7 +182,9 @@ export default function ProductOrder({ categoryNames, onCategoryChange, checkout
       quantity: 1,
       ...(artworkFirst ? { artworkIntent: artwork.artwork ? 'uploaded' as const : 'send_later' as const, artwork: artwork.artwork } : {}),
       addOns: addOns.length > 0 ? addOns : undefined,
-    })
+    }
+    if (editingItem) { replaceItem(editingItem.id, nextItem); navigate(returnTo); return }
+    addItem(nextItem)
     setAdded(true)
     setTimeout(() => setAdded(false), 2000)
   }
@@ -184,8 +203,8 @@ export default function ProductOrder({ categoryNames, onCategoryChange, checkout
 
   const resetSelections = (catIdx: number) => {
     if (catIdx === activeCategory) return
-    setArtwork({ status: 'idle' })
-    onArtworkChange?.({ status: 'idle' })
+    if (!editingItem) { setArtwork({ status: 'idle' }); onArtworkChange?.({ status: 'idle' }) }
+    if (selectedAddOns.size) setOptionNotice('Product changed. Previous upgrades were removed; choose the options for this product below.')
     setActiveCategory(catIdx)
     setSelectedItem(0)
     setSelectedQtyIndex(0)
@@ -207,6 +226,8 @@ export default function ProductOrder({ categoryNames, onCategoryChange, checkout
       transition={{ delay: 0.2 }}
       className={artworkFirst ? "max-w-6xl mx-auto pb-20 md:pb-0" : "max-w-5xl mx-auto"}
     >
+      {editingItem && <div className="mb-5 rounded-xl border border-primary/40 bg-primary/5 p-4"><p className="font-bold">Edit {editingItem.name}</p><p className="text-sm text-muted-foreground">Keeping {editingItem.quantity} {editingItem.quantity === 1 ? 'batch' : 'batches'}. Prices below are for one batch. Changes are applied when you save.</p><p className="text-sm mt-2" role="status">Updated subtotal: ${(totalPrice * editingItem.quantity).toFixed(2)} for all batches, before cart discounts.</p><Link to={returnTo} className="inline-block mt-3 text-primary font-semibold underline">Cancel editing</Link></div>}
+      {optionNotice && <p role="status" className="mb-4 text-sm text-primary">{optionNotice}</p>}
       <h2 className={artworkFirst ? "sr-only" : "text-2xl md:text-3xl font-black mb-2 text-center"}>
         {checkoutMode === 'estimate' ? 'Choose your signage or display' : 'Shop Products'}
       </h2>
@@ -232,7 +253,7 @@ export default function ProductOrder({ categoryNames, onCategoryChange, checkout
           <ProductExample category={category.name} />
           <details className="rounded-2xl border border-border bg-card p-4" key={category.name}>
             <summary className="cursor-pointer text-sm font-bold">{artwork.artwork ? 'Artwork attached · view or change' : 'Have artwork? Add it here (optional)'}</summary>
-            <div className="mt-4"><ProductionArtwork size={item.size} purpose={checkoutMode === 'estimate' ? 'quote' : 'order'} onChange={value => { setArtwork(value); onArtworkChange?.(value) }} /></div>
+            <div className="mt-4"><ProductionArtwork key={editingItem?.id || category.name} initialArtwork={editingItem?.artwork} size={item.size} purpose={checkoutMode === 'estimate' ? 'quote' : 'order'} onChange={value => { setArtwork(value); onArtworkChange?.(value) }} /></div>
           </details>
           <p className="text-sm text-muted-foreground">We review your artwork and email a proof before printing. You can send the file later.</p>
         </div>}
@@ -321,7 +342,7 @@ export default function ProductOrder({ categoryNames, onCategoryChange, checkout
               <div>
                 <input
                   type="number"
-                  min={1}
+                  min={minimumQty}
                   max={100000}
                   step={1}
                   aria-label="Product quantity" aria-invalid={quantityInvalid}
@@ -372,7 +393,7 @@ export default function ProductOrder({ categoryNames, onCategoryChange, checkout
             )}
           </div>
 
-          {quantityInvalid && <p role="alert" className="text-sm text-red-400">Enter a whole quantity from 1 to 100,000.</p>}
+          {quantityInvalid && <p role="alert" className="text-sm text-red-400">Enter a whole quantity from {minimumQty} to 100,000.</p>}
           {/* Add-Ons */}
           {category.addOns.length > 0 && (
             <details open={artworkFirst ? undefined : true} className="rounded-2xl border border-border bg-card p-4">
@@ -466,7 +487,7 @@ export default function ProductOrder({ categoryNames, onCategoryChange, checkout
                 {added ? (
                   <>Added to Cart! <Check size={18} /></>
                 ) : (
-                  <>Add to Cart — ${totalPrice.toFixed(2)} <ShoppingCart size={18} /></>
+                  <>{editingItem ? 'Save changes' : 'Add to Cart'} — ${totalPrice.toFixed(2)} <ShoppingCart size={18} /></>
                 )}
               </button>
             )}
@@ -476,7 +497,7 @@ export default function ProductOrder({ categoryNames, onCategoryChange, checkout
       </div>
       {artworkFirst && orderVisible && <div className="md:hidden fixed bottom-0 left-0 right-0 z-40 bg-card border-t border-border px-4 pt-3 pb-[max(12px,env(safe-area-inset-bottom))] flex items-center gap-4">
         <div className="shrink-0"><p className="font-bold text-lg">${totalPrice.toFixed(2)}</p><p className="text-xs text-muted-foreground">{checkoutMode === 'estimate' ? 'Starting price' : quantityInvalid ? 'Enter a whole quantity' : `${effectiveQty} pcs · $${(totalPrice / effectiveQty).toFixed(2)}/ea`}</p></div>
-        <button type="button" onClick={checkoutMode === "estimate" ? handleEstimateRequest : handleAddToCart} disabled={artworkBlocked || quantityInvalid} className="btn-primary flex-1 justify-center disabled:opacity-50">{artwork.status === 'uploading' ? 'Uploading…' : checkoutMode === 'estimate' ? 'Get Estimate' : added ? 'Added!' : 'Add to Cart'}</button>
+        <button type="button" onClick={checkoutMode === "estimate" ? handleEstimateRequest : handleAddToCart} disabled={artworkBlocked || quantityInvalid} className="btn-primary flex-1 justify-center disabled:opacity-50">{artwork.status === 'uploading' ? 'Uploading…' : checkoutMode === 'estimate' ? 'Get Estimate' : added ? 'Added!' : editingItem ? 'Save changes' : 'Add to Cart'}</button>
       </div>}
     </motion.div>
   )

@@ -1,11 +1,13 @@
+import { Link, useNavigate, useSearchParams } from 'react-router-dom'
+import { resolveProductEdit, type ProductConfiguration } from '@/lib/productCartEditing'
 import oliveLandArtwork from '@/assets/optimized/projects/drive-olive-land-pita-artwork.webp'
 import MobileOrderAction from '@/components/MobileOrderAction'
 import { useState, useCallback, useRef, useEffect } from 'react'
 import { motion } from 'framer-motion'
 import { X, ShoppingCart, Check } from 'lucide-react'
-import { useCart } from '@/context/CartContext'
+import { useCart, type CartItem } from '@/context/CartContext'
 import { supabase } from '@/lib/supabase'
-import { getPricing, loadPricing, type ProductCategory, type AddOn } from '@/lib/pricing'
+import { getPricing, loadPricing, type ProductCategory, type AddOn, type PricingConfig } from '@/lib/pricing'
 import EstimateForm from '@/components/EstimateForm'
 import PortfolioStrip from '@/components/PortfolioStrip'
 import ServicePageIntro from '@/components/ServicePageIntro'
@@ -127,32 +129,43 @@ function createMylarCartItemId(size: string) {
 }
 
 export default function MylarPackaging() {
-  const { addItem } = useCart()
+  const { items } = useCart()
+  const [searchParams] = useSearchParams()
+  const editId = searchParams.get('edit')
+  const editingItem = items.find(item => item.id === editId)
+  const returnTo = searchParams.get('returnTo') === 'checkout' ? '/checkout' : '/cart'
   const [pricing, setPricing] = useState(() => getPricing())
-  const category = pricing.products.find(p => p.name === 'Mylar Packaging') as ProductCategory | undefined
-
+  const [loaded, setLoaded] = useState(false)
   useEffect(() => {
     let active = true
-    loadPricing().then((config) => {
-      if (active) setPricing(config)
-    })
+    loadPricing().then(config => { if (active) { setPricing(config); setLoaded(true) } })
     return () => { active = false }
   }, [])
+  if (editId && !loaded) return <p role="status" className="section-container py-16">Loading your saved packaging…</p>
+  const editConfig = editingItem && resolveProductEdit(editingItem, pricing.products)
+  if (editId && (!editConfig || editConfig.kind !== 'packaging')) return <div role="alert" className="section-container py-16"><p>{editingItem ? 'We could not restore these packaging options. Your original item is still in the cart. Contact the shop or remove it only when you are ready to replace it.' : 'This item is no longer in your cart.'}</p><Link to="/cart" className="btn-primary mt-4">Back to cart</Link></div>
+  return <MylarOrderForm key={editId || 'new'} pricing={pricing} editingItem={editingItem} editConfig={editConfig || undefined} returnTo={returnTo} />
+}
 
-  const [selectedItem, setSelectedItem] = useState(0)
-  const [quantity, setQuantity] = useState(250)
-  const [selectedAddOns, setSelectedAddOns] = useState<Set<string>>(new Set())
-  const [finish, setFinish] = useState<'matte' | 'gloss'>('matte')
-  const [pouchColor, setPouchColor] = useState<'white' | 'black'>('white')
+function MylarOrderForm({ pricing, editingItem, editConfig, returnTo }: { pricing: PricingConfig; editingItem?: CartItem; editConfig?: ProductConfiguration; returnTo: string }) {
+  const { addItem, replaceItem } = useCart()
+  const navigate = useNavigate()
+  const category = pricing.products.find(p => p.name === 'Mylar Packaging') as ProductCategory | undefined
+  const [selectedItem, setSelectedItem] = useState(Math.max(0, category?.items.findIndex(v => v.size === editConfig?.variant) ?? 0))
+  const [quantity, setQuantity] = useState(editConfig?.pieces || 250)
+  const [selectedAddOns, setSelectedAddOns] = useState<Set<string>>(() => new Set(editConfig?.addOns || []))
+  const [finish, setFinish] = useState<'matte' | 'gloss'>(editConfig?.finish || 'matte')
+  const [pouchColor, setPouchColor] = useState<'white' | 'black'>(editConfig?.pouchColor || 'white')
   const [uploadedFile, setUploadedFile] = useState<File | null>(null)
   const [previewUrl, setPreviewUrl] = useState<string | null>(null)
-  const [artworkUpload, setArtworkUpload] = useState<ArtworkAttachment | null>(null)
+  const [artworkUpload, setArtworkUpload] = useState<ArtworkAttachment | null>(editingItem?.artwork || null)
   const artworkGeneration = useRef(0)
   useEffect(() => () => { artworkGeneration.current += 1 }, [])
-  const [artworkStatus, setArtworkStatus] = useState<'idle' | 'uploading' | 'uploaded' | 'error'>('idle')
+  const [artworkStatus, setArtworkStatus] = useState<'idle' | 'uploading' | 'uploaded' | 'error'>(editingItem?.artwork ? 'uploaded' : 'idle')
   const [artworkError, setArtworkError] = useState('')
   const [isDragging, setIsDragging] = useState(false)
   const [added, setAdded] = useState(false)
+  const [optionNotice, setOptionNotice] = useState('')
 
   const items = category?.items ?? []
   const addOns = category?.addOns ?? []
@@ -177,7 +190,8 @@ export default function MylarPackaging() {
   const scale = item ? (mockupScales[item.size] ?? 0.75) : 0.75
   const isJar = item?.size.toLowerCase().includes('jar')
   const activeMockup = isJar ? 'jar' : selectedAddOns.has('Holographic Upgrade') ? 'foil' : 'pouch'
-  const quantityInvalid = !Number.isSafeInteger(quantity) || quantity < 1 || quantity > 100000
+  const minimumQty = item ? Math.min(...item.quantities.map(q => q.qty)) : 1
+  const quantityInvalid = !Number.isSafeInteger(quantity) || quantity < minimumQty || quantity > 100000
   const displaySize = (size: string) => size.includes('(') ? `${size.slice(size.indexOf('(') + 1, -1)} pouch` : size
 
   const uploadArtwork = useCallback(async (file: File) => {
@@ -274,19 +288,22 @@ export default function MylarPackaging() {
       .filter(a => selectedAddOns.has(a.name))
       .map(a => ({ name: a.name, price: +(a.value * quantity).toFixed(2) }))
     const cartBasePrice = +(unitPrice * quantity).toFixed(2)
-    addItem({
-      id: createMylarCartItemId(item.size),
-      name: `Custom ${displaySize(item.size)}`,
+    const nextItem = {
+      id: editingItem?.id || createMylarCartItemId(item.size),
+      productConfiguration: { version: 1 as const, kind: 'packaging' as const, category: 'Mylar Packaging', variant: item.size, pieces: quantity, addOns: [...selectedAddOns], finish, pouchColor },
+      name: `Mylar Packaging — ${item.size}`,
       category: 'Mylar Packaging',
       pieceCount: quantity,
       size: item.size,
-      option: isJar ? `${quantity} jars with custom labels` : `${quantity} pcs · ${selectedAddOns.has('Foil Finish') ? 'foil' : finish} · ${pouchColor} · ${selectedAddOns.has('Holographic Upgrade') ? 'Holo' : 'Standard'}`,
+      option: isJar ? `${quantity} pcs` : `${quantity} pcs · ${selectedAddOns.has('Foil Finish') ? 'foil' : finish} · ${pouchColor} · ${selectedAddOns.has('Holographic Upgrade') ? 'Holo' : 'Standard'}`,
       price: cartBasePrice,
       quantity: 1,
       addOns: cartAddOns.length > 0 ? cartAddOns : undefined,
-      artworkIntent: artworkUpload ? 'uploaded' : 'send_later',
+      artworkIntent: artworkUpload ? 'uploaded' as const : 'send_later' as const,
       artwork: artworkUpload || undefined,
-    })
+    }
+    if (editingItem) { replaceItem(editingItem.id, nextItem); navigate(returnTo); return }
+    addItem(nextItem)
     setAdded(true)
     setTimeout(() => setAdded(false), 2000)
   }
@@ -303,6 +320,7 @@ export default function MylarPackaging() {
             title="Custom Mylar & Packaging"
             description="Choose your pouch size, finish and print run. Send artwork now or after ordering."
           />
+          {editingItem && <div className="mb-5 rounded-xl border border-primary/40 bg-primary/5 p-4"><p className="font-bold">Edit {editingItem.name}</p><p className="text-sm text-muted-foreground">Keeping {editingItem.quantity} {editingItem.quantity === 1 ? 'batch' : 'batches'}. Prices below are for one batch. Changes are applied when you save.</p><p className="text-sm mt-2" role="status">Updated subtotal: ${(totalPrice * editingItem.quantity).toFixed(2)} for all batches, before cart discounts.</p><Link to={returnTo} className="inline-block mt-3 text-primary font-semibold underline">Cancel editing</Link></div>}
           <div className="grid md:grid-cols-2 gap-6 items-start">
             <div className="space-y-3 md:sticky md:top-24">
             <figure className="overflow-hidden rounded-2xl border border-border bg-card">
@@ -310,7 +328,7 @@ export default function MylarPackaging() {
               <figcaption className="p-4 text-sm"><p className="font-bold">Your brand, on the pack</p><p className="text-muted-foreground mt-1">Olive Land packaging artwork from a shop project. This is a design example; your proof confirms the layout for your selected packaging.</p></figcaption>
             </figure>
             <details className="rounded-2xl border border-border bg-card p-4">
-            <summary className="cursor-pointer font-semibold text-sm">Add artwork (optional)</summary>
+            <summary className="cursor-pointer font-semibold text-sm">{artworkUpload ? 'Artwork attached · view or change' : 'Add artwork (optional)'}</summary>
             {/* Upload Card */}
             <motion.div
               initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}
@@ -329,13 +347,14 @@ export default function MylarPackaging() {
                     <span>Upload file</span>
                     <input type="file" accept="image/*,.pdf,.ai,.eps,.svg,.psd,.tif,.tiff,.heic,.webp" className="hidden" onChange={handleFileChange} />
                   </label>
-                  {uploadedFile && (
+                  {(uploadedFile || artworkUpload) && (
                     <button onClick={clearArtworkFile} className="inline-flex items-center gap-1.5 rounded-full border border-border px-4 py-2 text-xs text-muted-foreground hover:bg-muted transition-colors">
                       <X className="h-3.5 w-3.5" /> Clear
                     </button>
                   )}
                 </div>
-                {uploadedFile && <p className="text-xs text-muted-foreground">Selected: <span className="font-medium text-foreground">{uploadedFile.name}</span></p>}
+                {(uploadedFile || artworkUpload) && <p className="text-xs text-muted-foreground break-words">Selected: <span className="font-medium text-foreground">{uploadedFile?.name || artworkUpload?.fileName}</span></p>}
+                {!uploadedFile && artworkUpload && <p className="text-xs text-muted-foreground">Saved production file retained. Upload again only to replace it. Your emailed proof confirms placement.</p>}
                 {artworkStatus === 'uploading' && <p className="text-xs text-primary">Uploading artwork for proof...</p>}
                 {artworkStatus === 'uploaded' && <p className="text-xs text-green-400">Artwork attached to this order.</p>}
                 {artworkStatus === 'error' && <p className="text-xs text-red-400">{artworkError}</p>}
@@ -361,13 +380,14 @@ export default function MylarPackaging() {
                 <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Size / product</p>
                 <div className="flex flex-wrap gap-2">
                   {items.map((p, i) => (
-                    <button key={displaySize(p.size)} aria-pressed={selectedItem === i} onClick={() => { setSelectedItem(i); setSelectedAddOns(new Set()) }} className={`rounded-full border px-4 py-2 text-xs font-medium transition-colors ${selectedItem === i ? 'border-primary bg-primary/10 text-primary' : 'border-border bg-muted text-muted-foreground hover:text-foreground hover:border-foreground/20'}`}>
+                    <button key={displaySize(p.size)} aria-pressed={selectedItem === i} onClick={() => { if (i === selectedItem) return; setSelectedItem(i); if (selectedAddOns.size) setOptionNotice('Product changed. Previous upgrades were removed; choose the options for this product below.'); setSelectedAddOns(new Set()) }} className={`rounded-full border px-4 py-2 text-xs font-medium transition-colors ${selectedItem === i ? 'border-primary bg-primary/10 text-primary' : 'border-border bg-muted text-muted-foreground hover:text-foreground hover:border-foreground/20'}`}>
                       {displaySize(p.size)}
                     </button>
                   ))}
                 </div>
               </div>
 
+              {optionNotice && <p role="status" className="text-sm text-primary">{optionNotice}</p>}
               {/* Finish */}
               {!isJar && (
                 <div className="space-y-3">
@@ -405,7 +425,7 @@ export default function MylarPackaging() {
                   type="number"
                   aria-label="Packaging quantity"
                   step={1}
-                  min={1}
+                  min={minimumQty}
                   max={100000}
                   aria-invalid={quantityInvalid}
                   className="w-full rounded-lg border border-border bg-muted px-4 py-2.5 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"
@@ -415,7 +435,7 @@ export default function MylarPackaging() {
                 />
               </div>
 
-              {quantityInvalid && <p role="alert" className="text-sm text-red-400">Enter a whole quantity from 1 to 100,000.</p>}
+              {quantityInvalid && <p role="alert" className="text-sm text-red-400">Enter a whole quantity from {minimumQty} to 100,000.</p>}
               {/* Add-Ons */}
               {addOns.length > 0 && (
                 <div className="space-y-3">
@@ -484,7 +504,7 @@ export default function MylarPackaging() {
                     ) : uploadedFile && artworkStatus === 'error' ? (
                       <>Fix artwork upload first</>
                     ) : (
-                      <><ShoppingCart size={18} /> Add to Cart — ${totalPrice.toFixed(2)}</>
+                      <><ShoppingCart size={18} /> {editingItem ? 'Save changes' : 'Add to Cart'} — ${totalPrice.toFixed(2)}</>
                     )}
                   </button>
                   <p className="text-[10px] text-muted-foreground text-center mt-2">You'll receive a proof before anything prints.</p>
@@ -502,7 +522,7 @@ export default function MylarPackaging() {
             </motion.div>
 </div>
           </div>
-          <MobileOrderAction regionId="configure" price={`$${totalPrice.toFixed(2)}`} detail={`${quantity} pieces`} label={added ? 'Added!' : 'Add to Cart'} disabled={!qtyTier || quantityInvalid || (Boolean(uploadedFile) && artworkStatus !== 'uploaded')} onClick={handleAddToCart} />
+          <MobileOrderAction regionId="configure" price={`$${totalPrice.toFixed(2)}`} detail={`${quantity} pieces`} label={added ? 'Added!' : editingItem ? 'Save changes' : 'Add to Cart'} disabled={!qtyTier || quantityInvalid || (Boolean(uploadedFile) && artworkStatus !== 'uploaded')} onClick={handleAddToCart} />
         </div>
       </section>
       <section id="quote" className="py-12 md:py-20 border-t border-border/50 scroll-mt-24">

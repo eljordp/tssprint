@@ -1,3 +1,4 @@
+import { cartEditHref } from '@/lib/productCartEditing'
 import { useEffect, useRef, useState } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
 import { motion } from 'framer-motion'
@@ -636,7 +637,7 @@ export default function Checkout() {
                           {item.artworkIntent === 'design_help' && <p className="text-xs text-primary mt-1">Design help requested</p>}
                           {item.artwork && <p className="text-xs text-green-400 mt-1 break-words">Artwork: {item.artwork.fileName}</p>}
                           <div className="mt-2 flex items-center gap-4 text-sm">
-                            <Link aria-disabled={processing} onClick={event => { if (processing) event.preventDefault() }} aria-label={`Edit ${item.name}`} to={item.configuration ? `/stickers?edit=${encodeURIComponent(item.id)}#configure` : `/cart#item-${encodeURIComponent(item.id)}`} className="min-h-10 inline-flex items-center font-semibold text-primary hover:underline">Edit</Link>
+                            <Link aria-disabled={processing} onClick={event => { if (processing) event.preventDefault() }} aria-label={`Edit ${item.name}`} to={cartEditHref(item, 'checkout') || `/cart#item-${encodeURIComponent(item.id)}`} className="min-h-10 inline-flex items-center font-semibold text-primary hover:underline">Edit</Link>
                             <button type="button" aria-label={`Remove ${item.name} from order`} disabled={processing} onClick={() => removeItem(item.id)} className="min-h-10 text-muted-foreground hover:text-destructive hover:underline disabled:opacity-50">Remove</button>
                           </div>
                         </div>
