@@ -1,3 +1,4 @@
+import ResponsiveImage from '@/components/ResponsiveImage'
 import { useState } from 'react'
 import { motion } from 'framer-motion'
 import { CheckCircle, Clock, Shield, Wrench, Zap } from 'lucide-react'
@@ -77,8 +78,8 @@ export default function VehicleGraphics() {
           />
           <div className="max-w-6xl mx-auto grid md:grid-cols-2 gap-6 items-start">
           <div className="md:sticky md:top-24 space-y-4">
-            <figure className="rounded-2xl border border-border bg-card overflow-hidden"><img src={bhogalTruck} alt="Bhogal Construction wrapped box truck" width={900} height={675} className="w-full aspect-[4/3] object-cover" /><figcaption className="p-4"><h2 className="font-bold text-lg">Choose how much of the vehicle to cover</h2><p className="text-sm text-muted-foreground mt-2">Door graphics keep most of the original paint visible. Partial wraps cover selected panels. Full wraps cover the vehicle body. Your estimate confirms the surfaces and installation included.</p></figcaption></figure>
-            <div className="grid grid-cols-2 gap-3"><figure><img src={safewayInstall} alt="Applying Safeway door lettering" className="w-full aspect-[4/3] object-cover rounded-xl" /><figcaption className="text-sm mt-2">Door lettering · install detail</figcaption></figure><figure><img src={albertsonsVan} alt="Albertsons branded vehicle" className="w-full aspect-[4/3] object-cover rounded-xl" /><figcaption className="text-sm mt-2">Fleet graphics · Albertsons</figcaption></figure></div>
+            <figure className="rounded-2xl border border-border bg-card overflow-hidden"><ResponsiveImage src={bhogalTruck} alt="Bhogal Construction wrapped box truck" width={900} height={675} className="w-full aspect-[4/3] object-cover" /><figcaption className="p-4"><h2 className="font-bold text-lg">Choose how much of the vehicle to cover</h2><p className="text-sm text-muted-foreground mt-2">Door graphics keep most of the original paint visible. Partial wraps cover selected panels. Full wraps cover the vehicle body. Your estimate confirms the surfaces and installation included.</p></figcaption></figure>
+            <div className="grid grid-cols-2 gap-3"><figure><ResponsiveImage src={safewayInstall} alt="Applying Safeway door lettering" className="w-full aspect-[4/3] object-cover rounded-xl" /><figcaption className="text-sm mt-2">Door lettering · install detail</figcaption></figure><figure><ResponsiveImage src={albertsonsVan} alt="Albertsons branded vehicle" className="w-full aspect-[4/3] object-cover rounded-xl" /><figcaption className="text-sm mt-2">Fleet graphics · Albertsons</figcaption></figure></div>
             <details className="rounded-xl border border-border p-4"><summary className="font-bold text-sm cursor-pointer">Add artwork (optional)</summary><div className="mt-4"><ProductionArtwork size="Vehicle artwork · placement confirmed in your proof" purpose="quote" onChange={setArtwork} /></div></details>
           </div>
           <EstimateForm

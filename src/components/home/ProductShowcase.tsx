@@ -1,3 +1,4 @@
+import ResponsiveImage from '@/components/ResponsiveImage'
 import { Link } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import { ArrowRight } from 'lucide-react'
@@ -43,7 +44,7 @@ export default function ProductShowcase() {
               >
                 {/* Image section */}
                 <div className="relative h-44 sm:h-56 md:h-72 overflow-hidden">
-                  <img
+                  <ResponsiveImage
                     src={item.image}
                     alt={item.title}
                     loading="lazy"

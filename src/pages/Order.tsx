@@ -1,3 +1,4 @@
+import ResponsiveImage from '@/components/ResponsiveImage'
 import { useEffect, useState, useRef } from 'react'
 import { Link, useSearchParams, useNavigate } from 'react-router-dom'
 import { motion } from 'framer-motion'
@@ -152,7 +153,7 @@ function Sticker({ shape, artworkUrl, size = 96, dashed = false }: { shape: stri
       }}
     >
       {artworkUrl ? (
-        <img src={artworkUrl} alt="Artwork" className="w-full h-full object-contain" />
+        <ResponsiveImage src={artworkUrl} alt="Artwork" className="w-full h-full object-contain" />
       ) : (
         <span className="text-[10px] text-white/50 font-semibold leading-tight text-center px-1">Your<br/>Design</span>
       )}
@@ -516,7 +517,7 @@ export default function Order({ embedded = false, initialShape = 'Die-Cut', init
               <button type="button" onClick={() => chooseArtworkIntent('upload')} className="btn-primary w-full justify-center mb-3"><FileUp size={16} />{artworkFile || artworkUpload ? 'Change artwork' : 'Upload & preview'}</button>
               {/* Preview area */}
               <div className="flex-1 flex items-center justify-center w-full min-w-0 overflow-hidden min-h-[160px] md:min-h-[240px] py-4">
-                {artworkUrl ? <img src={artworkUrl} alt={preview?.pages ? "PDF artwork — first page" : "Your artwork preview"} className="max-h-[320px] max-w-full object-contain rounded bg-white" /> : <StickerMockup shape={shape} artworkUrl={artworkUrl} variant={mockupView === 'handheld' ? 'single' : mockupView} /> }
+                {artworkUrl ? <ResponsiveImage src={artworkUrl} alt={preview?.pages ? "PDF artwork — first page" : "Your artwork preview"} className="max-h-[320px] max-w-full object-contain rounded bg-white" /> : <StickerMockup shape={shape} artworkUrl={artworkUrl} variant={mockupView === 'handheld' ? 'single' : mockupView} /> }
               </div>
 
               <p role="status" className="text-xs text-muted-foreground mt-2 text-center">
@@ -866,7 +867,7 @@ export default function Order({ embedded = false, initialShape = 'Die-Cut', init
                 className="group bg-background border border-border rounded-xl overflow-hidden hover:border-primary/40 transition-all"
               >
                 <div className="aspect-[4/3] overflow-hidden bg-black">
-                  <img src={project.image} alt={project.title} loading="lazy" className="h-full w-full object-cover group-hover:scale-105 transition-transform duration-500" />
+                  <ResponsiveImage src={project.image} alt={project.title} loading="lazy" className="h-full w-full object-cover group-hover:scale-105 transition-transform duration-500" />
                 </div>
                 <div className="p-4">
                   <p className="text-[10px] font-bold uppercase tracking-widest text-primary/90 mb-1">{project.category}</p>

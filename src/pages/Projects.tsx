@@ -1,3 +1,4 @@
+import ResponsiveImage from '@/components/ResponsiveImage'
 import { useState } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
@@ -76,7 +77,7 @@ export default function Projects() {
                 to={`/case-studies/${study.slug}`}
                 className="group relative aspect-[4/3] rounded-2xl overflow-hidden border border-border hover:border-primary/40 transition-all"
               >
-                <img src={study.thumbnail} alt={study.client} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+                <ResponsiveImage sizes="(min-width: 1024px) 400px, (min-width: 640px) 50vw, 100vw" src={study.thumbnail} alt={study.client} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
                 <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/40 to-transparent" />
                 <div className="absolute top-3 left-3 px-2.5 py-1 rounded-full bg-black/60 backdrop-blur-sm border border-white/10 text-[9px] font-bold uppercase tracking-widest text-white/80">
                   {study.category}
@@ -163,7 +164,7 @@ export default function Projects() {
                   }`}
                   aria-label={`View ${project.title}`}
                 >
-                  <img src={project.image} alt={project.title} loading="lazy" decoding="async" className={`w-full h-full ${project.imageKind ? 'object-contain bg-white' : project.imageFit === 'contain' ? 'object-contain bg-black' : 'object-cover'} group-hover:scale-105 transition-transform duration-500`} />
+                  <ResponsiveImage sizes="(min-width: 1024px) 400px, (min-width: 640px) 50vw, 100vw" src={project.image} alt={project.title} loading="lazy" decoding="async" className={`w-full h-full ${project.imageKind ? 'object-contain bg-white' : project.imageFit === 'contain' ? 'object-contain bg-black' : 'object-cover'} group-hover:scale-105 transition-transform duration-500`} />
                   {project.imageKind && <span className="absolute top-3 left-3 rounded-full bg-black/80 px-3 py-1 text-xs font-semibold text-white">{project.imageKind}</span>}
                   <div className="absolute inset-x-0 bottom-0 p-4 bg-gradient-to-t from-black/85 via-black/40 to-transparent">
                     <p className="text-[10px] font-bold uppercase tracking-widest text-primary/90 mb-0.5">{project.category}</p>

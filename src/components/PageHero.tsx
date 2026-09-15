@@ -1,3 +1,4 @@
+import ResponsiveImage from '@/components/ResponsiveImage'
 import { motion } from 'framer-motion'
 import { Link } from 'react-router-dom'
 import type { LucideIcon } from 'lucide-react'
@@ -108,7 +109,7 @@ export default function PageHero({
                 className="lg:col-span-5 relative"
               >
                 <div className="relative rounded-2xl overflow-hidden border border-white/10 shadow-2xl aspect-[4/3] lg:aspect-square">
-                  <img
+                  <ResponsiveImage
                     src={image}
                     alt={imageAlt ?? title}
                     className="w-full h-full object-cover"

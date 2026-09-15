@@ -1,3 +1,4 @@
+import ResponsiveImage from '@/components/ResponsiveImage'
 import { useModalFocus } from '@/hooks/useModalFocus'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Link } from 'react-router-dom'
@@ -42,7 +43,7 @@ export default function ProjectModal({ project, onClose }: Props) {
 
             <div className="grid md:grid-cols-[1.2fr_1fr] gap-0">
               <div className={`relative bg-black ${project.imageFit === 'contain' ? 'aspect-[4/3]' : 'aspect-square'} md:aspect-auto md:min-h-[400px]`}>
-                <img
+                <ResponsiveImage
                   src={project.image}
                   alt={project.title}
                   className={`absolute inset-0 w-full h-full ${project.imageKind ? 'object-contain bg-white' : project.imageFit === 'contain' ? 'object-contain' : 'object-cover'}`}

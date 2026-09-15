@@ -1,3 +1,4 @@
+import ResponsiveImage from '@/components/ResponsiveImage'
 import { lazy, Suspense, useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { ArrowRight, Clock, MapPin, MessageSquare, Shield, Star, Sticker } from 'lucide-react'
@@ -109,7 +110,7 @@ function MobileProjectProof() {
         <div className="grid grid-cols-3 gap-2">
           {projects.map(project => (
             <Link key={project.label} to="/projects" className="group overflow-hidden rounded-xl border border-border bg-card focus-visible:ring-2 focus-visible:ring-primary">
-              <img src={project.src} alt={project.alt} loading="lazy" decoding="async" className="aspect-square w-full object-cover" />
+              <ResponsiveImage src={project.src} alt={project.alt} loading="lazy" decoding="async" className="aspect-square w-full object-cover" />
               <p className="px-2 py-2 text-[11px] font-bold leading-tight">{project.label}</p>
             </Link>
           ))}

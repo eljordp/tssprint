@@ -1,3 +1,4 @@
+import ResponsiveImage from '@/components/ResponsiveImage'
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { motion } from 'framer-motion'
@@ -64,10 +65,10 @@ export default function Hero() {
                     aria-label="Holographic stickers fresh off the printer"
                     className="absolute inset-0 w-full h-full object-cover"
                   >
-                    <img src={heroPrinter} alt="Large-format printer mid-job" className="w-full h-full object-cover" />
+                    <ResponsiveImage sizes="100vw" src={heroPrinter} alt="Large-format printer mid-job" className="w-full h-full object-cover" />
                   </video>
                 ) : (
-                  <img
+                  <ResponsiveImage
                     src={HERO_POSTER}
                     alt="Holographic stickers fresh off the printer"
                     className="absolute inset-0 w-full h-full object-cover"

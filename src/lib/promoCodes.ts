@@ -1,4 +1,3 @@
-import { supabase } from './supabase'
 import { DEFAULT_PROMOS, validatePromos } from './approvedPromos'
 export interface PromoCode {
   code: string
@@ -18,6 +17,7 @@ const USED_CODES_KEY = 'tss-used-codes'
 
 let sharedCodes: PromoCode[] = []
 export async function loadPromoCodes(): Promise<PromoCode[]> {
+ const { supabase } = await import('./supabase')
  const { data, error } = await supabase.from('pricing_configs').select('config').eq('id', 'checkout_promos').maybeSingle()
  if (error) throw error
  const approved = validatePromos(data ? data.config : DEFAULT_PROMOS)
@@ -32,7 +32,7 @@ export const AUTO_APPLIED_KEY = 'tss_auto_discount_applied'
 export function getPromoCodes(): PromoCode[] { return sharedCodes }
 
 export function getUsedCodes(): string[] {
-  return JSON.parse(localStorage.getItem(USED_CODES_KEY) || '[]')
+  try { const codes = JSON.parse(localStorage.getItem(USED_CODES_KEY) || '[]'); return Array.isArray(codes) ? codes.filter(code => typeof code === 'string') : [] } catch { return [] }
 }
 
 function markCodeUsed(code: string) {

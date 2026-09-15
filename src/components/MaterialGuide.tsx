@@ -1,3 +1,4 @@
+import ResponsiveImage from '@/components/ResponsiveImage'
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { Check } from 'lucide-react'
@@ -34,7 +35,7 @@ export default function MaterialGuide({ value, onSelect }: { value: string; onSe
       </div>
       <p className="text-xs text-muted-foreground mt-2">{selected.cue}</p>
       <figure className="mt-3">
-        <img src={isVinyl ? comparisonPhoto : selected.image} alt={isVinyl ? 'The same sticker: glossy on the left, matte on the right' : selected.alt} width={isVinyl ? 1200 : 560} height={isVinyl ? 722 : 420} loading="lazy" className="w-full h-40 sm:h-44 object-contain rounded-lg bg-black/20" />
+        <ResponsiveImage src={isVinyl ? comparisonPhoto : selected.image} alt={isVinyl ? 'The same sticker: glossy on the left, matte on the right' : selected.alt} width={isVinyl ? 1200 : 560} height={isVinyl ? 722 : 420} loading="lazy" className="w-full h-40 sm:h-44 object-contain rounded-lg bg-black/20" />
         <figcaption className="text-[11px] text-muted-foreground mt-1 flex flex-wrap justify-between gap-1">
           <span>{isVinyl ? 'Same design · gloss vs. matte' : selected.photoNote}</span>
           <a href={isVinyl ? 'https://www.jukeboxprint.com/blog/glossy-vs-matte-stickers' : selected.sourceUrl} target="_blank" rel="noopener noreferrer" className="underline underline-offset-2">Photo: {isVinyl ? 'Jukebox' : selected.source}</a>

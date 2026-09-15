@@ -1,3 +1,4 @@
+import ResponsiveImage from '@/components/ResponsiveImage'
 import { useEffect, useState } from 'react'
 import { motion } from 'framer-motion'
 import { Link } from 'react-router-dom'
@@ -59,7 +60,7 @@ export default function Services() {
               <motion.div key={service.title} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: index * 0.08 }}>
                 <Link to={service.href} className="group block bg-card border border-border rounded-2xl overflow-hidden hover:border-primary/30 transition-all duration-300 h-full">
                   <div className="relative aspect-[16/10] overflow-hidden">
-                    <img src={service.image} alt={service.title} loading="lazy" decoding="async" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+                    <ResponsiveImage src={service.image} alt={service.title} loading="lazy" decoding="async" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
                     <div className="absolute inset-0 bg-gradient-to-t from-card via-card/20 to-transparent" />
                   </div>
                   <div className="p-6">
@@ -97,7 +98,7 @@ export default function Services() {
                   className="absolute inset-0 w-full h-full object-cover"
                 />
               ) : (
-                <img
+                <ResponsiveImage
                   src={SHOP_POSTER}
                   alt="Large-format printer running custom stickers"
                   className="absolute inset-0 w-full h-full object-cover"

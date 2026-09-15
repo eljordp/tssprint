@@ -2,7 +2,6 @@ import { Link, useNavigate, useSearchParams } from 'react-router-dom'
 import { resolveProductEdit, type ProductConfiguration } from '@/lib/productCartEditing'
 import { trackEvent } from '@/lib/analytics'
 import { useEffect, useRef, useState } from 'react'
-import { motion } from 'framer-motion'
 import { ShoppingCart, Check, Plus, Sparkles, ArrowRight } from 'lucide-react'
 import { useCart, type CartItem } from '@/context/CartContext'
 import { getPricing, loadPricing, type ProductCategory, type ProductTier, type PricingConfig } from '@/lib/pricing'
@@ -219,11 +218,8 @@ function ProductOrderForm({ categoryNames, onCategoryChange, checkoutMode = 'car
   }
 
   return (
-    <motion.div
+    <div
       ref={orderRegion}
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ delay: 0.2 }}
       className={artworkFirst ? "max-w-6xl mx-auto pb-20 md:pb-0" : "max-w-5xl mx-auto"}
     >
       {editingItem && <div className="mb-5 rounded-xl border border-primary/40 bg-primary/5 p-4"><p className="font-bold">Edit {editingItem.name}</p><p className="text-sm text-muted-foreground">Keeping {editingItem.quantity} {editingItem.quantity === 1 ? 'batch' : 'batches'}. Prices below are for one batch. Changes are applied when you save.</p><p className="text-sm mt-2" role="status">Updated subtotal: ${(totalPrice * editingItem.quantity).toFixed(2)} for all batches, before cart discounts.</p><Link to={returnTo} className="inline-block mt-3 text-primary font-semibold underline">Cancel editing</Link></div>}
@@ -242,7 +238,7 @@ function ProductOrderForm({ categoryNames, onCategoryChange, checkoutMode = 'car
           const example = getProductExample(cat.name)
           return <button type="button" key={cat.name} onClick={() => resetSelections(i)} aria-pressed={activeCategory === i}
             className={`text-left rounded-xl border overflow-hidden transition-colors focus-visible:outline-2 focus-visible:outline-primary ${activeCategory === i ? 'border-primary bg-primary/10' : 'border-border bg-card hover:border-primary/50'}`}>
-            {example && <ProductExampleMedia example={example} />}
+            {example && <ProductExampleMedia example={example} thumbnail priority={i === 0} />}
             <span className="block p-3 text-sm font-bold">{cat.name === 'Event Displays' ? 'Canopy Tents' : cat.name}</span>
           </button>
         })}
@@ -499,6 +495,6 @@ function ProductOrderForm({ categoryNames, onCategoryChange, checkoutMode = 'car
         <div className="shrink-0"><p className="font-bold text-lg">${totalPrice.toFixed(2)}</p><p className="text-xs text-muted-foreground">{checkoutMode === 'estimate' ? 'Starting price' : quantityInvalid ? 'Enter a whole quantity' : `${effectiveQty} pcs · $${(totalPrice / effectiveQty).toFixed(2)}/ea`}</p></div>
         <button type="button" onClick={checkoutMode === "estimate" ? handleEstimateRequest : handleAddToCart} disabled={artworkBlocked || quantityInvalid} className="btn-primary flex-1 justify-center disabled:opacity-50">{artwork.status === 'uploading' ? 'Uploading…' : checkoutMode === 'estimate' ? 'Get Estimate' : added ? 'Added!' : editingItem ? 'Save changes' : 'Add to Cart'}</button>
       </div>}
-    </motion.div>
+    </div>
   )
 }

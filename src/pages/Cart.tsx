@@ -1,3 +1,4 @@
+import ResponsiveImage from '@/components/ResponsiveImage'
 import { cartEditHref } from '@/lib/productCartEditing'
 import { useState, useEffect, useRef, type FormEvent } from 'react'
 import { Link } from 'react-router-dom'
@@ -53,7 +54,7 @@ export default function Cart() {
             animate={{ opacity: 1, y: 0 }}
             className="relative mb-8 rounded-3xl overflow-hidden border border-white/10 shadow-2xl aspect-square max-w-sm mx-auto"
           >
-            <img src={emptyCartImage} alt="Finished MagDre die-cut sticker stacks" className="w-full h-full object-cover" />
+            <ResponsiveImage src={emptyCartImage} alt="Finished MagDre die-cut sticker stacks" className="w-full h-full object-cover" />
             <div className="absolute inset-0 bg-gradient-to-t from-background/80 via-transparent to-transparent" />
           </motion.div>
           <h1 className="text-3xl md:text-4xl font-black mb-3">Nothing in here yet.</h1>
@@ -77,7 +78,7 @@ export default function Cart() {
           {items.map(item => (
             <div key={item.id} id={`item-${item.id}`} className="scroll-mt-24 bg-card border border-border rounded-2xl p-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
               <div className="min-w-0">
-                <h3 className="font-bold break-words">{item.name}</h3>
+                <h2 className="font-bold break-words">{item.name}</h2>
                 {cartEditHref(item) && <Link className="inline-flex min-h-11 items-center mt-1 text-sm font-bold text-primary" to={cartEditHref(item)!}>Edit size, finish, quantity or artwork</Link>}
                 <p className="text-sm text-muted-foreground">{item.option} · {item.size}</p>
                 <p className="text-xs text-muted-foreground mt-1">{item.quantity} {item.quantity === 1 ? 'batch' : 'batches'}{item.pieceCount ? ` · ${item.pieceCount * item.quantity} pieces total` : ''}. Changing batches repeats this exact configuration.</p>

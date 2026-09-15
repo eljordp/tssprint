@@ -1,6 +1,7 @@
 import { createContext, useContext, useState, useEffect, useCallback, useRef, type ReactNode } from 'react'
-import { validatePromoCode, loadPromoCodes, applyPromoCode, type PromoResult, AUTO_DISCOUNT_CODE, AUTO_APPLIED_KEY } from '@/lib/promoCodes'
+import { validatePromoCode, loadPromoCodes, applyPromoCode, type PromoResult, AUTO_DISCOUNT_CODE } from '@/lib/promoCodes'
 import { getAnalyticsIdentity, trackAddToCart, trackCartEvent, shouldSuppressAnalytics } from '@/lib/analytics'
+import { resolveCartPromo } from '@/lib/cartPromo'
 import { cartRequest, getCartCredentials, resetCartCredentials } from '@/lib/cartSession'
 
 import type { ProductConfiguration } from '@/lib/productCartEditing'
@@ -57,6 +58,9 @@ interface CartContextType {
   setCartEmail: (email: string | null) => void
   restoreCart: (saved: SavedCartLookup, email: string) => void
   // Promo code
+  promoReady: boolean
+  promoLoadError: boolean
+  retryPromos: () => void
   promoCode: string | null
   promoDiscount: number
   promoLabel: string | null
@@ -90,9 +94,10 @@ export function CartProvider({ children }: { children: ReactNode }) {
     else localStorage.removeItem('tss-cart-email')
   }, [])
   const [autoPromoDismissed, setAutoPromoDismissed] = useState(() => { try { return sessionStorage.getItem('tss_auto_promo_dismissed') === 'true' } catch { return false } })
-  const [promoCode, setPromoCode] = useState<string | null>(null)
-  const [promoDiscount, setPromoDiscount] = useState(0)
-  const [promoLabel, setPromoLabel] = useState<string | null>(null)
+  const [requestedPromoCode, setRequestedPromoCode] = useState<string | null>(null)
+  const [promoLoadState, setPromoLoadState] = useState<'loading' | 'ready' | 'error'>('loading')
+  const [promoAttempt, setPromoAttempt] = useState(0)
+  const retryPromos = () => { setPromoLoadState('loading'); setPromoAttempt(attempt => attempt + 1) }
 
   // Sync to localStorage
   useEffect(() => {
@@ -176,9 +181,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
 
   const clearCart = () => {
     setItems([])
-    setPromoCode(null)
-    setPromoDiscount(0)
-    setPromoLabel(null)
+    setRequestedPromoCode(null)
   }
 
   const restoreCart = useCallback((saved: SavedCartLookup, email: string) => {
@@ -196,7 +199,6 @@ export function CartProvider({ children }: { children: ReactNode }) {
     setCartStage(undefined)
   }
 
-  const [promosReady, setPromosReady] = useState(false)
   const total = items.reduce((sum, i) => {
     const addOnTotal = i.addOns?.reduce((a, b) => a + b.price, 0) || 0
     return sum + (i.price + addOnTotal) * i.quantity
@@ -204,63 +206,32 @@ export function CartProvider({ children }: { children: ReactNode }) {
 
   const totalItems = items.reduce((sum, i) => sum + i.quantity, 0)
 
-  // Re-validate promo when cart changes
-  useEffect(() => {
-    if (!promoCode || !promosReady) return
-    const timer = window.setTimeout(() => {
-      const result = validatePromoCode(promoCode, total)
-      if (result.valid && result.discount !== undefined) {
-        setPromoDiscount(result.discount)
-      } else {
-        setPromoCode(null)
-        setPromoDiscount(0)
-        setPromoLabel(null)
-      }
-    }, 0)
-    return () => window.clearTimeout(timer)
-  }, [total, promoCode, promosReady])
+  const promoReady = promoLoadState === 'ready'
+  let hasOrdered = false
+  try { hasOrdered = localStorage.getItem('tss_order_completed') === 'true' } catch { /* Optional browser history. */ }
+  // Resolve the selected code and amount in the same render as readiness/total.
+  // Checkout can never observe "ready" with a stale pre-discount amount.
+  const resolvedPromo = resolveCartPromo({ ready: promoReady, subtotal: total, requestedCode: requestedPromoCode, automaticCode: AUTO_DISCOUNT_CODE, allowAutomatic: !autoPromoDismissed && !hasOrdered && items.length > 0, validate: validatePromoCode })
+  const { code: promoCode, discount: promoDiscount, label: promoLabel } = resolvedPromo
 
-  // Auto-apply first-order discount for first-time buyers
   useEffect(() => {
-    if (!promosReady || items.length === 0 || autoPromoDismissed) return
-    if (promoCode) return // user already has a code applied
-    const timer = window.setTimeout(() => {
-      const hasOrdered = localStorage.getItem('tss_order_completed') === 'true'
-      if (hasOrdered) return
-      const result = validatePromoCode(AUTO_DISCOUNT_CODE, total)
-      if (result.valid && result.code && result.discount !== undefined) {
-        setPromoCode(result.code.code)
-        setPromoDiscount(result.discount)
-        setPromoLabel(`${result.code.value}% off`)
-        localStorage.setItem(AUTO_APPLIED_KEY, 'true')
-      }
-    }, 0)
-    return () => window.clearTimeout(timer)
-  }, [items.length, total, promoCode, autoPromoDismissed, promosReady])
-
-  useEffect(() => { void loadPromoCodes().then(() => setPromosReady(true)).catch(() => {}) }, [])
+    if (!items.length) return
+    let active = true
+    void loadPromoCodes().then(() => { if (active) setPromoLoadState('ready') }).catch(() => { if (active) setPromoLoadState('error') })
+    return () => { active = false }
+  }, [items.length, promoAttempt])
 
   const applyPromo = async (code: string): Promise<PromoResult> => {
-    try { await loadPromoCodes() } catch { return { valid: false, error: 'Could not check discounts. Please retry.' } }
+    try { await loadPromoCodes(); setPromoLoadState('ready') } catch { setPromoLoadState('error'); return { valid: false, error: 'Could not check discounts. Please retry.' } }
     const result = validatePromoCode(code, total)
-    if (result.valid && result.code && result.discount !== undefined) {
-      setPromoCode(result.code.code)
-      setPromoDiscount(result.discount)
-      setPromoLabel(
-        result.code.type === 'percent'
-          ? `${result.code.value}% off`
-          : `$${result.code.value} off`
-      )
-    }
+    if (result.valid && result.code && result.discount !== undefined) setRequestedPromoCode(result.code.code)
     return result
   }
 
   const removePromo = () => {
     setAutoPromoDismissed(true)
     try { sessionStorage.setItem('tss_auto_promo_dismissed', 'true') } catch { /* Session persistence is optional. */ }
-    setPromoCode(null)
-    setPromoDiscount(0)
-    setPromoLabel(null)
+    setRequestedPromoCode(null)
   }
 
   const finalizePromo = () => {
@@ -274,7 +245,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
       items, addItem, replaceItem, removeItem, updateQuantity, clearCart, markConverted,
       total, totalItems, cartEmail, setCartEmail,
       restoreCart, restoreFromToken, emailCart, syncStatus, retrySync, setCartStage,
-      promoCode, promoDiscount, promoLabel,
+      promoCode, promoDiscount, promoLabel, promoReady, promoLoadError: promoLoadState === 'error', retryPromos,
       applyPromo, removePromo, finalizePromo,
     }}>
       {children}

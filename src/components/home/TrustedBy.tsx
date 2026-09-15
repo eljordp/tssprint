@@ -1,3 +1,4 @@
+import ResponsiveImage from '@/components/ResponsiveImage'
 import { useState } from 'react'
 import { motion } from 'framer-motion'
 import safewayLogo from '@/assets/brands/safeway.png'
@@ -38,7 +39,7 @@ export default function TrustedBy() {
         <div className="flex w-max gap-4 md:gap-12 animate-brand-scroll" style={{ animationPlayState: paused ? 'paused' : 'running' }}>
           {duplicated.map((brand, i) => (
             <div key={`${brand.id}-${i}`} className="flex items-center justify-center h-[72px] w-[150px] md:h-[120px] md:w-[280px] px-4 md:px-6 opacity-70 hover:opacity-100 transition-opacity duration-300 cursor-default">
-              <img
+              <ResponsiveImage
                 src={brand.logo}
                 alt={`${brand.name} logo`}
                 loading="lazy"

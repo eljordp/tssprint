@@ -1,3 +1,4 @@
+import ResponsiveImage from '@/components/ResponsiveImage'
 import { motion } from 'framer-motion'
 import { Link } from 'react-router-dom'
 import { ArrowRight, Car, Building2, Tent, Printer, Package, Star, Clock, FileCheck, MapPin, Shield, Zap, CheckCircle, Heart } from 'lucide-react'
@@ -43,7 +44,7 @@ export default function About() {
       {/* Hero Banner — with shop photo backdrop */}
       <div className="relative -mt-16 md:-mt-18 pt-24 md:pt-32 pb-12 md:pb-16 overflow-hidden">
         <div className="absolute inset-0">
-          <img src={aboutShop} alt="The Sticker Smith print shop" className="w-full h-full object-cover" />
+          <ResponsiveImage src={aboutShop} alt="The Sticker Smith print shop" className="w-full h-full object-cover" />
           <div className="absolute inset-0 bg-gradient-to-b from-black/50 via-black/70 to-background" />
         </div>
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="relative text-center section-container z-10">
@@ -59,7 +60,7 @@ export default function About() {
           <div className="grid md:grid-cols-[1fr_1.1fr] gap-10 md:gap-14 items-center max-w-6xl mx-auto">
             <motion.div {...fadeUp} className="relative order-1 md:order-1">
               <div className="relative rounded-3xl overflow-hidden shadow-2xl border border-white/10 aspect-[4/5]">
-                <img src={aboutCraft} alt="EPIC RANE sticker artwork in the Sticker Smith print shop" className="w-full h-full object-cover" />
+                <ResponsiveImage src={aboutCraft} alt="EPIC RANE sticker artwork in the Sticker Smith print shop" className="w-full h-full object-cover" />
                 <div className="absolute inset-0 bg-gradient-to-tr from-primary/10 via-transparent to-transparent" />
               </div>
               <div className="absolute -inset-4 -z-10 bg-primary/10 rounded-full blur-3xl" />
@@ -102,7 +103,7 @@ export default function About() {
                   className="group block bg-background border border-border rounded-2xl overflow-hidden hover:border-primary/40 transition-all duration-300 h-full"
                 >
                   <div className="relative aspect-[16/10] overflow-hidden">
-                    <img src={service.image} alt={service.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+                    <ResponsiveImage src={service.image} alt={service.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
                     <div className="absolute inset-0 bg-gradient-to-t from-background via-background/30 to-transparent" />
                     <div className="absolute top-3 left-3 w-10 h-10 rounded-xl bg-black/60 backdrop-blur-sm border border-white/10 flex items-center justify-center">
                       <service.icon className="w-5 h-5 text-primary" />

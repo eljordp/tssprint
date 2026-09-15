@@ -1,3 +1,4 @@
+import ResponsiveImage from '@/components/ResponsiveImage'
 import { useState, useEffect, type FormEvent } from 'react'
 import { useLocation, useSearchParams } from 'react-router-dom'
 import { motion } from 'framer-motion'
@@ -92,7 +93,7 @@ export default function Contact() {
     <>
       <div className="relative -mt-16 md:-mt-18 pt-24 md:pt-32 pb-12 md:pb-16 overflow-hidden">
         <div className="absolute inset-0">
-          <img src={contactPrinter} alt="The Sticker Smith print shop" className="w-full h-full object-cover" />
+          <ResponsiveImage src={contactPrinter} alt="The Sticker Smith print shop" className="w-full h-full object-cover" />
           <div className="absolute inset-0 bg-gradient-to-b from-black/50 via-black/70 to-background" />
         </div>
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="relative text-center section-container z-10">

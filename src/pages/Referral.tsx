@@ -1,3 +1,4 @@
+import ResponsiveImage from '@/components/ResponsiveImage'
 import { Link } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import { ArrowRight } from 'lucide-react'
@@ -14,7 +15,7 @@ export default function Referral() {
           <p className="text-lg text-muted-foreground">Introduce them to The Sticker Smith. Contact the shop to confirm your referral code, eligible orders and reward terms before sharing.</p>
           <a href="#referral-request" className="btn-primary mt-6">Ask about referrals <ArrowRight size={18} /></a>
         </motion.div>
-        <img src={referralHero} alt="Finished MagDre die-cut sticker stacks" className="rounded-2xl border border-border aspect-[4/3] object-cover w-full" />
+        <ResponsiveImage src={referralHero} alt="Finished MagDre die-cut sticker stacks" className="rounded-2xl border border-border aspect-[4/3] object-cover w-full" />
       </div>
       <div className="grid md:grid-cols-3 gap-4 mb-12">
         {[['1. Contact the shop', 'Tell us your name and how you plan to refer customers.'], ['2. Confirm the details', 'We reply by email with the code and terms that apply to your referral.'], ['3. Check in directly', 'For a referral already made, send us your code or order reference so we can check its status.']].map(([title, copy]) => <div key={title} className="rounded-2xl border border-border bg-card p-5"><h2 className="font-bold mb-2">{title}</h2><p className="text-sm text-muted-foreground">{copy}</p></div>)}

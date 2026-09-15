@@ -1,3 +1,4 @@
+import ResponsiveImage from '@/components/ResponsiveImage'
 import { motion } from 'framer-motion'
 import { Link } from 'react-router-dom'
 import { ArrowRight } from 'lucide-react'
@@ -34,7 +35,7 @@ export default function PortfolioStrip({ eyebrow = 'Recent Work', title, subtitl
             transition={{ delay: i * 0.05 }}
             className="group relative aspect-square rounded-2xl overflow-hidden border border-border"
           >
-            <img
+            <ResponsiveImage
               src={p.src}
               alt={p.alt}
               loading="lazy"

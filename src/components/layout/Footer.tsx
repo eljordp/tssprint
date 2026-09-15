@@ -1,10 +1,11 @@
+import ResponsiveImage from '@/components/ResponsiveImage'
 import { useState, type FormEvent } from 'react'
 import { Link } from 'react-router-dom'
 import { toast } from 'sonner'
 import tssLogo from '@/assets/tss-logo-new.png'
 import PaymentDisclosure from '@/components/PaymentDisclosure'
 import { cities } from '@/lib/cities'
-import { subscribeEmail } from '@/lib/contactSubmit'
+const subscribeEmail: typeof import('@/lib/contactSubmit').subscribeEmail = async (...args) => (await import('@/lib/contactSubmit')).subscribeEmail(...args)
 
 const footerLinks = {
   products: [
@@ -62,7 +63,7 @@ export default function Footer() {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-10">
           <div className="lg:col-span-2">
             <Link to="/" className="flex items-center gap-2 mb-4">
-              <img src={tssLogo} alt="The Sticker Smith" className="h-12 w-auto" />
+              <ResponsiveImage sizes="160px" src={tssLogo} alt="The Sticker Smith" className="h-12 w-auto" />
             </Link>
             <p className="text-muted-foreground max-w-sm mb-6 leading-relaxed">
               The Sticker Smith is a Bay Area sticker and print company for creators, brands, and dreamers.

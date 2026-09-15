@@ -1,3 +1,4 @@
+import ResponsiveImage from '@/components/ResponsiveImage'
 import { Link, Navigate } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import { ArrowRight, CheckCircle, Clock, MapPin, Shield } from 'lucide-react'
@@ -157,7 +158,7 @@ function StickerSupportPageInner({ page }: { page: StickerSupportPageConfig }) {
                 className="group bg-background border border-border rounded-xl overflow-hidden hover:border-primary/40 transition-all"
               >
                 <div className="aspect-[4/3] overflow-hidden bg-black">
-                  <img src={item.image} alt={item.imageAlt} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+                  <ResponsiveImage src={item.image} alt={item.imageAlt} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
                 </div>
                 <div className="p-4">
                   {item.imageNote && <p className="text-xs text-muted-foreground mb-2">{item.imageNote}</p>}

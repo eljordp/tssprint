@@ -1,3 +1,4 @@
+import ResponsiveImage from '@/components/ResponsiveImage'
 import { Link, useNavigate, useSearchParams } from 'react-router-dom'
 import { resolveProductEdit, type ProductConfiguration } from '@/lib/productCartEditing'
 import oliveLandArtwork from '@/assets/optimized/projects/drive-olive-land-pita-artwork.webp'
@@ -36,7 +37,7 @@ function PouchMockup({ previewUrl, pouchColor, finish, scale }: { previewUrl: st
         <div className={`absolute top-3 left-3 right-3 h-1.5 rounded-full ${pouchColor === 'white' ? 'bg-zinc-300' : 'bg-zinc-600'}`} />
         <div className={`absolute top-5 left-3 right-3 h-0.5 rounded-full ${pouchColor === 'white' ? 'bg-zinc-200' : 'bg-zinc-700'}`} />
         <div className="absolute inset-0 flex items-center justify-center p-6 pt-10">
-          {previewUrl ? <img src={previewUrl} alt="Your design" className="max-w-full max-h-full object-contain drop-shadow-lg" /> : <div className={`text-center ${pouchColor === 'white' ? 'text-zinc-400' : 'text-zinc-500'}`}><span className="text-xs">Your Design</span></div>}
+          {previewUrl ? <ResponsiveImage src={previewUrl} alt="Your design" className="max-w-full max-h-full object-contain drop-shadow-lg" /> : <div className={`text-center ${pouchColor === 'white' ? 'text-zinc-400' : 'text-zinc-500'}`}><span className="text-xs">Your Design</span></div>}
         </div>
         <div className={`absolute bottom-0 left-0 right-0 h-2 ${pouchColor === 'white' ? 'bg-zinc-200' : 'bg-zinc-800'}`} />
         <div className="absolute inset-0 pointer-events-none opacity-10">
@@ -59,7 +60,7 @@ function FoilMockup({ previewUrl, scale }: { previewUrl: string | null; scale: n
         <div className="absolute top-3 left-3 right-3 h-1.5 rounded-full bg-white/40" />
         <div className="absolute top-5 left-3 right-3 h-0.5 rounded-full bg-white/30" />
         <div className="absolute inset-0 flex items-center justify-center p-6 pt-10">
-          {previewUrl ? <img src={previewUrl} alt="Your design" className="max-w-full max-h-full object-contain drop-shadow-lg" /> : <div className="text-center text-white/70"><span className="text-xs">Your Design</span></div>}
+          {previewUrl ? <ResponsiveImage src={previewUrl} alt="Your design" className="max-w-full max-h-full object-contain drop-shadow-lg" /> : <div className="text-center text-white/70"><span className="text-xs">Your Design</span></div>}
         </div>
         <div className="absolute bottom-0 left-0 right-0 h-2 bg-white/20" />
       </div>
@@ -74,7 +75,7 @@ function JarMockup({ previewUrl }: { previewUrl: string | null }) {
         <div className="relative w-24 h-28 rounded-lg overflow-hidden shadow-xl" style={{ background: 'linear-gradient(90deg, rgba(255,255,255,0.1) 0%, rgba(255,255,255,0.4) 20%, rgba(255,255,255,0.2) 40%, rgba(255,255,255,0.5) 60%, rgba(255,255,255,0.2) 80%, rgba(255,255,255,0.1) 100%)', border: '1px solid rgba(255,255,255,0.3)' }}>
           <div className="absolute -top-3 left-1/2 -translate-x-1/2 w-20 h-6 rounded-t-lg" style={{ background: 'linear-gradient(180deg, #3a3a3a 0%, #2a2a2a 50%, #1a1a1a 100%)', border: '1px solid #444' }} />
           <div className="absolute top-6 left-0 right-0 bottom-3 flex items-center justify-center p-2">
-            {previewUrl ? <img src={previewUrl} alt="Your label" className="max-w-full max-h-full object-contain" /> : <div className="text-center text-zinc-400"><span className="text-[10px]">Label Here</span></div>}
+            {previewUrl ? <ResponsiveImage src={previewUrl} alt="Your label" className="max-w-full max-h-full object-contain" /> : <div className="text-center text-zinc-400"><span className="text-[10px]">Label Here</span></div>}
           </div>
           <div className="absolute inset-0 pointer-events-none" style={{ background: 'linear-gradient(135deg, rgba(255,255,255,0.3) 0%, transparent 30%, transparent 70%, rgba(255,255,255,0.1) 100%)' }} />
         </div>
@@ -324,7 +325,7 @@ function MylarOrderForm({ pricing, editingItem, editConfig, returnTo }: { pricin
           <div className="grid md:grid-cols-2 gap-6 items-start">
             <div className="space-y-3 md:sticky md:top-24">
             <figure className="overflow-hidden rounded-2xl border border-border bg-card">
-              <img src={oliveLandArtwork} alt="Olive Land pita-chip packaging artwork" className="aspect-[4/3] max-h-80 md:max-h-none w-full object-contain bg-white" />
+              <ResponsiveImage src={oliveLandArtwork} alt="Olive Land pita-chip packaging artwork" className="aspect-[4/3] max-h-80 md:max-h-none w-full object-contain bg-white" />
               <figcaption className="p-4 text-sm"><p className="font-bold">Your brand, on the pack</p><p className="text-muted-foreground mt-1">Olive Land packaging artwork from a shop project. This is a design example; your proof confirms the layout for your selected packaging.</p></figcaption>
             </figure>
             <details className="rounded-2xl border border-border bg-card p-4">

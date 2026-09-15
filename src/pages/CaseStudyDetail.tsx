@@ -1,3 +1,4 @@
+import ResponsiveImage from '@/components/ResponsiveImage'
 import { Link, useParams, Navigate } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import { ArrowLeft, ArrowRight, CheckCircle, Quote } from 'lucide-react'
@@ -15,7 +16,7 @@ export default function CaseStudyDetail() {
       {/* Hero */}
       <div className="relative -mt-16 md:-mt-18 pt-24 md:pt-32 pb-12 md:pb-16 overflow-hidden">
         <div className="absolute inset-0">
-          <img src={study.heroImage} alt={study.client} className="w-full h-full object-cover" />
+          <ResponsiveImage src={study.heroImage} alt={study.client} className="w-full h-full object-cover" />
           <div className="absolute inset-0 bg-gradient-to-b from-black/60 via-black/75 to-background" />
         </div>
         <div className="relative section-container z-10">
@@ -120,7 +121,7 @@ export default function CaseStudyDetail() {
                 transition={{ delay: i * 0.1 }}
                 className="relative rounded-2xl overflow-hidden border border-border aspect-[4/3]"
               >
-                <img src={img} alt={`${study.client} project detail ${i + 1}`} loading="lazy" className="w-full h-full object-cover" />
+                <ResponsiveImage src={img} alt={`${study.client} project detail ${i + 1}`} loading="lazy" className="w-full h-full object-cover" />
               </motion.div>
             ))}
           </div>

@@ -33,7 +33,7 @@ interface CustomerInfo {
 }
 
 export default function Checkout() {
-  const { items, total, removeItem, clearCart, markConverted, setCartEmail, setCartStage, promoCode, promoDiscount, promoLabel, applyPromo, removePromo, finalizePromo } = useCart()
+  const { items, total, removeItem, clearCart, markConverted, setCartEmail, setCartStage, promoCode, promoDiscount, promoLabel, promoReady, promoLoadError, retryPromos, applyPromo, removePromo, finalizePromo } = useCart()
   const navigate = useNavigate()
   const [customerInfo, setCustomerInfo] = useState<CustomerInfo>(() => {
     const empty: CustomerInfo = { deliveryMethod: 'shipping', firstName: '', lastName: '', email: '', phone: '', address: '', city: '', state: '', zip: '' }
@@ -79,7 +79,7 @@ export default function Checkout() {
   const quoteKey = JSON.stringify({ items, customerInfo, promoCode, promoDiscount, total: finalTotal.toFixed(2) })
   const quoteReady = quoteState.key === quoteKey && quoteState.valid
   useEffect(() => {
-    if (!formValid || items.length === 0) return
+    if (!promoReady || !formValid || items.length === 0) return
     const controller = new AbortController()
     const timer = window.setTimeout(async () => {
       try {
@@ -91,10 +91,10 @@ export default function Checkout() {
       }
     }, 400)
     return () => { window.clearTimeout(timer); controller.abort() }
-  }, [quoteKey, formValid, items.length])
+  }, [quoteKey, formValid, items.length, promoReady])
 
   useEffect(() => {
-    if (checkoutStartedTracked.current || items.length === 0 || total < MIN_ORDER_SUBTOTAL) return
+    if (!promoReady || checkoutStartedTracked.current || items.length === 0 || total < MIN_ORDER_SUBTOTAL) return
     checkoutStartedTracked.current = true
     setCartStage('checkout')
     trackCheckoutStarted({
@@ -104,7 +104,7 @@ export default function Checkout() {
       promoCode,
       promoDiscount,
     })
-  }, [finalTotal, items, promoCode, promoDiscount, total, setCartStage])
+  }, [finalTotal, items, promoCode, promoDiscount, promoReady, total, setCartStage])
 
   if (items.length === 0) {
     return (
@@ -751,14 +751,15 @@ export default function Checkout() {
                   </div>
                 )}
 
+                {!promoReady && <p role={promoLoadError ? 'alert' : 'status'} className="mb-4 text-sm">{promoLoadError ? <>Discounts could not be checked. <button type="button" onClick={retryPromos} className="underline text-primary">Retry discounts</button></> : 'Checking your discounts…'}</p>}
                 {!paymentConfig && !paymentError && <p role="status" className="mb-4 text-sm">Loading secure payment options…</p>}
                 {onlyQuickBooks && paymentConfig && !paymentConfig.enabled && !qbPreview && <p role="alert" className="mb-4 text-sm">Online payment is temporarily unavailable. <a href="mailto:thestickersmith@gmail.com" className="text-primary underline">Contact the shop for an invoice.</a></p>}
-                <QuickBooksPayment categories={items.map(item => item.category || '')} disabled={!formValid || !quoteReady || processing} payload={checkoutPayload} onBusy={setProcessing} onError={setPaymentError} />
+                <QuickBooksPayment categories={items.map(item => item.category || '')} disabled={!promoReady || !formValid || !quoteReady || processing} payload={checkoutPayload} onBusy={setProcessing} onError={setPaymentError} />
 
                 {paymentConfig && !onlyQuickBooks && <><SquareCardPayment
                   amount={finalTotal}
                   customer={customerInfo}
-                  disabled={!formValid || !quoteReady || processing}
+                  disabled={!promoReady || !formValid || !quoteReady || processing}
                   processing={processing}
                   onAvailabilityChange={setSquareAvailable}
                   onPaymentToken={captureSquarePayment}
@@ -774,7 +775,7 @@ export default function Checkout() {
                     )}
                     <PayPalButtons
                       style={{ layout: 'vertical', color: 'gold', shape: 'pill', label: 'pay', height: 50 }}
-                      disabled={!formValid || !quoteReady || processing}
+                      disabled={!promoReady || !formValid || !quoteReady || processing}
                       createOrder={createPayPalOrder}
                       onApprove={async (data, actions) => {
                         setProcessing(true)

@@ -1,11 +1,12 @@
-import { useState, useEffect, useRef } from 'react'
+import ResponsiveImage from '@/components/ResponsiveImage'
+import { useState, useEffect, useRef, lazy, Suspense } from 'react'
 import { Link, useLocation } from 'react-router-dom'
 import { Menu, X, ChevronDown, Search, User } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useAuth } from '@/context/AuthContext'
 import { useCart } from '@/context/CartContext'
 import { useModalFocus } from '@/hooks/useModalFocus'
-import SearchModal from '@/components/SearchModal'
+const SearchModal = lazy(() => import('@/components/SearchModal'))
 import tssLogo from '@/assets/tss-logo-new.png'
 
 const navLinks = [
@@ -95,7 +96,7 @@ export default function Header() {
         <div className="section-container">
           <nav className="flex items-center justify-between h-16 md:h-18">
             <Link to="/" className="flex items-center group">
-              <img src={tssLogo} alt="The Sticker Smith" width={400} height={224} className="h-10 md:h-12 w-auto transition-transform group-hover:scale-105" />
+              <ResponsiveImage sizes="(min-width: 768px) 86px, 72px" src={tssLogo} alt="The Sticker Smith" width={400} height={224} className="h-10 md:h-12 w-auto transition-transform group-hover:scale-105" />
             </Link>
             <div className="hidden lg:flex items-center gap-1">
               {navLinks.map((link) => (
@@ -207,7 +208,7 @@ export default function Header() {
           </motion.div>
         )}
       </AnimatePresence>
-      <SearchModal isOpen={isSearchOpen} onClose={() => setIsSearchOpen(false)} />
+      {isSearchOpen && <Suspense fallback={null}><SearchModal isOpen={isSearchOpen} onClose={() => setIsSearchOpen(false)} /></Suspense>}
     </>
   )
 }

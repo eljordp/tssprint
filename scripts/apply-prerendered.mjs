@@ -10,6 +10,7 @@
 import { cp, stat, readFile, writeFile, readdir, mkdir } from 'node:fs/promises'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
+import { routePreloads } from './route-preloads.mjs'
 import { APP_SHELL_ROUTES, appShellHtmlForRoute } from './app-shell-meta.mjs'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
@@ -26,6 +27,7 @@ try {
 // Pull the fresh asset tags from the just-built dist/index.html so we can
 // stamp them into every prerendered HTML.
 const freshIndex = await readFile(path.join(DEST, 'index.html'), 'utf8')
+const manifest = JSON.parse(await readFile(path.join(DEST, '.vite/manifest.json'), 'utf8'))
 
 function extractAll(html, regex) {
   const out = []
@@ -51,6 +53,7 @@ console.log(`[apply-prerendered] fresh build references ${freshScripts.length} J
 // on every build, so prerendered HTML's baked-in image/media/font references go
 // stale whenever a source file changes. We rewrite them to the fresh names so
 // the build self-heals instead of failing the asset-existence check.
+const existingAssets = new Set(await readdir(path.join(DEST, 'assets')))
 const HASH_RE = /^(.+)-[A-Za-z0-9_-]{8}(\.[A-Za-z0-9]+)$/
 async function buildAssetMap() {
   const map = new Map()
@@ -62,13 +65,17 @@ async function buildAssetMap() {
   }
   for (const f of files) {
     const m = f.match(HASH_RE)
-    if (m) map.set(m[1] + m[2], f)
+    if (m) {
+      const key = m[1] + m[2]
+      // Responsive variants share a basename. Never guess which size replaces a missing hash.
+      map.set(key, map.has(key) ? null : f)
+    }
   }
   return map
 }
 const assetMap = await buildAssetMap()
 
-function patchHtml(html) {
+function patchHtml(html, route) {
   // Strip every existing /assets/*.js script + /assets/*.css link.
   html = html.replace(/<script[^>]+src="\/assets\/[^"]+\.js"[^>]*><\/script>\s*/g, '')
   html = html.replace(/<link[^>]+href="\/assets\/[^"]+\.css"[^>]*>\s*/g, '')
@@ -76,10 +83,11 @@ function patchHtml(html) {
   // handles their preloads; serialized preload tags must not pin old chunks.
   html = html.replace(/<link\b(?=[^>]*\brel="modulepreload")[^>]*>\s*/g, '')
   // Inject the fresh ones right before </head>.
-  html = html.replace(/<\/head>/i, `    ${freshTags}\n  </head>`)
+  html = html.replace(/<\/head>/i, `    ${freshTags}\n${routePreloads(manifest, route)}\n  </head>`)
   // Rewrite any remaining hashed asset references (images, fonts, media) to the
   // fresh build's filenames, matched by base name. Unknown refs pass through.
   html = html.replace(/\/assets\/([A-Za-z0-9._-]+)/g, (full, file) => {
+    if (existingAssets.has(file)) return full
     const m = file.match(HASH_RE)
     if (!m) return full
     const fresh = assetMap.get(m[1] + m[2])
@@ -103,8 +111,8 @@ async function assertReferencedAssetsExist(dir) {
 
       const html = await readFile(file, 'utf8')
       const assets = new Set()
-      for (const match of html.matchAll(/["'(](\/assets\/[^"'()?#]+\.[a-z0-9]+)(?:[?#][^"'()]*)?["')]/gi)) {
-        assets.add(match[1])
+      for (const match of html.matchAll(/\/assets\/[A-Za-z0-9._-]+\.[A-Za-z0-9]+/g)) {
+        assets.add(match[0])
       }
 
       for (const asset of assets) {
@@ -137,7 +145,9 @@ async function walk(srcDir, destDir) {
       await walk(s, d)
     } else if (entry.name.endsWith('.html')) {
       const original = await readFile(s, 'utf8')
-      const patched = patchHtml(original)
+      const relative = path.relative(SRC, s).replaceAll(path.sep, '/')
+      const route = '/' + relative.replace(/(?:^|\/)index\.html$/, '').replace(/\.html$/, '')
+      const patched = patchHtml(original, route)
       await writeFile(d, patched, 'utf8')
     } else {
       await cp(s, d, { force: true })
@@ -147,7 +157,7 @@ async function walk(srcDir, destDir) {
 
 async function writeAppShellAliases(html) {
   for (const route of APP_SHELL_ROUTES) {
-    const routeHtml = appShellHtmlForRoute(html, route)
+    const routeHtml = appShellHtmlForRoute(html, route).replace('</head>', `${routePreloads(manifest, route)}\n</head>`)
     const sub = route.replace(/^\//, '')
     const outDir = path.join(DEST, sub)
     await mkdir(outDir, { recursive: true })

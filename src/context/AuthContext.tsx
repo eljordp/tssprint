@@ -1,4 +1,4 @@
-import { signInWithMigration } from '@/lib/signIn'
+const signInWithMigration: typeof import('@/lib/signIn').signInWithMigration = async (...args) => (await import('@/lib/signIn')).signInWithMigration(...args)
 import { createContext, useContext, useState, useEffect, type ReactNode } from 'react'
 import type { User } from '@supabase/supabase-js'
 

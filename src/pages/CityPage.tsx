@@ -1,3 +1,4 @@
+import ResponsiveImage from '@/components/ResponsiveImage'
 import shopPhoto from '@/assets/optimized/projects/sticker-smith-storefront.webp'
 import { Link, Navigate } from 'react-router-dom'
 import { motion } from 'framer-motion'
@@ -38,7 +39,7 @@ function CityPageInner({ city }: { city: CityConfig }) {
               <Link to="/stickers" className="inline-flex items-center justify-center gap-2 px-5 py-3 rounded-full border border-white/20 text-white hover:bg-white/5 hover:border-white/40 transition-colors text-sm font-semibold">Order Stickers</Link>
             </div>
           </motion.div>
-          <figure><img src={shopPhoto} alt="The Sticker Smith shop in Hayward" width={800} height={600} className="w-full aspect-[4/3] rounded-2xl object-cover" /><figcaption className="mt-2 text-sm text-neutral-300">Our Hayward shop · pickup by appointment</figcaption></figure>
+          <figure><ResponsiveImage src={shopPhoto} alt="The Sticker Smith shop in Hayward" width={800} height={600} className="w-full aspect-[4/3] rounded-2xl object-cover" /><figcaption className="mt-2 text-sm text-neutral-300">Our Hayward shop · pickup by appointment</figcaption></figure>
         </div>
       </section>
 

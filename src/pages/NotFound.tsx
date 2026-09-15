@@ -1,3 +1,4 @@
+import ResponsiveImage from '@/components/ResponsiveImage'
 import { useEffect } from 'react'
 import { Link, useLocation } from 'react-router-dom'
 import { motion } from 'framer-motion'
@@ -15,7 +16,7 @@ export default function NotFound() {
     <section className="relative min-h-[80vh] flex items-center justify-center py-16 overflow-hidden">
       {/* Backdrop */}
       <div className="absolute inset-0 -z-10">
-        <img src={tornVinyl} alt="" className="w-full h-full object-cover opacity-40" />
+        <ResponsiveImage src={tornVinyl} alt="" className="w-full h-full object-cover opacity-40" />
         <div className="absolute inset-0 bg-gradient-to-b from-background/60 via-background/80 to-background" />
       </div>
 

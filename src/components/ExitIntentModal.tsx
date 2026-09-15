@@ -1,7 +1,7 @@
 import { useState, useEffect, type FormEvent } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { X, Gift, Check, Loader2 } from 'lucide-react'
-import { submitContactRequest } from '@/lib/contactSubmit'
+const submitContactRequest: typeof import('@/lib/contactSubmit').submitContactRequest = async (...args) => (await import('@/lib/contactSubmit')).submitContactRequest(...args)
 import { useCart } from '@/context/CartContext'
 import { useModalFocus } from '@/hooks/useModalFocus'
 

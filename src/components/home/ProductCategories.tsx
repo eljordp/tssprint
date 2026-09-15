@@ -1,3 +1,4 @@
+import ResponsiveImage from '@/components/ResponsiveImage'
 import { Link } from 'react-router-dom'
 
 import dieCutCategory from '@/assets/optimized/projects/drive-magdre-die-cut-stacks.webp'
@@ -62,7 +63,7 @@ export default function ProductCategories() {
               >
                 {/* Image */}
                 <div className="relative aspect-[4/3] overflow-hidden">
-                  <img
+                  <ResponsiveImage
                     src={cat.image}
                     alt={cat.title}
                     loading="lazy"

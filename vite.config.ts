@@ -1,4 +1,5 @@
 import { defineConfig } from 'vite'
+import { imagetools } from 'vite-imagetools'
 import react from '@vitejs/plugin-react'
 import tailwindcss from '@tailwindcss/vite'
 import path from 'path'
@@ -13,7 +14,8 @@ for (const folder of ['cmaps', 'standard_fonts', 'wasm', 'iccs']) {
 }
 
 export default defineConfig({
-  plugins: [react(), tailwindcss()],
+  plugins: [imagetools(), react(), tailwindcss()],
+  build: { manifest: true },
   resolve: {
     alias: {
       '@': path.resolve(__dirname, './src'),

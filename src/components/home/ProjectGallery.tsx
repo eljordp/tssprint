@@ -1,3 +1,4 @@
+import ResponsiveImage from '@/components/ResponsiveImage'
 import { useState } from 'react'
 import { motion } from 'framer-motion'
 import { Link } from 'react-router-dom'
@@ -44,7 +45,7 @@ export default function ProjectGallery() {
               aria-label={`View ${project.title}`}
             >
               <div className="relative w-60 sm:w-72 md:w-80 aspect-square rounded-2xl overflow-hidden border border-border cursor-pointer">
-                <img
+                <ResponsiveImage
                   src={project.image}
                   alt={project.title}
                   loading="lazy"
