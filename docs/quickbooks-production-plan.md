@@ -64,3 +64,6 @@ Apple Pay is offered by the hosted invoice on eligible Safari / Apple Wallet set
 - Existing unpaid verification invoice 3275 already showed $120.87 after discount + $12.99 sales tax = $133.86, with card and Apple Pay choices visible on Intuit's hosted page. This is not proof of a successful charge.
 - Unmapped categories remain Mylar Packaging, Event Displays and Table Covers. Their checkout requests a shop invoice rather than using an untaxed payment fallback. Taxability in QuickBooks alone does not establish the exact product mapping; finish those mappings using actual catalog evidence.
 - Remaining: GA4 User Data Collection Acknowledgement and server API secret; a specifically authorized real purchase, card/eligible Apple Pay completion, saved paid order, actual receipt arrival and GA4 report verification. Admin in the currently controlled Chrome profile shows its login screen; no credentials were changed.
+
+- Post-launch Vercel log scan returned zero 5xx entries for the new deployment in the inspected window. This is a point-in-time check, not uptime history.
+- GA4 reopened under jordanl4solar@gmail.com (authuser=1); the correct G-4B9FXT1HQ9 stream reports traffic in the past 48 hours. No API secrets exist. Its required User Data Collection Acknowledgement is open for the user; no acknowledgement was accepted by the agent.
