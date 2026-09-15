@@ -2,7 +2,7 @@ import { createContext, useContext, useState, useEffect, useCallback, type React
 import { validatePromoCode, applyPromoCode, type PromoResult, AUTO_DISCOUNT_CODE, AUTO_APPLIED_KEY } from '@/lib/promoCodes'
 import { getAnalyticsIdentity, trackAddToCart } from '@/lib/analytics'
 
-interface CartItem {
+export interface CartItem {
   id: string
   name: string
   category?: string

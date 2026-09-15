@@ -8,6 +8,7 @@ const HIDE_ON = new Set([
   '/contact',
   '/order-confirmation',
   '/account',
+  '/services/business-print',
 ])
 
 export default function MobileBar() {

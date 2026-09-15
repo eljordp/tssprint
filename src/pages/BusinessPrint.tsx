@@ -1,11 +1,8 @@
-import { useCallback, useState } from 'react'
 import { motion } from 'framer-motion'
 import { CheckCircle, Clock, Shield, Layers, Zap } from 'lucide-react'
 import ProductOrder from '@/components/ProductOrder'
 import EstimateForm from '@/components/EstimateForm'
 import PortfolioStrip from '@/components/PortfolioStrip'
-import StudioMockup from '@/components/StudioMockup'
-import ServicePageIntro from '@/components/ServicePageIntro'
 import bizCardsFoil from '@/assets/optimized/projects/bp-cleopatra-discount-cards-800.webp'
 import postcards from '@/assets/optimized/projects/bp-empire-automotive-flyer-1000.jpg'
 import pressroom from '@/assets/optimized/projects/bp-cleopatra-tattoo-flyer-1000.jpg'
@@ -34,30 +31,18 @@ const process = [
 ]
 
 export default function BusinessPrint() {
-  const [activeMockup, setActiveMockup] = useState('card')
-  const handleCategoryChange = useCallback((categoryName: string) => {
-    const map: Record<string, string> = {
-      'Business Cards': 'card',
-      'Flyers & Door Hangers': 'flyer',
-      'Postcards': 'postcard',
-      'Vehicle Magnets': 'magnet',
-    }
-    setActiveMockup(map[categoryName] ?? 'card')
-  }, [])
-
   return (
     <>
       <section className="pt-6 md:pt-10 pb-8 md:pb-16">
         <div className="section-container">
-          <ServicePageIntro
-            eyebrow="Business Print"
-            title="Custom Printing in Hayward"
-            description="Order business cards, flyers, postcards, magnets, and premium print materials with proofing before production."
-          />
+          <div className="max-w-6xl mx-auto mb-5 text-center">
+            <h1 className="text-2xl md:text-3xl font-black">Custom Printing in Hayward</h1>
+            <p className="mt-2 text-sm text-muted-foreground">Choose your product, upload your artwork, and review your price. Proof approval before printing.</p>
+          </div>
           <div id="shop" className="scroll-mt-24 mb-12">
             <ProductOrder
               categoryNames={['Business Cards', 'Flyers & Door Hangers', 'Postcards', 'Vehicle Magnets']}
-              onCategoryChange={handleCategoryChange}
+              artworkFirst
             />
           </div>
 
@@ -95,23 +80,6 @@ export default function BusinessPrint() {
               ))}
             </div>
           </motion.div>
-        </div>
-      </section>
-      <section className="py-12 md:py-20 border-t border-border/50">
-        <div className="section-container">
-          <StudioMockup
-            service="Business Print"
-            title="Preview your design on paper"
-            subtitle="Upload your artwork — see it rendered on the exact product."
-            activeKey={activeMockup}
-            onActiveKeyChange={setActiveMockup}
-            scenes={[
-              { key: 'card', label: 'Business Card', shape: 'business-card' },
-              { key: 'flyer', label: 'Flyer', shape: 'flyer' },
-              { key: 'postcard', label: 'Postcard', shape: 'postcard' },
-              { key: 'magnet', label: 'Vehicle Magnet', shape: 'sticker-rect' },
-            ]}
-          />
         </div>
       </section>
       <section className="py-12 md:py-20 border-t border-border/50">
