@@ -16,6 +16,7 @@ import { existsSync } from 'node:fs'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 import puppeteer from 'puppeteer'
+import { imageAssetMap } from './image-asset-map.mjs'
 import { APP_SHELL_ROUTES, appShellHtmlForRoute } from './app-shell-meta.mjs'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
@@ -94,6 +95,8 @@ function waitForHttp(url, expectedSignal, timeoutMs = 30000) {
 }
 
 async function main() {
+  await mkdir(PRERENDERED, { recursive: true })
+  await writeFile(path.join(PRERENDERED, 'image-assets.json'), JSON.stringify(await imageAssetMap(path.join(DIST, 'assets')), null, 2) + '\n')
   if (!existsSync(DIST)) {
     console.error('dist/ not found. Run `vite build` first.')
     process.exit(1)
