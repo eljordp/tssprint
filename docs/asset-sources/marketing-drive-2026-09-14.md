@@ -36,3 +36,5 @@ All eight top-level folders and their twenty immediate subfolders were inventori
 Eight shortcuts were unavailable: `hazcards.pdf`, `babiyoda.pdf`, `rayavalostablecover.pdf`, `SMEEZLERS.pdf`, `SANCHOSxKAVA.pdf`, `lungcandy4x6.pdf`, `candyfactoory4x5new.pdf`, and `layout.jpg`. No access requests or deletions were sent. Root `COWHOUSE.pdf` was listed but was not selected or opened as a website asset.
 
 Remaining material-evidence gaps: matched matte/gloss/clear/paper/raised-finish photographs with confirmed stock details, a finished custom-backdrop example, and an actual multi-design sticker-sheet photo. Do not turn an AI illustration or generic portfolio photo into a verified manufacturing claim.
+
+Follow-up: [material photographs](material-photographs-2026-09-14.md) adds credited real reference photos to the finish guide after the owner rejected generated samples. These references improve comparison but do not establish the shop’s exact stock.
