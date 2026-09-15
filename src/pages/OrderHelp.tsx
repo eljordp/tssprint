@@ -2,7 +2,7 @@ import { Link } from 'react-router-dom'
 
 export default function OrderHelp() {
   return <section className="section-container max-w-3xl py-12 space-y-6">
-    <h1 className="text-3xl font-black">Proofs, delivery & order help</h1>
+    <h1 className="text-3xl font-black">Order Help: Proofs, Pickup &amp; Delivery</h1>
     <div><h2 className="text-xl font-bold">Before we print</h2><p className="mt-2 text-muted-foreground">Your on-screen artwork preview is for placement; it is not your production proof. The shop emails the proof after reviewing your file. Check spelling, dimensions, layout, cut lines and the requested material. Reply to that proof email with your approval or a clear list of changes. Review the revised proof before approving. Printing begins after approval.</p></div>
     <div><h2 className="text-xl font-bold">Waiting for a proof or an update?</h2><p className="mt-2 text-muted-foreground">Check the inbox and spam folder for the email you used at checkout. If you chose to send artwork later, email your file and order reference to the shop. Reply to the shop’s email for help or an update on your order.</p><Link to="/account" className="inline-block mt-3 text-primary font-semibold">View my orders →</Link></div>
     <div><h2 className="text-xl font-bold">Production and delivery</h2><p className="mt-2 text-muted-foreground">Production time starts after artwork and proof approval. A production estimate does not include delivery time. Ask the shop to confirm availability for rush work or a specific event date.</p></div>

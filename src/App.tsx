@@ -123,7 +123,7 @@ const pageMeta: Record<string, PageMeta> = {
   },
   '/terms': { title: 'Terms & EULA | The Sticker Smith', description: 'Website license, artwork, proof approval, payments and ordering terms for The Sticker Smith.' },
   '/privacy': { title: 'Privacy Policy | The Sticker Smith', description: 'How The Sticker Smith collects and uses website, artwork, order and account information, and how to make a privacy request.' },
-  '/order-help': { title: 'Ordering, Proofs & Pickup | The Sticker Smith', description: 'How to send artwork, review your print proof and arrange pickup or order support.' },
+  '/order-help': { title: 'Order Help | Proofs, Pickup & Delivery', description: 'Get help with Sticker Smith artwork, digital proofs, order changes, Hayward pickup, delivery, and print support.' },
   '/account': {
     title: 'Account | The Sticker Smith',
     description: 'Manage your Sticker Smith account, referral code, profile, and order details.',
