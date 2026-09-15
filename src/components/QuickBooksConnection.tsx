@@ -11,6 +11,7 @@ type Status = {
   companyName: string | null
   redirectUri: string
 }
+type Readiness = { currency: string | null; salesTaxEnabled: boolean | null; automatedSalesTax: boolean | null; onlinePayments: boolean | null; autoEmail: boolean | null; items: { id: string; name: string; type: string; taxable: boolean | null; incomeAccount: string | null }[] }
 const messages: Record<string, string> = {
   sandbox_only: 'This test is available only for the sandbox company.',
   invoice_busy: 'The same invoice test is already running. Try again shortly.',
@@ -35,6 +36,7 @@ export default function QuickBooksConnection() {
   const [status, setStatus] = useState<Status | null>(null)
   const [busy, setBusy] = useState(false)
   const [message, setMessage] = useState('')
+  const [readiness, setReadiness] = useState<Readiness | null>(null)
   const request = useCallback(async (action: string, method = 'GET') => {
     const { data: { session } } = await supabase.auth.getSession()
     if (!session) throw new Error('Your admin session expired. Sign in again.')
@@ -94,11 +96,28 @@ export default function QuickBooksConnection() {
         <button className="btn-primary disabled:opacity-50" disabled={busy || !ready} onClick={() => act('connect')}>{busy ? 'Working…' : status.status === 'connected' ? 'Reconnect QuickBooks' : 'Connect QuickBooks'}</button>
         {status.status === 'connected' && <>
           <button className="rounded-lg border border-border px-4 py-2 disabled:opacity-50" disabled={busy} onClick={() => act('check')}>Check connection</button>
+          <button className="rounded-lg border border-border px-4 py-2 disabled:opacity-50" disabled={busy} onClick={async () => {
+            setBusy(true); setMessage('')
+            try { setReadiness(await request('readiness')) } catch (error) { setMessage(error instanceof Error ? error.message : 'Could not check payment settings.') } finally { setBusy(false) }
+          }}>Check payment settings</button>
           <button className="rounded-lg border border-border px-4 py-2 disabled:opacity-50" disabled={busy} onClick={() => act('disconnect')}>Disconnect</button>
         </>}
         <button className="rounded-lg border border-border px-4 py-2 disabled:opacity-50" disabled={busy} onClick={() => refresh().catch(error => setMessage(error.message))}>Refresh status</button>
       </div>
       <p className="text-sm text-muted-foreground">{status.environment === 'sandbox' ? 'Sandbox uses test company data. ' : ''}This connection does not enable customer payments yet. Invoice creation and payment confirmation still need verification.</p>
+      {readiness && <section className="space-y-3 border-t border-border pt-4">
+        <h3 className="font-bold">Live invoice settings</h3>
+        <p className="text-sm text-muted-foreground">Read from QuickBooks. No invoice was created or sent.</p>
+        <dl className="grid grid-cols-2 gap-2 text-sm">
+          <dt>Home currency</dt><dd>{readiness.currency || 'Not reported'}</dd>
+          <dt>Sales tax enabled</dt><dd>{readiness.salesTaxEnabled === null ? 'Not reported' : readiness.salesTaxEnabled ? 'Yes' : 'No'}</dd>
+          <dt>Automated sales tax</dt><dd>{readiness.automatedSalesTax === null ? 'Not reported' : readiness.automatedSalesTax ? 'Yes' : 'No'}</dd>
+          <dt>Online card preference</dt><dd>{readiness.onlinePayments === null ? 'Not reported — verify on an invoice' : readiness.onlinePayments ? 'Enabled' : 'Disabled'}</dd>
+          <dt>Automatic invoice email</dt><dd>{readiness.autoEmail === null ? 'Not reported' : readiness.autoEmail ? 'Enabled' : 'Disabled'}</dd>
+        </dl>
+        <h4 className="font-semibold">Available products and services</h4>
+        <ul className="space-y-2 text-sm">{readiness.items.map(item => <li key={item.id} className="rounded-lg border border-border p-3"><strong>{item.name}</strong> · {item.type}<br />Income account: {item.incomeAccount || 'Not reported'} · Taxable: {item.taxable === null ? 'Not reported' : item.taxable ? 'Yes' : 'No'}</li>)}</ul>
+      </section>}
       {status.environment === 'sandbox' && status.status === 'connected' && <QuickBooksInvoiceTests request={request} />}
     </> : <p className="text-muted-foreground">Loading connection settings…</p>}
   </div>
