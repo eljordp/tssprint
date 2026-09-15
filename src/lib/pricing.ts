@@ -28,7 +28,7 @@ export function getPricing(): PricingConfig {
   return defaultPricing
 }
 
-export async function loadPricing(): Promise<PricingConfig> {
+export async function loadPricing(strict = false): Promise<PricingConfig> {
   try {
     const { data, error } = await supabase
       .from('pricing_configs')
@@ -36,19 +36,19 @@ export async function loadPricing(): Promise<PricingConfig> {
       .eq('id', STORE_PRICING_ID)
       .maybeSingle()
 
+    if (error) throw error
     if (!error && data?.config) {
       const config = normalizePricingConfig(data.config)
       cachePricing(config)
       return config
     }
-  } catch { /* fall back to local/default pricing */ }
+  } catch (error) { if (strict) throw error }
 
   return getPricing()
 }
 
 export async function savePricing(config: PricingConfig) {
   const normalized = normalizePricingConfig(config)
-  cachePricing(normalized)
 
   const { error } = await supabase
     .from('pricing_configs')
@@ -59,6 +59,7 @@ export async function savePricing(config: PricingConfig) {
     }, { onConflict: 'id' })
 
   if (error) throw error
+  cachePricing(normalized)
 }
 
 export function getMaterialMultiplier(material: string, config: PricingConfig): number {

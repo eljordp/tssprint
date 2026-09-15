@@ -1,5 +1,5 @@
 import { createHash } from 'node:crypto'
-import { priceItem, loadServerPricing, approvedDiscount, checkoutError } from './checkout-pricing.js'
+import { priceItem, loadServerPricing, loadApprovedPromos, approvedDiscount, checkoutError } from './checkout-pricing.js'
 function envValue(name) {
   const raw = process.env[name]
   if (!raw) return ''
@@ -197,7 +197,8 @@ export async function normalizeCheckout(body, dependencies = {}) {
   const customer = normalizeCustomer(body?.customerInfo)
   const subtotal = toMoney(items.reduce((sum, item) => sum + item.lineTotal, 0))
   if (subtotal < 35) throw checkoutError('The minimum order is $35 before discounts.')
-  const discount = await approvedDiscount(body?.promoCode, subtotal, customer.email, dependencies.hasPaidOrder)
+  const promos = body?.promoCode ? await (dependencies.loadPromos || loadApprovedPromos)() : {}
+  const discount = await approvedDiscount(body?.promoCode, subtotal, customer.email, dependencies.hasPaidOrder, promos)
   if (body?.promoDiscount != null && (!Number.isFinite(Number(body.promoDiscount)) || Math.round(Number(body.promoDiscount) * 100) !== Math.round(discount * 100))) throw checkoutError('Promo discount changed. Please remove and reapply the code.')
   const total = toMoney(Math.max(0, subtotal - discount))
   const clientTotal = body?.total == null ? total : toMoney(body.total)

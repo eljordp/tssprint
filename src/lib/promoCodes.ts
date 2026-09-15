@@ -1,3 +1,5 @@
+import { supabase } from './supabase'
+import { DEFAULT_PROMOS, validatePromos } from './approvedPromos'
 export interface PromoCode {
   code: string
   type: 'percent' | 'fixed'
@@ -12,81 +14,22 @@ export interface PromoCode {
   createdAt: string
 }
 
-const STORAGE_KEY = 'tss-promo-codes'
 const USED_CODES_KEY = 'tss-used-codes'
 
-const defaultCodes: PromoCode[] = [
-  {
-    code: 'AUTO10',
-    type: 'percent',
-    value: 10,
-    label: 'First Order Discount — Auto-Applied',
-    category: 'first_time',
-    minOrder: 35,
-    maxUses: 0,
-    uses: 0,
-    active: true,
-    createdAt: new Date().toISOString(),
-  },
-  {
-    code: 'WELCOME15',
-    type: 'percent',
-    value: 15,
-    label: 'New Customer — 15% Off Your First Order',
-    category: 'first_time',
-    minOrder: 50,
-    maxUses: 0,
-    uses: 0,
-    active: true,
-    createdAt: new Date().toISOString(),
-  },
-  {
-    code: 'FIRST10',
-    type: 'fixed',
-    value: 10,
-    label: 'First Order — $10 Off',
-    category: 'first_time',
-    minOrder: 50,
-    maxUses: 0,
-    uses: 0,
-    active: true,
-    createdAt: new Date().toISOString(),
-  },
-]
+let sharedCodes: PromoCode[] = []
+export async function loadPromoCodes(): Promise<PromoCode[]> {
+ const { data, error } = await supabase.from('pricing_configs').select('config').eq('id', 'checkout_promos').maybeSingle()
+ if (error) throw error
+ const approved = validatePromos(data ? data.config : DEFAULT_PROMOS)
+ sharedCodes = Object.entries(approved).map(([code, p]) => ({ code, ...p, label: p.firstOrderOnly ? 'First order discount' : 'Discount', category: p.firstOrderOnly ? 'first_time' : 'custom', uses: 0, createdAt: '' }))
+ return sharedCodes
+}
 
 export const AUTO_DISCOUNT_CODE = 'AUTO10'
 export const FIRST_VISIT_KEY = 'tss_first_visit_seen'
 export const AUTO_APPLIED_KEY = 'tss_auto_discount_applied'
 
-export function getPromoCodes(): PromoCode[] {
-  const saved = localStorage.getItem(STORAGE_KEY)
-  if (saved) {
-    let codes: PromoCode[] = JSON.parse(saved)
-    let dirty = false
-    // Clean up: remove deprecated FAMILY20, fix old $25 minimums
-    if (codes.some(c => c.code === 'FAMILY20')) {
-      codes = codes.filter(c => c.code !== 'FAMILY20')
-      codes = codes.map(c => c.code === 'WELCOME15' && c.minOrder === 25 ? { ...c, minOrder: 50 } : c)
-      dirty = true
-    }
-    // Inject AUTO10 if missing (migration for existing users)
-    if (!codes.some(c => c.code === 'AUTO10')) {
-      const auto = defaultCodes.find(c => c.code === 'AUTO10')
-      if (auto) {
-        codes = [auto, ...codes]
-        dirty = true
-      }
-    }
-    if (dirty) localStorage.setItem(STORAGE_KEY, JSON.stringify(codes))
-    return codes
-  }
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(defaultCodes))
-  return defaultCodes
-}
-
-export function savePromoCodes(codes: PromoCode[]) {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(codes))
-}
+export function getPromoCodes(): PromoCode[] { return sharedCodes }
 
 export function getUsedCodes(): string[] {
   return JSON.parse(localStorage.getItem(USED_CODES_KEY) || '[]')
@@ -132,14 +75,6 @@ export function validatePromoCode(inputCode: string, subtotal: number): PromoRes
 
 export function applyPromoCode(code: string) {
   const codes = getPromoCodes()
-  const updated = codes.map(c => {
-    if (c.code.toUpperCase() === code.toUpperCase().trim()) {
-      return { ...c, uses: c.uses + 1 }
-    }
-    return c
-  })
-  savePromoCodes(updated)
-
   const found = codes.find(c => c.code.toUpperCase() === code.toUpperCase().trim())
   if (found?.category === 'first_time') {
     markCodeUsed(found.code)
@@ -152,3 +87,6 @@ export const categoryLabels: Record<PromoCode['category'], string> = {
   event: 'Trade Show / Event',
   custom: 'Custom',
 }
+
+// Preserve legacy referral drafts without making them approved checkout discounts.
+export function savePromoCodes(codes: PromoCode[]) { localStorage.setItem('tss-legacy-referral-promo-drafts', JSON.stringify(codes)) }

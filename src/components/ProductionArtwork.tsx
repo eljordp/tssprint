@@ -1,3 +1,4 @@
+import { trackEvent } from '@/lib/analytics'
 import { useEffect, useRef, useState } from 'react'
 import { Upload, FileCheck, LoaderCircle, ImagePlus } from 'lucide-react'
 import type { CartItem } from '@/context/CartContext'
@@ -34,6 +35,7 @@ export default function ProductionArtwork({ size, onChange, purpose = 'order' }:
     setPreview('')
     setImageFailed(false)
     setError('')
+    trackEvent('artwork_upload_started', { purpose })
     setStatus('uploading')
     onChange({ status: 'uploading' })
     try {
@@ -50,6 +52,7 @@ export default function ProductionArtwork({ size, onChange, purpose = 'order' }:
       const result = await supabase.storage.from(data.bucket).uploadToSignedUrl(data.path, data.token, next, { contentType })
       if (result.error) throw result.error
       if (request !== generation.current) return
+      trackEvent('artwork_upload_succeeded', { purpose })
       setStatus('uploaded')
       onChange({ status: 'uploaded', artwork: {
         bucket: data.bucket, path: data.path, fileName: next.name,
@@ -57,6 +60,7 @@ export default function ProductionArtwork({ size, onChange, purpose = 'order' }:
       } })
     } catch (cause) {
       if (request !== generation.current) return
+      trackEvent('artwork_upload_failed', { purpose })
       setStatus('error')
       setError(cause instanceof Error ? cause.message : 'Upload failed. Please retry.')
       onChange({ status: 'error' })

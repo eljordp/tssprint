@@ -1,3 +1,13 @@
+import CustomerHistory from '@/components/admin/CustomerHistory'
+import Tracking from '@/components/admin/Tracking'
+import QuoteFollowUp from '@/components/admin/QuoteFollowUp'
+import AdminSearch from '@/components/admin/AdminSearch'
+import { searchText } from '@/lib/adminSearch'
+import Overview from '@/components/admin/Overview'
+import Discounts from '@/components/admin/Discounts'
+import JobDetails from '@/components/admin/JobDetails'
+import tssLogo from '@/assets/tss-logo-new.png'
+import { useSearchParams } from 'react-router-dom'
 import { signInWithMigration } from '@/lib/signIn'
 import { cartLifecycle, type CartLifecycleRow } from '@/lib/cartLifecycle'
 import QuoteArtworkDownload from '@/components/QuoteArtworkDownload'
@@ -9,7 +19,7 @@ import {
   LogOut, Package, DollarSign, Users, ChevronDown, ChevronUp,
   Truck, Clock, CheckCircle, Settings, RotateCcw, Save, Loader2,
   ShoppingCart, BarChart3, UserPlus, Eye, MousePointer,
-  Copy, ExternalLink, Mail, Tag, Plus, Trash2, ToggleLeft, ToggleRight, Share2, Gift,
+  Copy, ExternalLink, Mail, Tag, ToggleLeft, ToggleRight, Share2, Gift,
   CreditCard, Unplug, Send, AlertCircle, MapPin,
   TrendingUp, Target, Search, Globe, History,
   Sun, Moon, Shield,
@@ -19,7 +29,6 @@ import { supabase } from '@/lib/supabase'
 import { getReferralUrl } from '@/lib/referrals'
 import { markStaffDevice } from '@/lib/analytics'
 import { toast } from 'sonner'
-import { getPromoCodes, savePromoCodes, categoryLabels, type PromoCode } from '@/lib/promoCodes'
 import { getReferrers, saveReferrers, getReferralLog, getReferralShareUrl, type Referrer, type ReferrerTier } from '@/lib/referralRewards'
 
 // ─── Types ───────────────────────────────────────────────────────────────────
@@ -57,8 +66,8 @@ interface OrderItem {
   }
 }
 
-type OrderStatus = 'completed' | 'shipped' | 'processing'
-type PaymentStatus = 'captured' | 'not_captured' | 'not_found' | 'unverified' | 'checking' | 'error'
+type OrderStatus = 'completed' | 'shipped' | 'processing' | 'artwork_needed' | 'artwork_review' | 'awaiting_approval' | 'in_production' | 'ready_pickup' | 'cancelled'
+type PaymentStatus = 'refunded' | 'captured' | 'not_captured' | 'not_found' | 'unverified' | 'checking' | 'error'
 
 interface Order {
   id: string; date: string
@@ -69,7 +78,8 @@ interface Order {
   items: OrderItem[]; total: string
   status: OrderStatus
   paymentStatus: PaymentStatus
-  paymentProvider: 'paypal' | 'square'
+  paymentProvider: 'paypal' | 'square' | 'quickbooks' | 'unknown'
+  staff_notes: string; assigned_to: string; due_date: string | null; tracking_url: string; proof_reference: string; proof_approved_at: string | null
   paymentCheckedAt?: string
   paymentIssue?: string
   paypalCaptureId?: string
@@ -86,6 +96,7 @@ interface CartSession extends CartLifecycleRow {
 }
 
 interface Customer {
+  staff_tag?: CustomerTag
   id: string; email: string; first_name: string | null; last_name: string | null
   phone: string | null; total_spent: number; order_count: number
   referral_code: string | null; source: string | null
@@ -116,6 +127,7 @@ interface EmailSubscriber {
 }
 
 interface ContactInquiry {
+  staff_notes: string; follow_up_at: string | null
   id: string
   name: string
   email: string
@@ -147,24 +159,9 @@ interface SquareConnectionStatus {
   redirectUri: string
 }
 
-type CustomerTag = 'admin' | 'vip' | 'customer'
-
-function getCustomerTags(): Record<string, CustomerTag> {
-  return JSON.parse(localStorage.getItem('tss-customer-tags') || '{}')
-}
-
-function setCustomerTag(customerId: string, tag: CustomerTag) {
-  const tags = getCustomerTags()
-  if (tag === 'customer') {
-    delete tags[customerId]
-  } else {
-    tags[customerId] = tag
-  }
-  localStorage.setItem('tss-customer-tags', JSON.stringify(tags))
-}
+type CustomerTag = 'vip' | 'customer'
 
 const tagConfig: Record<CustomerTag, { label: string; color: string; bg: string }> = {
-  admin: { label: 'Admin', color: 'text-red-400', bg: 'bg-red-400/10 border-red-400/20' },
   vip: { label: 'VIP', color: 'text-yellow-400', bg: 'bg-yellow-400/10 border-yellow-400/20' },
   customer: { label: 'Customer', color: 'text-muted-foreground', bg: 'bg-muted/50 border-border' },
 }
@@ -359,45 +356,44 @@ function LoginForm({ onLogin }: { onLogin: () => void }) {
 const statusConfig: Record<OrderStatus, { label: string; icon: typeof Package; color: string }> = {
   completed: { label: 'Completed', icon: CheckCircle, color: 'text-green-400 bg-green-400/10' },
   shipped: { label: 'Shipped', icon: Truck, color: 'text-blue-400 bg-blue-400/10' },
-  processing: { label: 'Processing', icon: Clock, color: 'text-yellow-400 bg-yellow-400/10' },
+  processing: { label: 'Order received', icon: Clock, color: 'text-yellow-400 bg-yellow-400/10' },
+  artwork_needed: { label: 'Artwork needed', icon: Clock, color: 'text-primary bg-primary/10' },
+  artwork_review: { label: 'Artwork review', icon: Clock, color: 'text-primary bg-primary/10' },
+  awaiting_approval: { label: 'Awaiting approval', icon: Clock, color: 'text-primary bg-primary/10' },
+  in_production: { label: 'In production', icon: Clock, color: 'text-primary bg-primary/10' },
+  ready_pickup: { label: 'Ready for pickup', icon: Clock, color: 'text-primary bg-primary/10' },
+  cancelled: { label: 'Cancelled', icon: Clock, color: 'text-primary bg-primary/10' },
 }
 
-const paymentReviewConfig = {
-  label: 'Payment Review',
-  icon: AlertCircle,
-  color: 'text-red-400 bg-red-400/10',
-}
+const providerLabel = { paypal: 'PayPal', square: 'Square', quickbooks: 'QuickBooks', unknown: 'Unknown provider' }
 
 const paymentConfig: Record<PaymentStatus, { label: string; icon: typeof Package; color: string }> = {
+  refunded: { label: 'Refunded', icon: RotateCcw, color: 'text-muted-foreground border-border' },
   captured: { label: 'Payment captured', icon: CheckCircle, color: 'text-green-400 bg-green-400/10 border-green-400/20' },
   not_captured: { label: 'No capture found', icon: AlertCircle, color: 'text-red-400 bg-red-400/10 border-red-400/20' },
   not_found: { label: 'Payment not found', icon: AlertCircle, color: 'text-red-400 bg-red-400/10 border-red-400/20' },
   unverified: { label: 'Payment unverified', icon: AlertCircle, color: 'text-yellow-400 bg-yellow-400/10 border-yellow-400/20' },
-  checking: { label: 'Checking PayPal', icon: Loader2, color: 'text-blue-400 bg-blue-400/10 border-blue-400/20' },
+  checking: { label: 'Checking payment', icon: Loader2, color: 'text-blue-400 bg-blue-400/10 border-blue-400/20' },
   error: { label: 'Verify failed', icon: AlertCircle, color: 'text-yellow-400 bg-yellow-400/10 border-yellow-400/20' },
 }
 
 function normalizePaymentStatus(value: unknown): PaymentStatus {
-  if (value === 'captured' || value === 'not_captured' || value === 'not_found' || value === 'checking' || value === 'error') {
+  if (value === 'refunded' || value === 'captured' || value === 'not_captured' || value === 'not_found' || value === 'checking' || value === 'error') {
     return value
   }
   return 'unverified'
 }
 
 function normalizeOrderStatus(value: unknown): OrderStatus {
-  if (value === 'completed' || value === 'shipped' || value === 'processing') return value
+  if (typeof value === 'string' && Object.hasOwn(statusConfig, value)) return value as OrderStatus
   return 'processing'
 }
 
 function needsPaymentReview(order: Order) {
-  if (order.paymentStatus === 'captured') return false
-  if (order.paymentStatus === 'not_captured' || order.paymentStatus === 'not_found' || order.paymentStatus === 'error') return true
-  return order.status === 'completed'
+  return order.paymentStatus !== 'captured' && order.paymentStatus !== 'refunded' && order.status !== 'cancelled'
 }
 
-function getVisibleStatusConfig(order: Order) {
-  return needsPaymentReview(order) ? paymentReviewConfig : statusConfig[order.status]
-}
+function getVisibleStatusConfig(order: Order) { return statusConfig[order.status] }
 
 function artworkDownloadUrl(artwork: NonNullable<OrderItem['artwork']>) {
   return `/api/uploads/artwork-download?path=${encodeURIComponent(artwork.path)}&name=${encodeURIComponent(artwork.fileName)}`
@@ -454,29 +450,33 @@ function StatCard({ icon: Icon, label, value, color = 'text-primary', delay = 0 
 // ─── Orders Tab ──────────────────────────────────────────────────────────────
 
 function OrdersTab() {
+  const [params, setParams] = useSearchParams()
+  const record = params.get('record') || ''
+  const filter = params.get('filter') || 'all'
+  const [search, setSearch] = useState('')
+  const [page, setPage] = useState(0)
+  const [count, setCount] = useState(0)
   const [orders, setOrders] = useState<Order[]>([])
-  const [expanded, setExpanded] = useState<string | null>(null)
+  const [expanded, setExpanded] = useState<string | null>(record || null)
   const [loading, setLoading] = useState(true)
   const [loadError, setLoadError] = useState('')
-  const verifyAttempted = useRef<Set<string>>(new Set())
-
-  useEffect(() => { fetchOrders() }, [])
-
-  useEffect(() => {
-    if (loading) return
-    orders
-      .filter(order => order.paymentStatus !== 'captured' && order.paymentStatus !== 'checking' && !verifyAttempted.current.has(order.id))
-      .slice(0, 25)
-      .forEach(order => { void verifyPayment(order.id, true) })
-  }, [loading, orders])
-
-  const fetchOrders = async () => {
-    setLoading(true)
-    setLoadError('')
+  const [saving, setSaving] = useState<string | null>(null)
+  const requestId = useRef(0)
+  const fetchOrders = useCallback(async () => {
+    const request = ++requestId.current
+    setLoading(true); setLoadError('')
     try {
-      const { data, error } = await supabase.from('orders').select('*').order('created_at', { ascending: false })
+      let query = supabase.from('orders').select(filter === 'overdue' ? '*,production:order_production_details!inner(*)' : '*,production:order_production_details(*)', { count: 'exact' }).order('created_at', { ascending: false }).order('id').range(page * 25, page * 25 + 24)
+      if (record) query = query.eq('id', record)
+      if (filter === 'payment_review') query = query.neq('payment_status', 'captured').neq('payment_status', 'refunded')
+      else if (filter === 'overdue') query = query.lt('production.due_date', new Date().toLocaleDateString('en-CA')).not('status', 'in', '(completed,cancelled,shipped)')
+      else if (filter !== 'all') query = query.eq('status', filter)
+      const q = searchText(search)
+      if (q) query = query.or(['id','customer_first_name','customer_last_name','customer_email','customer_phone'].map(c => `${c}.ilike.*${q}*`).join(','))
+      const { data, error, count: total } = await query
+      if (request !== requestId.current) return
       if (error) throw error
-
+      setCount(total || 0)
       setOrders((data || []).map(o => ({
         id: o.id, date: o.created_at,
         customer: {
@@ -488,52 +488,28 @@ function OrdersTab() {
         items: o.items as OrderItem[], total: String(o.total),
         status: normalizeOrderStatus(o.status),
         paymentStatus: normalizePaymentStatus(o.payment_status),
-        paymentProvider: o.payment_provider === 'square' ? 'square' : 'paypal',
+        paymentProvider: ['paypal','square','quickbooks'].includes(o.payment_provider) ? o.payment_provider : 'unknown',
         paymentCheckedAt: typeof o.payment_verified_at === 'string' ? o.payment_verified_at : undefined,
         paypalCaptureId: typeof o.paypal_capture_id === 'string' ? o.paypal_capture_id : undefined,
         paymentAmount: o.payment_amount ? String(o.payment_amount) : undefined,
         paymentCurrency: typeof o.payment_currency === 'string' ? o.payment_currency : undefined,
+        staff_notes: o.production?.staff_notes || '', assigned_to: o.production?.assigned_to || '', due_date: o.production?.due_date || null, tracking_url: o.production?.tracking_url || '', proof_reference: o.production?.proof_reference || '', proof_approved_at: o.production?.proof_approved_at || null,
         attribution: (o.attribution || null) as AttributionData,
       })))
-    } catch (error) {
-      const message = error instanceof Error ? error.message : 'Unknown Supabase error'
-      setLoadError(`Could not load Supabase orders: ${message}. Showing only orders saved in this admin browser.`)
-      try {
-        const localOrders = JSON.parse(localStorage.getItem('tss-orders') || '[]') as Array<Partial<Order>>
-        setOrders(localOrders.map(order => ({
-          id: String(order.id || ''),
-          date: String(order.date || new Date().toISOString()),
-          customer: {
-            firstName: order.customer?.firstName || '',
-            lastName: order.customer?.lastName || '',
-            email: order.customer?.email || '',
-            phone: order.customer?.phone || '',
-            address: order.customer?.address || '',
-            city: order.customer?.city || '',
-            state: order.customer?.state || '',
-            zip: order.customer?.zip || '',
-          },
-          items: (order.items || []) as OrderItem[],
-          total: String(order.total || '0.00'),
-          status: normalizeOrderStatus(order.status),
-          paymentStatus: normalizePaymentStatus(order.paymentStatus),
-          paymentProvider: order.paymentProvider === 'square' ? 'square' : 'paypal',
-          paymentCheckedAt: order.paymentCheckedAt,
-          paymentIssue: order.paymentIssue,
-          paypalCaptureId: order.paypalCaptureId,
-          paymentAmount: order.paymentAmount,
-          paymentCurrency: order.paymentCurrency,
-        })))
-      } catch {
-        setOrders([])
-      }
-    } finally { setLoading(false) }
-  }
+    } catch {
+      if (request === requestId.current) { setOrders([]); setLoadError('Could not load shared orders. Retry to see current records.'); setCount(0) }
+    } finally { if (request === requestId.current) setLoading(false) }
+  }, [page, search, filter, record])
+  useEffect(() => {
+    const counter = requestId
+    const timer = window.setTimeout(() => void fetchOrders(), 250)
+    return () => { window.clearTimeout(timer); counter.current++ }
+  }, [fetchOrders])
 
   const verifyPayment = async (orderId: string, silent = false) => {
     const currentOrder = orders.find(order => order.id === orderId)
-    const provider = currentOrder?.paymentProvider === 'square' ? 'square' : 'paypal'
-    verifyAttempted.current.add(orderId)
+    const provider = currentOrder?.paymentProvider
+    if (provider !== 'square' && provider !== 'paypal') { toast.error('Review this payment in its provider integration. Automatic verification is not available.'); return }
     setOrders(prev => prev.map(order => (
       order.id === orderId
         ? { ...order, paymentStatus: 'checking', paymentIssue: `Checking live ${provider === 'square' ? 'Square' : 'PayPal'} for a completed capture.` }
@@ -583,30 +559,22 @@ function OrdersTab() {
   }
 
   const updateStatus = async (orderId: string, status: OrderStatus) => {
-    const updated = orders.map(o => o.id === orderId ? { ...o, status } : o)
-    setOrders(updated)
+    setSaving(orderId)
     try {
-      const { error } = await supabase.from('orders').update({ status }).eq('id', orderId)
-      if (error) throw error
-    } catch {
-      localStorage.setItem('tss-orders', JSON.stringify(updated))
-      toast.error('Could not update Supabase order status. Saved only in this browser.')
-      return
-    }
-    toast.success(`Order status updated to ${status}`)
+      const previous = orders.find(order => order.id === orderId)
+      const update = supabase.from('orders').update({ status }).eq('id', orderId).eq('status', previous?.status || '')
+      const { data, error } = await update.select('*').single()
+      if (error || !data) throw error
+      setOrders(previous => previous.map(o => o.id === orderId ? { ...o, status } : o))
+      toast.success('Job status saved')
+    } catch { toast.error(status === 'in_production' ? 'Not saved. Record proof approval first, or refresh if another admin changed this order.' : 'Status was not saved. The previous status is unchanged. Refresh and retry.') }
+    finally { setSaving(null) }
   }
 
   const paidOrders = orders.filter(o => o.paymentStatus === 'captured')
   const reviewOrders = orders.filter(needsPaymentReview)
   const totalRevenue = paidOrders.reduce((sum, o) => sum + parseFloat(o.total), 0)
   const uniqueCustomers = new Set(orders.map(o => o.customer.email)).size
-
-  if (loading) return (
-    <div className="bg-card border border-border rounded-2xl p-12 text-center">
-      <Loader2 size={32} className="mx-auto text-primary animate-spin mb-4" />
-      <p className="text-muted-foreground">Loading orders...</p>
-    </div>
-  )
 
   return (
     <div className="space-y-6">
@@ -619,18 +587,27 @@ function OrdersTab() {
         </div>
       )}
 
-      <div className="grid grid-cols-1 sm:grid-cols-4 gap-4">
-        <StatCard icon={Package} label="Total Orders" value={orders.length} delay={0.1} />
-        <StatCard icon={DollarSign} label="Verified Revenue" value={`$${totalRevenue.toFixed(2)}`} color="text-green-400" delay={0.2} />
-        <StatCard icon={AlertCircle} label="Payment Review" value={reviewOrders.length} color="text-yellow-400" delay={0.3} />
-        <StatCard icon={Users} label="Unique Customers" value={uniqueCustomers} color="text-blue-400" delay={0.4} />
+      <div className="grid grid-cols-2 xl:grid-cols-4 gap-4">
+        <StatCard icon={Package} label="Matching orders" value={count} delay={0.1} />
+        <StatCard icon={DollarSign} label="Gross paid · this page" value={`$${totalRevenue.toFixed(2)}`} color="text-green-400" delay={0.2} />
+        <StatCard icon={AlertCircle} label="Payment review · this page" value={reviewOrders.length} color="text-yellow-400" delay={0.3} />
+        <StatCard icon={Users} label="Customers · this page" value={uniqueCustomers} color="text-blue-400" delay={0.4} />
       </div>
 
       <h2 className="text-xl font-bold">Orders</h2>
-      {orders.length === 0 ? (
+      <div className="flex flex-wrap gap-3">
+        <input aria-label="Search orders" placeholder="Order number, name, email or phone" className="admin-input flex-1 min-w-48" value={search} onChange={e => { setSearch(e.target.value); setPage(0) }} />
+        <select aria-label="Order queue" className="admin-input sm:!w-auto" value={filter} onChange={e => { setPage(0); setParams({ tab:'orders',filter:e.target.value }) }}><option value="all">All jobs</option><option value="payment_review">Payment review</option><option value="overdue">Overdue</option>{Object.entries(statusConfig).map(([value,cfg]) => <option key={value} value={value}>{cfg.label}</option>)}</select>
+        <button className="rounded-lg border border-border px-4" onClick={() => void fetchOrders()}>Refresh</button>
+        {record && <button className="underline text-sm" onClick={() => setParams({tab:'orders'})}>Show all orders</button>}
+      </div>
+      {loading && <p role="status">Loading orders…</p>}
+      <div className="flex items-center justify-between text-sm"><button disabled={page === 0 || loading} onClick={() => setPage(page-1)} className="disabled:opacity-40">Previous</button><span>{count ? `${page*25+1}–${Math.min((page+1)*25,count)} of ${count}` : '0 results'}</span><button disabled={(page+1)*25 >= count || loading} onClick={() => setPage(page+1)} className="disabled:opacity-40">Next</button></div>
+
+      {!loading && !loadError && orders.length === 0 ? (
         <div className="bg-card border border-border rounded-2xl p-12 text-center">
           <Package size={48} className="mx-auto text-muted-foreground mb-4" />
-          <p className="text-muted-foreground">No orders yet.</p>
+          <p className="text-muted-foreground">No matching orders.</p>
         </div>
       ) : (
         <div className="space-y-3">
@@ -648,7 +625,7 @@ function OrdersTab() {
                 <button onClick={() => setExpanded(isOpen ? null : order.id)}
                   className="w-full p-5 flex items-center justify-between gap-4 text-left hover:bg-muted/30 transition-colors"
                   aria-expanded={isOpen}>
-                  <div className="flex items-center gap-4 min-w-0">
+                  <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2 sm:gap-4 min-w-0">
                     <div className={`px-2.5 py-1 rounded-lg text-xs font-bold flex items-center gap-1 shrink-0 ${cfg.color}`}>
                       <StatusIcon size={12} />{cfg.label}
                     </div>
@@ -668,14 +645,14 @@ function OrdersTab() {
                       <div className="rounded-xl border border-red-400/20 bg-red-400/10 p-4 text-sm text-red-100">
                         <div className="flex items-start gap-3">
                           <AlertCircle size={18} className="mt-0.5 shrink-0 text-red-400" />
-                          <p>This order is not counted as paid until live {order.paymentProvider === 'square' ? 'Square' : 'PayPal'} shows a completed capture for this ID.</p>
+                          <p>This order is not counted as paid until live {providerLabel[order.paymentProvider]} shows a completed capture for this ID.</p>
                         </div>
                       </div>
                     )}
                     <div className="grid sm:grid-cols-2 gap-4">
                       <div>
                         <h4 className="text-xs font-bold uppercase text-muted-foreground mb-2">Contact</h4>
-                        <p className="text-sm">{order.customer.email}</p>
+                        <a className="text-sm text-primary underline" href={`mailto:${order.customer.email}`}>{order.customer.email}</a>
                         <p className="text-sm text-muted-foreground">{order.customer.phone}</p>
                       </div>
                       <div>
@@ -716,14 +693,15 @@ function OrdersTab() {
                                 </button>
                               )}
                             </div>
-                            <span className="font-bold text-sm text-primary">${(item.price * item.quantity).toFixed(2)}</span>
+                            <span className="font-bold text-sm text-primary">${((item.price + (item.addOns || []).reduce((sum, a) => sum + a.price, 0)) * item.quantity).toFixed(2)}</span>
                           </div>
                         ))}
                       </div>
                     </div>
+                    <JobDetails key={`${order.id}-${order.status}`} id={order.id} initial={order} onSaved={fields => setOrders(previous => previous.map(o => o.id === order.id ? { ...o, ...fields } : o))} />
                     <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 pt-2 border-t border-border">
                       <div className="space-y-2">
-                        <p className="text-xs text-muted-foreground break-all">{order.paymentProvider === 'square' ? 'Square payment' : 'PayPal order'} ID: {order.id}</p>
+                        <p className="text-xs text-muted-foreground break-all">{providerLabel[order.paymentProvider]} order ID: {order.id}</p>
                         <div className={`inline-flex items-center gap-1.5 rounded-lg border px-2.5 py-1 text-xs font-bold ${payment.color}`}>
                           <PaymentIcon size={12} className={isPaymentChecking ? 'animate-spin' : ''} />
                           {payment.label}
@@ -744,18 +722,16 @@ function OrdersTab() {
                         <button
                           type="button"
                           onClick={() => { void verifyPayment(order.id) }}
-                          disabled={isPaymentChecking}
+                          disabled={isPaymentChecking || !['paypal','square'].includes(order.paymentProvider)}
                           className="text-xs px-3 py-1.5 bg-secondary border border-border rounded-lg text-foreground hover:border-primary/40 disabled:opacity-50"
                         >
-                          {isPaymentChecking ? 'Checking...' : `Recheck ${order.paymentProvider === 'square' ? 'Square' : 'PayPal'}`}
+                          {isPaymentChecking ? 'Checking...' : `Recheck ${providerLabel[order.paymentProvider]}`}
                         </button>
                         <label htmlFor={`status-${order.id}`} className="text-xs text-muted-foreground">Job Status:</label>
-                        <select id={`status-${order.id}`} value={order.status}
+                        <select id={`status-${order.id}`} disabled={saving === order.id} value={order.status}
                           onChange={e => updateStatus(order.id, e.target.value as OrderStatus)}
                           className="text-xs px-3 py-1.5 bg-background border border-border rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-primary/50">
-                          <option value="processing">Processing</option>
-                          <option value="shipped">Shipped</option>
-                          <option value="completed">Completed</option>
+                          {Object.entries(statusConfig).map(([value, config]) => <option key={value} value={value}>{config.label}</option>)}
                         </select>
                       </div>
                     </div>
@@ -773,8 +749,12 @@ function OrdersTab() {
 // ─── Inquiries Tab ───────────────────────────────────────────────────────────
 
 function InquiriesTab() {
+  const [params] = useSearchParams()
+  const record = params.get('record')
+  const initialFilter = params.get('filter') || 'all'
+
   const [inquiries, setInquiries] = useState<ContactInquiry[]>([])
-  const [expanded, setExpanded] = useState<string | null>(null)
+  const [expanded, setExpanded] = useState<string | null>(record)
   const [loading, setLoading] = useState(true)
   const [refreshing, setRefreshing] = useState(false)
   const [loadError, setLoadError] = useState('')
@@ -782,18 +762,21 @@ function InquiriesTab() {
   const [search, setSearch] = useState('')
   const [serviceFilter, setServiceFilter] = useState('all')
   const [sourceFilter, setSourceFilter] = useState('all')
-  const [statusFilter, setStatusFilter] = useState('all')
+  const [statusFilter, setStatusFilter] = useState(initialFilter === 'follow_up' ? 'all' : initialFilter)
 
   const fetchInquiries = useCallback(async (showLoader = true) => {
     if (showLoader) setLoading(true)
     else setRefreshing(true)
     setLoadError('')
     try {
-      const { data, error } = await supabase
+      let query = supabase
         .from('contact_submissions')
-        .select('id,name,email,phone,service,message,source,visitor_id,session_id,attribution,lead_status,assigned_to,responded_at,updated_at,created_at')
+        .select('id,name,email,phone,service,message,source,visitor_id,session_id,attribution,lead_status,assigned_to,responded_at,updated_at,created_at,staff_notes,follow_up_at')
         .order('created_at', { ascending: false })
 
+      if (record) query = query.eq('id',record)
+      if (initialFilter === 'follow_up') query = query.lte('follow_up_at',new Date().toLocaleDateString('en-CA')).not('lead_status','in','(won,closed,spam)')
+      const {data,error} = await query
       if (error) throw error
       setInquiries((data || []) as ContactInquiry[])
       setLastUpdated(new Date())
@@ -805,7 +788,7 @@ function InquiriesTab() {
       if (showLoader) setLoading(false)
       setRefreshing(false)
     }
-  }, [])
+  }, [record, initialFilter])
 
   useEffect(() => {
     void fetchInquiries()
@@ -1059,6 +1042,7 @@ function InquiriesTab() {
                       <h4 className="text-xs font-bold uppercase text-muted-foreground mb-2">Message</h4>
                       <p className="whitespace-pre-wrap rounded-xl bg-muted/30 p-4 text-sm leading-relaxed">{readQuoteArtwork(inquiry.message).message}</p>
                       <QuoteArtworkDownload message={inquiry.message} />
+                      <QuoteFollowUp id={inquiry.id} assigned={inquiry.assigned_to || ''} notes={inquiry.staff_notes || ''} due={inquiry.follow_up_at} />
                     </div>
 
                     <div className="flex flex-wrap gap-2 pt-2 border-t border-border">
@@ -1071,7 +1055,7 @@ function InquiriesTab() {
                         <Copy size={14} /> Copy Inquiry
                       </button>
                       <label className="ml-auto flex items-center gap-2 text-xs text-muted-foreground">
-                        <span>Assigned to {inquiry.assigned_to || 'JP'}</span>
+                        <span>Quote status</span>
                         <select
                           value={inquiry.lead_status || 'new'}
                           onChange={e => { void updateLeadStatus(inquiry, e.target.value as ContactInquiry['lead_status']) }}
@@ -1150,23 +1134,27 @@ function SubTabs({ active, tabs, onChange }: { active: string; tabs: { id: strin
 }
 
 function PricingTab() {
+  const [pricingParams] = useSearchParams()
+  const [pricingError, setPricingError] = useState('')
   const [config, setConfig] = useState<PricingConfig>(() => getPricing())
   const [saved, setSaved] = useState(false)
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
-  const [activeTab, setActiveTab] = useState('stickers')
+  const [activeTab, setActiveTab] = useState(() => categoryTabs.find(t => 'productIndex' in t && defaultPricing.products[t.productIndex!]?.name === pricingParams.get('record'))?.id || 'stickers')
   const [subTab, setSubTab] = useState<Record<string, string>>({})
 
   useEffect(() => {
     let active = true
-    loadPricing()
+    loadPricing(true)
       .then((remoteConfig) => {
         if (active) setConfig(remoteConfig)
       })
+      .catch(() => { if (active) { setPricingError('Could not load current shared prices. Reload before publishing changes.'); } })
       .finally(() => {
         if (active) setLoading(false)
       })
-    return () => { active = false }
+
+  return () => { active = false }
   }, [])
 
   const getSubTab = (id: string) => subTab[id] || 'pricing'
@@ -1233,6 +1221,8 @@ function PricingTab() {
   const tierLabels = ['50', '100', '250', '500', '1000', '2500+']
   const activeProduct = categoryTabs.find(t => t.id === activeTab)
 
+  if (pricingError) return <p role="alert">{pricingError} <button className="underline" onClick={() => window.location.reload()}>Reload</button></p>
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
@@ -1250,14 +1240,12 @@ function PricingTab() {
         </div>
       </div>
 
-      <div className="flex gap-1.5 overflow-x-auto pb-1 scrollbar-hide" role="tablist" aria-label="Pricing categories">
-        {categoryTabs.map(tab => (
-          <button key={tab.id} onClick={() => setActiveTab(tab.id)} role="tab" aria-selected={activeTab === tab.id}
-            className={`px-4 py-2 rounded-xl text-sm font-medium whitespace-nowrap transition-all ${activeTab === tab.id ? 'bg-primary text-primary-foreground shadow-sm' : 'bg-card border border-border text-muted-foreground hover:text-foreground hover:border-primary/30'}`}>
-            {tab.label}
-          </button>
-        ))}
-      </div>
+      <label className="block max-w-md text-sm font-semibold">Product category
+        <select className="admin-input mt-2" value={activeTab} onChange={e=>setActiveTab(e.target.value)}>
+          <optgroup label="Print products & signage">{categoryTabs.filter(t=>!['frosted','solar','security','autotint'].includes(t.id)).map(t=><option key={t.id} value={t.id}>{t.label}</option>)}</optgroup>
+          <optgroup label="Legacy film categories">{categoryTabs.filter(t=>['frosted','solar','security','autotint'].includes(t.id)).map(t=><option key={t.id} value={t.id}>{t.label}</option>)}</optgroup>
+        </select>
+      </label>
 
       {activeTab === 'stickers' && (
         <div className="space-y-5">
@@ -1388,165 +1376,6 @@ function PricingTab() {
               </div>
             )
           })}
-        </div>
-      )}
-    </div>
-  )
-}
-
-function PromoCodeManager() {
-  const [codes, setCodes] = useState<PromoCode[]>(() => getPromoCodes())
-  const [showAdd, setShowAdd] = useState(false)
-  const [newCode, setNewCode] = useState({
-    code: '',
-    type: 'percent' as 'percent' | 'fixed',
-    value: 10,
-    label: '',
-    category: 'custom' as PromoCode['category'],
-    minOrder: 0,
-    maxUses: 0,
-    expiresAt: '',
-  })
-
-  const toggleActive = (index: number) => {
-    const updated = codes.map((c, i) => i === index ? { ...c, active: !c.active } : c)
-    setCodes(updated)
-    savePromoCodes(updated)
-  }
-
-  const deleteCode = (index: number) => {
-    const updated = codes.filter((_, i) => i !== index)
-    setCodes(updated)
-    savePromoCodes(updated)
-  }
-
-  const addCode = () => {
-    if (!newCode.code.trim() || !newCode.label.trim()) return
-    const code: PromoCode = {
-      code: newCode.code.toUpperCase().trim().replace(/\s/g, ''),
-      type: newCode.type,
-      value: newCode.value,
-      label: newCode.label,
-      category: newCode.category,
-      minOrder: newCode.minOrder || undefined,
-      maxUses: newCode.maxUses || undefined,
-      uses: 0,
-      active: true,
-      expiresAt: newCode.expiresAt || undefined,
-      createdAt: new Date().toISOString(),
-    }
-    const updated = [...codes, code]
-    setCodes(updated)
-    savePromoCodes(updated)
-    setNewCode({ code: '', type: 'percent', value: 10, label: '', category: 'custom', minOrder: 0, maxUses: 0, expiresAt: '' })
-    setShowAdd(false)
-  }
-
-  return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          <Tag size={20} className="text-primary" />
-          <h2 className="text-xl font-bold">Promo Codes</h2>
-          <span className="text-sm text-muted-foreground">({codes.filter(c => c.active).length} active)</span>
-        </div>
-        <button
-          onClick={() => setShowAdd(!showAdd)}
-          className="flex items-center gap-1.5 text-sm font-bold px-4 py-1.5 rounded-lg bg-primary text-primary-foreground hover:brightness-110 transition-all"
-        >
-          <Plus size={14} /> New Code
-        </button>
-      </div>
-
-      {showAdd && (
-        <motion.div
-          initial={{ opacity: 0, height: 0 }}
-          animate={{ opacity: 1, height: 'auto' }}
-          className="bg-card border border-primary/30 rounded-2xl p-6 space-y-4"
-        >
-          <h3 className="font-bold">Create Promo Code</h3>
-          <div className="grid sm:grid-cols-2 gap-4">
-            <div>
-              <label className="block text-xs font-medium text-muted-foreground mb-1.5">Code *</label>
-              <input type="text" value={newCode.code} onChange={e => setNewCode({ ...newCode, code: e.target.value.toUpperCase() })} placeholder="e.g. TRADESHOW2026" className="w-full px-3 py-2 bg-background border border-border rounded-lg text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-primary/50 uppercase tracking-wider" />
-            </div>
-            <div>
-              <label className="block text-xs font-medium text-muted-foreground mb-1.5">Label *</label>
-              <input type="text" value={newCode.label} onChange={e => setNewCode({ ...newCode, label: e.target.value })} placeholder="e.g. Bay Area Trade Show 2026" className="w-full px-3 py-2 bg-background border border-border rounded-lg text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-primary/50" />
-            </div>
-            <div>
-              <label className="block text-xs font-medium text-muted-foreground mb-1.5">Category</label>
-              <select value={newCode.category} onChange={e => setNewCode({ ...newCode, category: e.target.value as PromoCode['category'] })} className="w-full px-3 py-2 bg-background border border-border rounded-lg text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-primary/50">
-                <option value="friends_family">Friends & Family</option>
-                <option value="first_time">First Time Customer</option>
-                <option value="event">Trade Show / Event</option>
-                <option value="custom">Custom</option>
-              </select>
-            </div>
-            <div>
-              <label className="block text-xs font-medium text-muted-foreground mb-1.5">Discount Type</label>
-              <select value={newCode.type} onChange={e => setNewCode({ ...newCode, type: e.target.value as 'percent' | 'fixed' })} className="w-full px-3 py-2 bg-background border border-border rounded-lg text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-primary/50">
-                <option value="percent">Percentage Off</option>
-                <option value="fixed">Fixed Amount Off</option>
-              </select>
-            </div>
-            <div>
-              <label className="block text-xs font-medium text-muted-foreground mb-1.5">Value ({newCode.type === 'percent' ? '%' : '$'})</label>
-              <input type="number" min="0" step={newCode.type === 'percent' ? '1' : '0.01'} value={newCode.value} onChange={e => setNewCode({ ...newCode, value: parseFloat(e.target.value) || 0 })} className="w-full px-3 py-2 bg-background border border-border rounded-lg text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-primary/50" />
-            </div>
-            <div>
-              <label className="block text-xs font-medium text-muted-foreground mb-1.5">Min Order ($)</label>
-              <input type="number" min="0" step="1" value={newCode.minOrder} onChange={e => setNewCode({ ...newCode, minOrder: parseFloat(e.target.value) || 0 })} className="w-full px-3 py-2 bg-background border border-border rounded-lg text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-primary/50" />
-            </div>
-            <div>
-              <label className="block text-xs font-medium text-muted-foreground mb-1.5">Max Uses (0 = unlimited)</label>
-              <input type="number" min="0" step="1" value={newCode.maxUses} onChange={e => setNewCode({ ...newCode, maxUses: parseInt(e.target.value) || 0 })} className="w-full px-3 py-2 bg-background border border-border rounded-lg text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-primary/50" />
-            </div>
-            <div>
-              <label className="block text-xs font-medium text-muted-foreground mb-1.5">Expires (optional)</label>
-              <input type="date" value={newCode.expiresAt} onChange={e => setNewCode({ ...newCode, expiresAt: e.target.value })} className="w-full px-3 py-2 bg-background border border-border rounded-lg text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-primary/50" />
-            </div>
-          </div>
-          <div className="flex gap-2">
-            <button onClick={addCode} className="btn-primary text-sm">Create Code</button>
-            <button onClick={() => setShowAdd(false)} className="text-sm text-muted-foreground hover:text-foreground px-4 py-2">Cancel</button>
-          </div>
-        </motion.div>
-      )}
-
-      {codes.length === 0 ? (
-        <div className="bg-card border border-border rounded-2xl p-12 text-center">
-          <Tag size={48} className="mx-auto text-muted-foreground mb-4" />
-          <p className="text-muted-foreground">No promo codes yet. Create one above.</p>
-        </div>
-      ) : (
-        <div className="space-y-2">
-          {codes.map((code, i) => (
-            <div key={code.code} className={`bg-card border rounded-2xl p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4 ${code.active ? 'border-border' : 'border-border opacity-50'}`}>
-              <div className="flex items-center gap-4 min-w-0">
-                <button onClick={() => toggleActive(i)} className="shrink-0">
-                  {code.active ? <ToggleRight size={28} className="text-green-400" /> : <ToggleLeft size={28} className="text-muted-foreground" />}
-                </button>
-                <div className="min-w-0">
-                  <div className="flex items-center gap-2 flex-wrap">
-                    <span className="font-black tracking-wider">{code.code}</span>
-                    <span className="text-xs px-2 py-0.5 rounded-full bg-primary/10 text-primary font-bold">{code.type === 'percent' ? `${code.value}% off` : `$${code.value} off`}</span>
-                    <span className="text-xs px-2 py-0.5 rounded-full bg-muted text-muted-foreground">{categoryLabels[code.category]}</span>
-                  </div>
-                  <p className="text-sm text-muted-foreground mt-0.5">{code.label}</p>
-                  <div className="flex gap-3 text-xs text-muted-foreground mt-1">
-                    <span>{code.uses} uses</span>
-                    {code.maxUses ? <span>max {code.maxUses}</span> : null}
-                    {code.minOrder ? <span>min ${code.minOrder}</span> : null}
-                    {code.expiresAt ? <span>expires {new Date(code.expiresAt).toLocaleDateString()}</span> : null}
-                  </div>
-                </div>
-              </div>
-              <button onClick={() => deleteCode(i)} className="text-muted-foreground hover:text-destructive transition-colors shrink-0 self-end sm:self-center">
-                <Trash2 size={16} />
-              </button>
-            </div>
-          ))}
         </div>
       )}
     </div>
@@ -1858,14 +1687,14 @@ function AnalyticsTab() {
       const visitorsWho = (predicate: (path: string) => boolean) =>
         new Set(views.filter(v => predicate(v.path)).map(v => v.visitor_id)).size
       // All stages use unique visitors for a consistent cohort. The final stage
-      // uses /order-confirmation views (only reached after a successful order)
+      // uses /order-confirmation views, which are not proof of a captured payment
       // rather than the raw order count, which isn't visitor-linked.
       const funnelRaw = [
         { label: 'Tracked browser IDs', count: visitors },
         { label: 'Viewed a product', count: visitorsWho(p => !!PRODUCT_PAGE_NAMES[p]) },
         { label: 'Reached the cart', count: visitorsWho(p => p === '/cart') },
         { label: 'Started checkout', count: visitorsWho(p => p === '/checkout') },
-        { label: 'Completed an order', count: visitorsWho(p => p === '/order-confirmation') },
+        { label: 'Viewed confirmation page', count: visitorsWho(p => p === '/order-confirmation') },
       ]
       const top = funnelRaw[0].count || 1
       const funnel = funnelRaw.map(s => ({ ...s, pct: Math.round((s.count / top) * 100) }))
@@ -1992,13 +1821,13 @@ function AnalyticsTab() {
 
       <div className="rounded-2xl border border-primary/20 bg-primary/5 p-4 text-sm">
         <p className="font-bold">Measurement baseline: {range === 'today' ? 'today' : range === 'all' ? 'all recorded history' : `the last ${range}`}</p>
-        <p className="mt-1 text-xs text-muted-foreground">Use this as the starting line before more SEO traffic arrives. Revenue only counts PayPal-captured orders. Calls count tracked tap-to-call clicks—not answered or completed calls.</p>
+        <p className="mt-1 text-xs text-muted-foreground">Use this as the starting line before more SEO traffic arrives. Gross paid revenue uses orders with a captured payment status, before refunds, fees and tax adjustments. Calls are tap-to-call clicks. Confirmation-page views do not prove payment.</p>
       </div>
 
       {/* Headline business numbers */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-        <StatCard icon={DollarSign} label="Revenue (paid)" value={`$${data.revenue.toFixed(2)}`} color="text-green-400" delay={0.05} />
-        <StatCard icon={ShoppingCart} label="Orders" value={data.orders} color="text-green-400" delay={0.1} />
+        <StatCard icon={DollarSign} label="Gross paid revenue" value={`$${data.revenue.toFixed(2)}`} color="text-green-400" delay={0.05} />
+        <StatCard icon={ShoppingCart} label="Order records" value={data.orders} color="text-green-400" delay={0.1} />
         <StatCard icon={Send} label="Leads (quotes)" value={data.leads} color="text-yellow-400" delay={0.15} />
         <StatCard icon={Target} label="Tap-to-call clicks" value={data.phoneClicks} color="text-orange-400" delay={0.2} />
         <StatCard icon={Users} label="Tracked visitors" value={data.visitors} color="text-blue-400" delay={0.25} />
@@ -2317,6 +2146,9 @@ function SeoTab() {
 // ─── CRM / Referrals Tab ────────────────────────────────────────────────────
 
 function CRMTab() {
+  const [params] = useSearchParams()
+  const record = params.get('record')
+  const [loadError, setLoadError] = useState('')
   const [customers, setCustomers] = useState<Customer[]>([])
   const [referrals, setReferrals] = useState<CRMReferral[]>([])
   const [lastOrderByEmail, setLastOrderByEmail] = useState<Record<string, string>>({})
@@ -2324,17 +2156,21 @@ function CRMTab() {
   const [view, setView] = useState<'customers' | 'referrals'>('customers')
   const [search, setSearch] = useState('')
   const [tagFilter, setTagFilter] = useState<CustomerTag | 'all'>('all')
-  const [tags, setTags] = useState<Record<string, CustomerTag>>(getCustomerTags())
+  const [tags, setTags] = useState<Record<string, CustomerTag>>({})
 
   const fetchData = useCallback(async () => {
     setLoading(true)
     try {
-      const [{ data: custData }, { data: refData }, { data: orderData }] = await Promise.all([
-        supabase.from('customers').select('*').order('created_at', { ascending: false }),
+      const results = await Promise.all([
+        record ? supabase.from('customers').select('*').eq('id',record) : supabase.from('customers').select('*').order('created_at', { ascending: false }),
         supabase.from('referrals').select('*, referrer:referrer_id(email, first_name), referred:referred_id(email, first_name)').order('created_at', { ascending: false }),
         supabase.from('orders').select('customer_email, created_at').order('created_at', { ascending: false }),
       ])
-      if (custData) setCustomers(custData as Customer[])
+      const failure = results.find(result => result.error)
+      if (failure) throw failure.error
+      const [{ data: custData }, { data: refData }, { data: orderData }] = results
+      if (custData) { setCustomers(custData as Customer[]); setTags(Object.fromEntries(custData.map(c => [c.id, c.staff_tag === 'vip' ? 'vip' : 'customer']))) }
+      setLoadError('')
       if (refData) setReferrals(refData as CRMReferral[])
       if (orderData) {
         // Most recent order per customer email (query is already newest-first).
@@ -2345,16 +2181,17 @@ function CRMTab() {
         }
         setLastOrderByEmail(map)
       }
-    } catch { /* silent */ }
+    } catch { setLoadError('Could not load shared customers. Refresh to retry.') }
     finally { setLoading(false) }
-  }, [])
+  }, [record])
 
   useEffect(() => { fetchData() }, [fetchData])
 
-  const handleTagChange = (customerId: string, tag: CustomerTag) => {
-    setCustomerTag(customerId, tag)
-    setTags(getCustomerTags())
-    toast.success(`Customer tagged as ${tagConfig[tag].label}`)
+  const handleTagChange = async (customerId: string, tag: CustomerTag) => {
+    const { error } = await supabase.from('customers').update({staff_tag:tag}).eq('id',customerId).select('id').single()
+    if (error) { toast.error('Customer tag was not saved. Retry.'); return }
+    setTags(previous => ({...previous,[customerId]:tag}))
+    toast.success('Customer tag saved')
   }
 
   const getTag = (customerId: string): CustomerTag => tags[customerId] || 'customer'
@@ -2362,13 +2199,12 @@ function CRMTab() {
   const filtered = customers.filter(c => {
     const matchesSearch = !search || c.email.toLowerCase().includes(search.toLowerCase()) || (c.first_name || '').toLowerCase().includes(search.toLowerCase()) || (c.last_name || '').toLowerCase().includes(search.toLowerCase())
     const matchesTag = tagFilter === 'all' || getTag(c.id) === tagFilter
-    return matchesSearch && matchesTag
+    return matchesSearch && matchesTag && (!record || c.id === record)
   })
 
   const totalCustomers = customers.length
   const totalRevenue = customers.reduce((s, c) => s + (c.total_spent || 0), 0)
   const totalReferrals = referrals.length
-  const adminCount = customers.filter(c => getTag(c.id) === 'admin').length
   const vipCount = customers.filter(c => getTag(c.id) === 'vip').length
 
   const copyLink = (code: string) => {
@@ -2385,6 +2221,9 @@ function CRMTab() {
 
   return (
     <div className="space-y-6">
+      {loadError && <p role="alert" className="text-destructive">{loadError}</p>}
+      <p className="text-sm text-muted-foreground">Shared customer tags. These do not grant staff access.</p>
+      {record && customers[0] && <><a className="text-primary underline text-sm" href="/admin?tab=crm">All customers</a><CustomerHistory email={customers[0].email}/></>}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         <StatCard icon={Users} label="Total Customers" value={totalCustomers} delay={0.1} />
         <StatCard icon={DollarSign} label="Lifetime Revenue" value={`$${totalRevenue.toFixed(2)}`} color="text-green-400" delay={0.2} />
@@ -2403,7 +2242,7 @@ function CRMTab() {
         {view === 'customers' && (
           <>
             <div className="flex gap-1">
-              {([['all', `All (${totalCustomers})`], ['admin', `Admins (${adminCount})`], ['vip', `VIP (${vipCount})`], ['customer', `Regular`]] as [CustomerTag | 'all', string][]).map(([key, label]) => (
+              {([['all', `All (${totalCustomers})`], ['vip', `VIP (${vipCount})`], ['customer', `Regular`]] as [CustomerTag | 'all', string][]).map(([key, label]) => (
                 <button key={key} onClick={() => setTagFilter(key)}
                   className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${tagFilter === key ? 'bg-primary/20 text-primary border border-primary/30' : 'bg-muted/30 text-muted-foreground hover:text-foreground border border-transparent'}`}>
                   {label}
@@ -2429,7 +2268,7 @@ function CRMTab() {
                 <thead>
                   <tr className="border-b border-border">
                     <th className="text-left px-4 py-3 text-xs font-bold uppercase text-muted-foreground">Customer</th>
-                    <th className="text-left px-4 py-3 text-xs font-bold uppercase text-muted-foreground">Role</th>
+                    <th className="text-left px-4 py-3 text-xs font-bold uppercase text-muted-foreground">Customer tag</th>
                     <th className="text-left px-4 py-3 text-xs font-bold uppercase text-muted-foreground">Email</th>
                     <th className="text-right px-4 py-3 text-xs font-bold uppercase text-muted-foreground">Orders</th>
                     <th className="text-right px-4 py-3 text-xs font-bold uppercase text-muted-foreground">Spent</th>
@@ -2444,7 +2283,7 @@ function CRMTab() {
                     const cfg = tagConfig[tag]
                     return (
                     <tr key={c.id} className="border-b border-border/50 hover:bg-muted/20 transition-colors">
-                      <td className="px-4 py-3 font-medium">{[c.first_name, c.last_name].filter(Boolean).join(' ') || '—'}</td>
+                      <td className="px-4 py-3 font-medium"><a className="text-primary underline" href={`/admin?tab=crm&record=${encodeURIComponent(c.id)}`}>{[c.first_name, c.last_name].filter(Boolean).join(' ') || c.email}</a></td>
                       <td className="px-4 py-3">
                         <select
                           value={tag}
@@ -2453,7 +2292,6 @@ function CRMTab() {
                         >
                           <option value="customer">Customer</option>
                           <option value="vip">VIP</option>
-                          <option value="admin">Admin</option>
                         </select>
                       </td>
                       <td className="px-4 py-3 text-muted-foreground">{c.email}</td>
@@ -2534,12 +2372,13 @@ function CRMTab() {
 function SubscribersTab() {
   const [subscribers, setSubscribers] = useState<EmailSubscriber[]>([])
   const [loading, setLoading] = useState(true)
-  const [filter, setFilter] = useState<'all' | 'subscribed' | 'unsubscribed'>('all')
+  const [loadError, setLoadError] = useState('')
+  const [filter, setFilter] = useState<'all' | 'subscribed' | 'unsubscribed'>('subscribed')
 
   useEffect(() => { fetchSubscribers() }, [])
 
   const fetchSubscribers = async () => {
-    setLoading(true)
+    setLoading(true); setLoadError('')
     try {
       const { data, error } = await supabase
         .from('email_subscribers')
@@ -2549,7 +2388,7 @@ function SubscribersTab() {
       if (error) throw error
       setSubscribers((data || []) as EmailSubscriber[])
     } catch {
-      toast.error('Could not load email list')
+      setLoadError('Could not load the email list. Retry to see current subscriptions.')
       setSubscribers([])
     } finally {
       setLoading(false)
@@ -2562,11 +2401,13 @@ function SubscribersTab() {
   const sources = new Set(subscribers.map(sub => sub.source).filter(Boolean)).size
 
   const copyEmails = () => {
-    const emails = filtered.map(sub => sub.email).join(', ')
+    const emails = filtered.filter(sub => sub.status === 'subscribed').map(sub => sub.email).join(', ')
     if (!emails) return
     navigator.clipboard.writeText(emails)
-    toast.success('Subscriber emails copied')
+    toast.success('Opted-in subscriber emails copied')
   }
+
+  if (loadError) return <p role="alert">{loadError} <button className="underline" onClick={()=>void fetchSubscribers()}>Retry</button></p>
 
   if (loading) return (
     <div className="bg-card border border-border rounded-2xl p-12 text-center">
@@ -2595,10 +2436,10 @@ function SubscribersTab() {
         </div>
         <button
           onClick={copyEmails}
-          disabled={filtered.length === 0}
+          disabled={!filtered.some(sub=>sub.status==='subscribed')}
           className="inline-flex items-center justify-center gap-2 rounded-xl border border-border bg-card px-4 py-2 text-sm font-medium text-muted-foreground transition-all hover:border-primary/30 hover:text-foreground disabled:opacity-50"
         >
-          <Copy size={14} /> Copy Emails
+          <Copy size={14} /> Copy opted-in emails
         </button>
       </div>
 
@@ -3315,106 +3156,57 @@ function SecurityTab() {
 
 // ─── Main Dashboard ──────────────────────────────────────────────────────────
 
-const mainTabs = [
-  { id: 'orders', label: 'Orders', icon: Package },
-  { id: 'inquiries', label: 'Inquiries', icon: Send },
-  { id: 'worklog', label: 'Work Log', icon: History },
-  { id: 'pricing', label: 'Pricing', icon: DollarSign },
-  { id: 'promos', label: 'Promos', icon: Tag },
-  { id: 'carts', label: 'Carts', icon: ShoppingCart },
-  { id: 'analytics', label: 'Analytics', icon: BarChart3 },
-  { id: 'security', label: 'Security', icon: Shield },
-  { id: 'seo', label: 'SEO', icon: Search },
-  { id: 'crm', label: 'CRM', icon: Users },
-  { id: 'subscribers', label: 'Email List', icon: Mail },
-  { id: 'square', label: 'Square', icon: CreditCard },
-  { id: 'quickbooks', label: 'QuickBooks', icon: CreditCard },
-  { id: 'referrals', label: 'Referrals', icon: Share2 },
-] as const
-
-type MainTab = (typeof mainTabs)[number]['id']
-
-function getInitialAdminTab(): MainTab {
-  const params = new URLSearchParams(window.location.search)
-  const tab = params.get('tab')
-  if (mainTabs.some(item => item.id === tab)) return tab as MainTab
-  return params.has('square') ? 'square' : 'orders'
-}
-
+const adminGroups = [
+ {label:'Overview',icon:BarChart3,tabs:[['overview','Overview']]},
+ {label:'Orders',icon:Package,tabs:[['orders','Orders'],['carts','Abandoned carts']]},
+ {label:'Quotes',icon:Send,tabs:[['inquiries','Quotes & inquiries']]},
+ {label:'Customers',icon:Users,tabs:[['crm','Customers']]},
+ {label:'Products',icon:Tag,tabs:[['pricing','Catalog & pricing']]},
+ {label:'Marketing',icon:Mail,tabs:[['promos','Discounts'],['subscribers','Email subscribers'],['referrals','Referral archive']]},
+ {label:'Reports',icon:TrendingUp,tabs:[['analytics','Sales & traffic'],['tracking','Tracking checks'],['seo','Search performance']]},
+ {label:'Settings',icon:Settings,tabs:[['quickbooks','QuickBooks'],['square','Square'],['security','Security & logins'],['worklog','Site updates']]},
+]
 function Dashboard() {
-  const [activeTab, setActiveTab] = useState<MainTab>(getInitialAdminTab)
-  const [theme, setTheme] = useState<'dark' | 'light'>(() =>
-    (localStorage.getItem('tss-admin-theme') as 'dark' | 'light') || 'dark'
-  )
-  const toggleTheme = () => {
-    setTheme((prev) => {
-      const next = prev === 'dark' ? 'light' : 'dark'
-      localStorage.setItem('tss-admin-theme', next)
-      return next
-    })
-  }
-
-  const changeTab = (tab: MainTab) => {
-    setActiveTab(tab)
-    const url = new URL(window.location.href)
-    url.searchParams.set('tab', tab)
-    window.history.replaceState(null, '', url.toString())
-  }
-
-  const logout = async () => {
-    await supabase.auth.signOut()
-    window.location.reload()
-  }
-
-  return (
-    <section className={`py-8 md:py-16 min-h-screen ${theme === 'light' ? 'admin-light' : ''}`}>
-      <div className="section-container max-w-6xl">
-        <div className="flex items-center justify-between mb-6">
-          <motion.h1 initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="text-3xl md:text-5xl font-black">
-            Admin Dashboard
-          </motion.h1>
-          <div className="flex items-center gap-4">
-            <button onClick={toggleTheme} className="flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors" aria-label={theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'}>
-              {theme === 'dark' ? <Sun size={18} /> : <Moon size={18} />}
-              <span className="hidden sm:inline">{theme === 'dark' ? 'Light' : 'Dark'}</span>
-            </button>
-            <button onClick={logout} className="flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors" aria-label="Sign out">
-              <LogOut size={18} /> Sign Out
-            </button>
-          </div>
-        </div>
-
-        <div className="flex gap-1.5 overflow-x-auto pb-1 mb-8 scrollbar-hide" role="tablist" aria-label="Admin sections">
-          {mainTabs.map(tab => {
-            const Icon = tab.icon
-            return (
-              <button key={tab.id} onClick={() => changeTab(tab.id)} role="tab" aria-selected={activeTab === tab.id}
-                className={`flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-medium whitespace-nowrap transition-all ${
-                  activeTab === tab.id ? 'bg-primary text-primary-foreground shadow-sm' : 'bg-card border border-border text-muted-foreground hover:text-foreground hover:border-primary/30'
-                }`}>
-                <Icon size={16} /> {tab.label}
-              </button>
-            )
-          })}
-        </div>
-
-        {activeTab === 'orders' && <OrdersTab />}
-        {activeTab === 'inquiries' && <InquiriesTab />}
-        {activeTab === 'worklog' && <WorkLogTab />}
-        {activeTab === 'pricing' && <PricingTab />}
-        {activeTab === 'promos' && <PromoCodeManager />}
-        {activeTab === 'carts' && <CartsTab />}
-        {activeTab === 'analytics' && <AnalyticsTab />}
-        {activeTab === 'security' && <SecurityTab />}
-        {activeTab === 'seo' && <SeoTab />}
-        {activeTab === 'crm' && <CRMTab />}
-        {activeTab === 'subscribers' && <SubscribersTab />}
-        {activeTab === 'square' && <SquareTab />}
-        {activeTab === 'quickbooks' && <QuickBooksConnection />}
-        {activeTab === 'referrals' && <ReferralsTab />}
-      </div>
-    </section>
-  )
+ const [params,setParams]=useSearchParams()
+ const requested=params.get('tab') || (params.has('square')?'square':'overview')
+ const activeTab=adminGroups.some(g=>g.tabs.some(t=>t[0]===requested))?requested:'overview'
+ const group=adminGroups.find(g=>g.tabs.some(t=>t[0]===activeTab))!
+ const [menu,setMenu]=useState(false)
+ const [theme,setTheme]=useState(()=>localStorage.getItem('tss-admin-theme') || 'dark')
+ const navigate=(tab:string,record?:string,filter?:string)=>{setParams({tab,...(record?{record}:{}),...(filter?{filter}:{})});setMenu(false);window.scrollTo({top:0,behavior:'instant'})}
+ const toggleTheme=()=>{const next=theme==='dark'?'light':'dark';setTheme(next);localStorage.setItem('tss-admin-theme',next)}
+ const logout=async()=>{await supabase.auth.signOut();window.location.reload()}
+ return <div className={`min-h-screen ${theme==='light'?'admin-light':''}`}>
+  <a href="#admin-content" className="sr-only focus:not-sr-only focus:block p-3">Skip to admin content</a>
+  <header className="sticky top-0 z-30 bg-background border-b border-border px-4 lg:px-6 py-3 flex items-center gap-4">
+   <a href="/admin" aria-label="Admin overview" className="hidden lg:block w-48 shrink-0"><img src={tssLogo} alt="The Sticker Smith" className="h-10 w-auto"/></a>
+   <button className="lg:hidden text-sm font-bold" aria-expanded={menu} aria-controls="admin-navigation" onClick={()=>setMenu(!menu)}>Menu</button>
+   <AdminSearch navigate={navigate}/>
+   <a href="/" target="_blank" rel="noopener noreferrer" className="hidden xl:block text-sm whitespace-nowrap">View website ↗</a>
+   <button onClick={toggleTheme} aria-label="Toggle admin color theme">{theme==='dark'?<Sun size={18}/>:<Moon size={18}/>}</button>
+  </header>
+  <div className="lg:grid lg:grid-cols-[224px_minmax(0,1fr)]">
+   <aside id="admin-navigation" className={`${menu?'block':'hidden'} lg:block border-r border-border bg-card p-4 lg:sticky lg:top-[73px] lg:h-[calc(100vh-73px)]`}>
+    <nav aria-label="Admin sections" className="space-y-1">{adminGroups.map(g=>{const Icon=g.icon;return <button key={g.label} aria-current={g===group?'page':undefined} onClick={()=>navigate(g.tabs[0][0])} className={`flex items-center gap-3 w-full px-4 py-3 rounded-xl text-sm font-semibold ${g===group?'bg-primary text-primary-foreground':'text-muted-foreground hover:bg-muted'} ${g.label==='Settings'?'!mt-6':''}`}><Icon size={18}/>{g.label}</button>})}</nav>
+    <button onClick={()=>void logout()} className="flex items-center gap-3 px-4 py-4 text-sm text-muted-foreground"><LogOut size={18}/> Sign out</button>
+   </aside>
+   <main id="admin-content" className="min-w-0 p-4 sm:p-6 lg:p-8 max-w-[1600px] w-full">
+    <h1 className="text-2xl font-black mb-5">{group.label}</h1>
+    {group.tabs.length>1&&<nav aria-label={`${group.label} views`} className="flex flex-wrap gap-2 mb-6">{group.tabs.map(([id,label])=><button key={id} aria-current={id===activeTab?'page':undefined} onClick={()=>navigate(id)} className={`px-4 py-2 rounded-lg text-sm border ${id===activeTab?'border-primary text-primary bg-primary/10':'border-border'}`}>{label}</button>)}</nav>}
+    <div key={`${activeTab}-${params.get('record')||''}-${params.get('filter')||''}`}>
+     {activeTab==='overview'&&<Overview navigate={navigate}/>}
+     {activeTab==='orders'&&<OrdersTab/>}{activeTab==='inquiries'&&<InquiriesTab/>}
+     {activeTab==='worklog'&&<WorkLogTab/>}{activeTab==='pricing'&&<PricingTab/>}
+     {activeTab==='promos'&&<Discounts/>}{activeTab==='carts'&&<CartsTab/>}
+     {activeTab==='analytics'&&<AnalyticsTab/>}{activeTab==='tracking'&&<Tracking/>}{activeTab==='security'&&<SecurityTab/>}
+     {activeTab==='seo'&&<SeoTab/>}{activeTab==='crm'&&<CRMTab/>}
+     {activeTab==='subscribers'&&<SubscribersTab/>}{activeTab==='square'&&<SquareTab/>}
+     {activeTab==='quickbooks'&&<QuickBooksConnection/>}
+     {activeTab==='referrals'&&<><p className="rounded-xl border border-yellow-400/40 p-4 mb-4 text-sm">Legacy browser-only referral records. Rewards shown here are estimates, not verified payouts. Current shared referral records are in Customers → Referrals.</p><ReferralsTab/></>}
+    </div>
+   </main>
+  </div>
+ </div>
 }
 
 // ─── Referrals Tab ──────────────────────────────────────────────────────────
@@ -3455,7 +3247,7 @@ function ReferralsTab() {
           { label: 'Referrers', value: referrers.length, icon: Users },
           { label: 'Total Clicks', value: totalClicks, icon: MousePointer },
           { label: 'Conversions', value: totalConversions, icon: CheckCircle },
-          { label: 'Commission Paid', value: `$${totalEarned.toFixed(2)}`, icon: Gift },
+          { label: 'Estimated rewards (unverified)', value: `$${totalEarned.toFixed(2)}`, icon: Gift },
         ].map(s => (
           <div key={s.label} className="bg-card border border-border rounded-2xl p-5">
             <div className="flex items-center gap-2 text-muted-foreground mb-2"><s.icon size={16} /><span className="text-xs font-medium">{s.label}</span></div>
