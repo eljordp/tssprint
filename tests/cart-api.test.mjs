@@ -67,3 +67,13 @@ test('cross-origin requests are rejected before accessing storage',async()=>{
   const result=await request('sync',{...credentials,items:[item]},{host:'tssprint.com',origin:'https://untrusted.example','sec-fetch-site':'cross-site'})
   assert.equal(result.statusCode,403); assert.equal(row,null)
 })
+
+test('expired links and cleared saved carts cannot restore stale items', async () => {
+  reset(); await request('sync', {...credentials, items:[item], email:'fixture@example.test'})
+  const expired = signRecovery(row.id, row.email, process.env.CART_RECOVERY_SECRET, Date.now() - 8 * 86400000)
+  const rejected = await request('restore', {token:expired})
+  assert.equal(rejected.statusCode, 400); assert.match(rejected.data.error, /expired/)
+  const token = signRecovery(row.id, row.email, process.env.CART_RECOVERY_SECRET)
+  row.items = []
+  assert.equal((await request('restore', {token})).statusCode, 410)
+})
