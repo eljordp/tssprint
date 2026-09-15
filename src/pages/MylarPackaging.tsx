@@ -429,7 +429,7 @@ function MylarOrderForm({ pricing, editingItem, editConfig, returnTo }: { pricin
                   min={minimumQty}
                   max={100000}
                   aria-invalid={quantityInvalid}
-                  className="w-full rounded-lg border border-border bg-muted px-4 py-2.5 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"
+                  className="w-full rounded-lg border border-border bg-muted px-4 py-2.5 text-base text-foreground focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"
                   value={quantity}
                   onChange={e => setQuantity(Number(e.target.value) || 0)}
                   placeholder="Enter quantity (pcs)"

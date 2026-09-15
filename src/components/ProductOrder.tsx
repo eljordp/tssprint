@@ -260,7 +260,7 @@ function ProductOrderForm({ categoryNames, onCategoryChange, checkoutMode = 'car
           <div>
             <label className="block text-sm font-bold mb-3 uppercase tracking-wider">Select Product</label>
             {artworkFirst ? (
-              <select aria-label="Select product" value={selectedItem} onChange={event => { setSelectedItem(Number(event.target.value)); setSelectedQtyIndex(0) }} className="w-full rounded-xl border border-border bg-card px-4 py-3 text-sm">
+              <select aria-label="Select product" value={selectedItem} onChange={event => { setSelectedItem(Number(event.target.value)); setSelectedQtyIndex(0) }} className="w-full rounded-xl border border-border bg-card px-4 py-3 text-base">
                 {category.items.map((product, index) => <option key={product.size} value={index}>{product.size}</option>)}
               </select>
             ) : hasGroups ? (
@@ -342,7 +342,7 @@ function ProductOrderForm({ categoryNames, onCategoryChange, checkoutMode = 'car
                   max={100000}
                   step={1}
                   aria-label="Product quantity" aria-invalid={quantityInvalid}
-                  className="w-full rounded-lg border border-border bg-muted px-4 py-2.5 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary mb-3"
+                  className="w-full rounded-lg border border-border bg-muted px-4 py-2.5 text-base text-foreground focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary mb-3"
                   value={customQty}
                   onChange={e => setCustomQty(Number(e.target.value) || 0)}
                   placeholder="Enter quantity"
