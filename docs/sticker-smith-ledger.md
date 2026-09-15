@@ -2,6 +2,8 @@
 
 Updated September 14, 2026 (Pacific). Canonical record of customer-experience decisions, dated audits, useful research and verification. Retain important findings and their source/version, not transcripts, credentials, customer records or repetitive tool logs. Preserve earlier ratings as history and mark corrections explicitly.
 
+**Active next-work plan:** [Cart editing, material evidence and order/recovery verification](customer-next-steps-plan-2026-09-14.md), created September 14 at 21:09 PDT at the user's request. Proposed sequence with ownership and acceptance criteria; no implementation or deployment performed in the planning turn.
+
 ## User decisions
 
 - Review every public page and the buying flow, not just signage. Fix clarity, useful visuals and friction before adding decoration.
@@ -136,7 +138,7 @@ Customer changes committed as `d6e7efd`, based on `5ebcfef`. Separate attempted 
 
 The Intuit/admin task merged customer changes in `b7e8d5d`, then produced combined commit `fc4b0ed`. Combined artifact: [tssprint-ca3r7bb8c](https://tssprint-ca3r7bb8c-jordis-projects-94d2df39.vercel.app), deployment `dpl_5QExPMWTvy3jtueqygxLQvzhvzfE`. At approximately 21:03 PDT, `vercel inspect https://tssprint.com` resolved to that READY production artifact. Public route/browser checks are recorded below once complete. Never deploy the older customer branch over the combined admin/payment release.
 
-Public verification, September 14, approximately 21:06–21:11 PDT:
+Public verification, September 14 evening, following the approximately 21:03 PDT production-alias check:
 
 - All **31 public routes returned HTTP 200** with their expected page content/headings, including all three formerly broken case-study URLs. Cart, checkout, account and confirmation app shells also returned 200 with their route-specific titles; shell HTML alone does not prove their complete workflows.
 - A deliberately nonexistent page returned **HTTP 404 with the custom recovery page**. The explicit `/404` document returned 200, as a directly requested document.
