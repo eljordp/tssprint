@@ -110,13 +110,9 @@ const websiteSchema = {
   '@type': 'WebSite',
   '@id': `${SITE_URL}/#website`,
   name: 'The Sticker Smith',
+  alternateName: ['TSS Print', 'TSSPrint'],
   url: SITE_URL,
   publisher: { '@id': BUSINESS_ID },
-  potentialAction: {
-    '@type': 'SearchAction',
-    target: `${SITE_URL}/projects?search={search_term_string}`,
-    'query-input': 'required name=search_term_string',
-  },
 }
 
 const serviceSchemas: Record<string, { name: string; description: string; serviceType: string }> = {
@@ -253,6 +249,7 @@ const breadcrumbLabels: Record<string, string> = {
   '/quote': 'Fast Quote',
   '/about': 'About',
   '/projects': 'Projects',
+  '/order-help': 'Order Help',
   '/referral': 'Referral Program',
 }
 

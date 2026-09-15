@@ -58,7 +58,7 @@ const ROUTE_TITLES = {
   '/projects': 'Print Projects & Portfolio | The Sticker Smith',
   '/terms': 'Terms & EULA | The Sticker Smith',
   '/privacy': 'Privacy Policy | The Sticker Smith',
-  '/order-help': 'Ordering, Proofs & Pickup | The Sticker Smith',
+  '/order-help': 'Order Help | Proofs, Pickup & Delivery',
   '/about': 'About The Sticker Smith | Bay Area Print Studio',
   '/contact': 'Contact & Free Quote | The Sticker Smith',
   '/quote': 'Fast Print Quote | Stickers, Signs, Wraps & Event Displays',

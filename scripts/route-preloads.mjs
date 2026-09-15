@@ -1,6 +1,6 @@
 // Use Vite's current manifest, never serialized hashes from a previous release.
 const pages = {
-  '/': 'Home', '/stickers': 'Order', '/services': 'Services',
+  '/': 'Home', '/stickers': 'original-stickers/index', '/services': 'Services',
   '/services/vehicle-graphics': 'VehicleGraphics', '/services/business-signage': 'BusinessSignage',
   '/services/event-displays': 'EventDisplays', '/services/business-print': 'BusinessPrint',
   '/mylar': 'MylarPackaging', '/projects': 'Projects', '/about': 'About', '/contact': 'Contact',

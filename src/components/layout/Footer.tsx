@@ -23,12 +23,13 @@ const footerLinks = {
     { label: 'Hayward Business Signs', href: '/services/business-signage#shop' },
     { label: 'Custom Mylar Bags', href: '/mylar#configure' },
   ],
-  support: [
-    { label: 'Get a Quote', href: '/contact' },
-    { label: 'About Us', href: '/about' },
-    { label: 'Our Projects', href: '/projects' },
+  explore: [
+    { label: 'Order Stickers', href: '/stickers' },
+    { label: 'Services', href: '/services' },
+    { label: 'Projects', href: '/projects' },
+    { label: 'About', href: '/about' },
     { label: 'Contact', href: '/contact' },
-    { label: 'Referral Program', href: '/referral' },
+    { label: 'Order Help', href: '/order-help' },
   ],
   serviceArea: cities.map((c) => ({ label: c.name, href: `/${c.slug}` })),
 }
@@ -131,9 +132,9 @@ export default function Footer() {
             </ul>
           </div>
           <div>
-            <h2 className="font-bold text-sm uppercase tracking-wider mb-5 text-foreground">Support</h2>
+            <h2 className="font-bold text-sm uppercase tracking-wider mb-5 text-foreground">Explore</h2>
             <ul className="space-y-3">
-              {footerLinks.support.map((link) => (<li key={link.label}><Link to={link.href} className="text-sm text-muted-foreground hover:text-foreground transition-colors">{link.label}</Link></li>))}
+              {footerLinks.explore.map((link) => (<li key={link.label}><Link to={link.href} className="text-sm text-muted-foreground hover:text-foreground transition-colors">{link.label}</Link></li>))}
             </ul>
           </div>
         </div>
@@ -163,6 +164,6 @@ export default function Footer() {
           </div>
         </div>
       </div>
-    <div className="section-container pb-8 space-y-4"><nav aria-label="Policies and order help" className="flex flex-wrap gap-x-6 gap-y-2 text-sm"><Link to="/order-help" className="text-primary py-2">Proofs, delivery &amp; order help</Link><Link to="/terms" className="text-muted-foreground hover:text-foreground py-2">Terms &amp; EULA</Link><Link to="/privacy" className="text-muted-foreground hover:text-foreground py-2">Privacy Policy</Link></nav><PaymentDisclosure /></div></footer>
+    <div className="section-container pb-8 space-y-4"><nav aria-label="Policies and programs" className="flex flex-wrap gap-x-6 gap-y-2 text-sm"><Link to="/referral" className="text-primary py-2">Referral Program</Link><Link to="/terms" className="text-muted-foreground hover:text-foreground py-2">Terms &amp; EULA</Link><Link to="/privacy" className="text-muted-foreground hover:text-foreground py-2">Privacy Policy</Link></nav><PaymentDisclosure /></div></footer>
   )
 }

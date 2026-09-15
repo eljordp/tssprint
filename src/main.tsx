@@ -7,8 +7,13 @@ import App from './App'
 import { prepareInitialRoute } from './lib/bootRoutes'
 
 async function start() {
-  await prepareInitialRoute(window.location.pathname)
   const root = document.getElementById('root')!
+  // Let already-rendered content reach the screen before hydration work begins.
+  // Empty app shells still start immediately.
+  if (root.dataset.reactSsr === 'true' && document.visibilityState === 'visible') {
+    await new Promise<void>(resolve => requestAnimationFrame(() => requestAnimationFrame(() => resolve())))
+  }
+  await prepareInitialRoute(window.location.pathname)
   const app = <StrictMode>
     <MotionConfig reducedMotion="user"><App /></MotionConfig>
     <Toaster
