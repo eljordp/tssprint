@@ -163,7 +163,6 @@ export default function Contact() {
                       <option value="Event Displays">Event Displays</option>
                       <option value="Mylar Packaging">Mylar Packaging</option>
                       <option value="Business Print">Business Print (cards, flyers, etc.)</option>
-                      <option value="Window Film & Tint">Window Film &amp; Tint</option>
                       <option value="Other">Other / Not sure</option>
                     </select>
                   </div>

@@ -22,6 +22,7 @@ type AnalyticsCartItem = {
 
 declare global {
   interface Window {
+    __prerender?: boolean
     __tssClickTracking?: boolean
     __tssGa4Configured?: boolean
     dataLayer?: unknown[]
@@ -192,8 +193,14 @@ function cleanProperties(properties: AnalyticsProperties) {
 
 const STAFF_OPTOUT_KEY = 'tss_analytics_optout'
 
+function isGa4DebugSession() {
+  return typeof window !== 'undefined' && new URLSearchParams(window.location.search).get('analytics_debug') === '1'
+}
+
 export function shouldSuppressAnalytics() {
   if (typeof window === 'undefined') return false
+
+  if (window.__prerender) return true
 
   // Never record internal/staff areas — keeps owner-facing stats to real customers.
   if (window.location.pathname.startsWith('/admin')) return true
@@ -221,11 +228,13 @@ export function markStaffDevice() {
 }
 
 function initGa4() {
-  if (typeof window === 'undefined' || !GA4_MEASUREMENT_ID || shouldSuppressAnalytics()) return
+  if (typeof window === 'undefined' || !GA4_MEASUREMENT_ID || window.__prerender || (shouldSuppressAnalytics() && !isGa4DebugSession())) return
 
   window.dataLayer = window.dataLayer || []
-  window.gtag = window.gtag || function gtag(...args: unknown[]) {
-    window.dataLayer?.push(args)
+  window.gtag = window.gtag || function gtag() {
+    // Google requires the native Arguments object, not a rest-parameter Array.
+    // eslint-disable-next-line prefer-rest-params
+    window.dataLayer?.push(arguments)
   }
 
   if (!document.getElementById(GA4_SCRIPT_ID)) {
@@ -247,12 +256,13 @@ function initGa4() {
 }
 
 function sendGa4Event(name: string, params: Ga4Params = {}) {
-  if (shouldSuppressAnalytics()) return
+  if (typeof window === 'undefined' || window.__prerender || (shouldSuppressAnalytics() && !isGa4DebugSession())) return
   initGa4()
   if (!window.gtag || !GA4_MEASUREMENT_ID) return
   window.gtag('event', name, {
     ...params,
     page_location: window.location.origin + window.location.pathname,
+    ...(isGa4DebugSession() ? { debug_mode: true, traffic_type: 'internal' } : {}),
     send_to: GA4_MEASUREMENT_ID,
   })
 }
@@ -273,7 +283,7 @@ function toGa4Items(items: AnalyticsCartItem[]) {
 }
 
 export function trackPageView(path: string) {
-  if (shouldSuppressAnalytics()) return
+  if (shouldSuppressAnalytics() && !isGa4DebugSession()) return
   captureMarketingAttribution()
   // Vercel Analytics auto-tracks page views via route changes.
   sendGa4Event('page_view', {
@@ -308,10 +318,10 @@ export function trackPageView(path: string) {
 }
 
 export function trackEvent(name: string, properties: AnalyticsProperties = {}) {
-  if (shouldSuppressAnalytics()) return
+  if (shouldSuppressAnalytics() && !isGa4DebugSession()) return
   const clean = cleanProperties(properties)
   try {
-    track(name, clean)
+    if (!shouldSuppressAnalytics()) track(name, clean)
   } catch {
     // Analytics should never block a lead, checkout, or navigation action.
   }

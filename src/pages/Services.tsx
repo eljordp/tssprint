@@ -6,9 +6,8 @@ import { ArrowRight } from 'lucide-react'
 import PageHero from '@/components/PageHero'
 import vehicleGraphics from '@/assets/optimized/services/vehicle-graphics-800.webp'
 import eventDisplays from '@/assets/optimized/services/event-displays-800.webp'
-import businessPrint from '@/assets/optimized/services/business-print-800.webp'
+import businessPrint from '@/assets/optimized/projects/bp-cleopatra-discount-cards-800.webp'
 import businessSignage from '@/assets/optimized/services/business-signage-800.webp'
-import windowFilm from '@/assets/optimized/services/window-film-800.webp'
 import mylarPackaging from '@/assets/optimized/services/mylar-packaging-800.webp'
 
 const SHOP_VIDEO = '/videos/epic-rane-print.mp4'
@@ -19,7 +18,6 @@ const services = [
   { image: eventDisplays, title: 'Custom Canopy Tents & Banners', description: 'Printed tents, feather flags, table covers, retractable banners, and booth displays.', href: '/services/event-displays#shop' },
   { image: businessPrint, title: 'Business Print Materials', description: 'Business cards, flyers, brochures, postcards, and marketing collateral.', href: '/services/business-print#shop' },
   { image: businessSignage, title: 'Hayward Business Signs & Signage', description: 'Storefront signs, wall graphics, A-frames, banners, and window graphics.', href: '/services/business-signage#shop' },
-  { image: windowFilm, title: 'Window Film & Graphics', description: 'Frosted film, solar film, security film, decorative graphics.', href: '/services/window-film#quote' },
   { image: mylarPackaging, title: 'Custom Mylar Packaging', description: 'Custom branded mylar bags, product labels, and retail packaging.', href: '/mylar#configure' },
 ]
 
@@ -47,7 +45,7 @@ export default function Services() {
       <PageHero
         eyebrow="What We Do"
         title="Full-service print & branding"
-        subtitle="Stickers, wraps, signage, packaging, print, window film. One studio, every surface — built for Bay Area brands."
+        subtitle="Stickers, wraps, signage, packaging, print. One studio, every surface — built for Bay Area brands."
         primaryCta={{ label: 'Get a Quote', href: '/contact' }}
         secondaryCta={{ label: 'See Our Work', href: '/projects' }}
       />

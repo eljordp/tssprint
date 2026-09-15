@@ -2,6 +2,7 @@
   "cleanUrls": true,
   "trailingSlash": false,
   "redirects": [
+    { "source": "/services/window-film", "destination": "/services/business-signage", "permanent": true },
     {
       "source": "/:path*",
       "has": [{ "type": "host", "value": "www.tssprint.com" }],

@@ -8,6 +8,7 @@ export interface CartItem {
   configuration?: { shape: string; material: string; size: string; pieces: number; format: 'handheld' | 'sheet' | 'roll'; rush: boolean; design: boolean }
   id: string
   name: string
+  category?: string
   size: string
   option: string
   price: number
@@ -147,7 +148,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
 
   const addItem = (item: CartItem): 'added' | 'pending' => {
     doAddItem(item)
-    trackAddToCart({ item, value: (item.price + (item.addOns?.reduce((sum, addon) => sum + addon.price, 0) || 0)) * item.quantity })
+    trackAddToCart({ item, value: (item.price + (item.addOns?.reduce((sum, a) => sum + a.price, 0) || 0)) * item.quantity, category: item.category, source: window.location.pathname })
     return 'added'
   }
 

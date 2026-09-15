@@ -11,7 +11,8 @@
     "prerender": "tsc -b && vite build && node scripts/prerender.mjs",
     "lint": "eslint .",
     "preview": "vite preview",
-    "test:cart": "node --experimental-strip-types --test tests/cart-recovery.test.ts tests/cart-api.test.mjs"
+    "test:cart": "node --experimental-strip-types --test tests/cart-recovery.test.ts tests/cart-api.test.mjs",
+    "test:checkout": "node --experimental-strip-types --test tests/checkout-enforcement.test.mjs tests/analytics.test.mjs"
   },
   "dependencies": {
     "@paypal/react-paypal-js": "^9.0.1",

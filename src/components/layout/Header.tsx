@@ -17,7 +17,6 @@ const navLinks = [
       { label: 'Business Signage', href: '/services/business-signage#shop', products: ['Storefront & Building Signs', 'Wall Graphics & Murals', 'A-Frame Sidewalk Signs', 'Retractable Banners', 'Acrylic & Metal Signs', 'LED & Illuminated Signs'] },
       { label: 'Event Displays', href: '/services/event-displays#shop', products: ['Hayward Custom Canopies', 'Custom Canopy Tents', 'Backdrop Displays', 'Table Covers & Throws', 'Feather & Teardrop Flags', 'Retractable Banner Stands'] },
       { label: 'Business Print', href: '/services/business-print#shop', products: ['Business Cards', 'Flyers', 'Door Hangers', 'Postcards & Mailers', 'Vehicle Magnets'] },
-      { label: 'Window Film & Tint', href: '/services/window-film#quote', products: ['Frosted Privacy Film', 'Solar & Heat Rejection', 'Security & Safety Film', 'Decorative Graphics', 'Custom Cut Logos'] },
       { label: 'Mylar Packaging', href: '/mylar#configure', products: ['Custom Mylar Bags Hayward', 'Eighths (3"×5")', 'Quarters (4"×6")', 'Ounce Bags (5"×8")', 'Half Pound (10"×12")', 'Pound Bags (14"×16")', '2oz Jar + Label'] },
     ],
   },

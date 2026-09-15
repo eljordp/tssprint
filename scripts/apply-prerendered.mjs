@@ -72,6 +72,9 @@ function patchHtml(html) {
   // Strip every existing /assets/*.js script + /assets/*.css link.
   html = html.replace(/<script[^>]+src="\/assets\/[^"]+\.js"[^>]*><\/script>\s*/g, '')
   html = html.replace(/<link[^>]+href="\/assets\/[^"]+\.css"[^>]*>\s*/g, '')
+  // Route chunks may be merged or removed between builds. Vite's fresh runtime
+  // handles their preloads; serialized preload tags must not pin old chunks.
+  html = html.replace(/<link\b(?=[^>]*\brel="modulepreload")[^>]*>\s*/g, '')
   // Inject the fresh ones right before </head>.
   html = html.replace(/<\/head>/i, `    ${freshTags}\n  </head>`)
   // Rewrite any remaining hashed asset references (images, fonts, media) to the

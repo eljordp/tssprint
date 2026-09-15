@@ -1,13 +1,12 @@
 import { motion } from 'framer-motion'
 import { Link } from 'react-router-dom'
-import { ArrowRight, Car, Building2, Tent, Printer, Film, Package, Star, Clock, FileCheck, MapPin, Shield, Zap, CheckCircle, Heart } from 'lucide-react'
+import { ArrowRight, Car, Building2, Tent, Printer, Package, Star, Clock, FileCheck, MapPin, Shield, Zap, CheckCircle, Heart } from 'lucide-react'
 import aboutCraft from '@/assets/pages/about-craft.jpg'
 import aboutShop from '@/assets/pages/about-shop-real.jpg'
 import svcVehicle from '@/assets/optimized/services/vehicle-graphics-800.webp'
 import svcSignage from '@/assets/optimized/services/business-signage-800.webp'
 import svcEvent from '@/assets/optimized/services/event-displays-800.webp'
-import svcPrint from '@/assets/optimized/services/business-print-800.webp'
-import svcFilm from '@/assets/optimized/services/window-film-800.webp'
+import svcPrint from '@/assets/optimized/projects/bp-cleopatra-discount-cards-800.webp'
 import svcMylar from '@/assets/optimized/services/mylar-packaging-800.webp'
 
 const services = [
@@ -15,7 +14,6 @@ const services = [
   { icon: Building2, title: 'Business Signage', description: 'Storefront signs, wall graphics, A-frames, retractable banners.', image: svcSignage, href: '/services/business-signage#shop' },
   { icon: Tent, title: 'Event Displays', description: 'Custom tents, feather flags, table covers, retractable banners.', image: svcEvent, href: '/services/event-displays#shop' },
   { icon: Printer, title: 'Business Print', description: 'Business cards, flyers, brochures, and marketing collateral.', image: svcPrint, href: '/services/business-print#shop' },
-  { icon: Film, title: 'Window Film', description: 'Frosted film, solar film, security film, decorative graphics.', image: svcFilm, href: '/services/window-film#quote' },
   { icon: Package, title: 'Custom Packaging', description: 'Branded mylar bags, labels, stickers, and product packaging.', image: svcMylar, href: '/mylar#configure' },
 ]
 
@@ -27,7 +25,7 @@ const stats = [
 ]
 
 const values = [
-  { icon: Shield, title: 'Premium Materials', description: '3M and Avery cast vinyl on stickers and wraps. 16pt cardstock on cards. SunTek and LLumar on tint. We don\'t cut corners on substrate.' },
+  { icon: Shield, title: 'Premium Materials', description: '3M and Avery cast vinyl on stickers and wraps. 16pt cardstock on cards. We don\'t cut corners on substrate.' },
   { icon: Zap, title: '3–5 Day Standard, 24hr Proof', description: 'Most jobs ship in 3–5 business days. Every order gets a free digital proof in 24 hours so you approve the file before we print.' },
   { icon: FileCheck, title: 'Trusted by Real Brands', description: 'Safeway, Albertsons, WHCI, and dozens of Bay Area businesses run their print and fleet branding through us. The list keeps growing.' },
   { icon: Heart, title: 'Bay Area, Hands-On', description: 'Local pickup, face-to-face consultations, real accountability. We install most jobs ourselves. You\'re not getting passed off to a call center.' },

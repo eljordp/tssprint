@@ -13,7 +13,7 @@ export default async function handler(req, res) {
 
   try {
     const body = await readBody(req)
-    const checkout = normalizeCheckout(body)
+    const checkout = await normalizeCheckout(body)
     const order = await paypalFetch('/v2/checkout/orders', {
       method: 'POST',
       body: JSON.stringify(buildPayPalOrderPayload(checkout)),

@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
-import { defaultStickerBasePrices, getBasePrice, getStickerPrice, isValidStickerQuantity, formatPriceAdjustment } from '../src/lib/stickerPricing.ts'
+import { defaultStickerBasePrices, getBasePrice, getStickerPrice, isValidStickerQuantity, formatPriceAdjustment } from '../src/lib/stickerPricing.js'
 
 const config = { basePrices: defaultStickerBasePrices }
 

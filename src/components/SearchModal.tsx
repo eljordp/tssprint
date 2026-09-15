@@ -53,7 +53,6 @@ const searchItems: SearchItem[] = [
   // Other Services
   { name: 'Vehicle Graphics & Wraps', category: 'Vehicle Graphics', href: '/services/vehicle-graphics#quote', keywords: ['vehicle', 'wrap', 'car wrap', 'truck', 'fleet', 'vinyl', 'lettering', 'decal', 'door graphic', 'perforated', 'window', 'hayward', 'bay area'] },
   { name: 'Business Signage', category: 'Business Signage', href: '/services/business-signage#shop', keywords: ['sign', 'signage', 'storefront', 'wall graphic', 'mural', 'a-frame', 'sidewalk', 'acrylic', 'metal', 'led', 'illuminated'] },
-  { name: 'Window Film & Tint', category: 'Window Film', href: '/services/window-film#quote', keywords: ['window', 'film', 'tint', 'frosted', 'privacy', 'solar', 'heat', 'security', 'decorative', 'anti-graffiti'] },
 ]
 
 export default function SearchModal({ isOpen, onClose }: { isOpen: boolean; onClose: () => void }) {

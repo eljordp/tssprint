@@ -21,7 +21,6 @@ const serviceCatalog = [
   'Business signage and storefront graphics',
   'Custom canopies, event displays, tents, banners, and table covers',
   'Business cards, flyers, postcards, and marketing print',
-  'Window film, tint, and decorative graphics',
   'Custom mylar bags and product labels in Hayward',
 ]
 
@@ -151,12 +150,6 @@ const serviceSchemas: Record<string, { name: string; description: string; servic
     description:
       'Business cards, flyers, postcards, menus, rack cards, brochures, and printed marketing materials for Bay Area brands.',
   },
-  '/services/window-film': {
-    name: 'Window Film, Tint, and Graphics',
-    serviceType: 'Window film, tint, privacy film, and window graphics',
-    description:
-      'Frosted window film, solar tint, security film, privacy film, decorative window graphics, and perforated window vinyl.',
-  },
   '/mylar': {
     name: 'Custom Mylar Bags and Jar Labels in Hayward and the Bay Area',
     serviceType: 'Custom mylar bags, pouch packaging, jar labels, and product labels in Hayward',
@@ -255,7 +248,6 @@ const breadcrumbLabels: Record<string, string> = {
   '/services/business-signage': 'Business Signage',
   '/services/event-displays': 'Event Displays',
   '/services/business-print': 'Business Print',
-  '/services/window-film': 'Window Film',
   '/mylar': 'Custom Mylar Packaging',
   '/contact': 'Contact',
   '/quote': 'Fast Quote',
