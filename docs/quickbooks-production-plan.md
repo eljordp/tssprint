@@ -50,3 +50,17 @@ Apple Pay is offered by the hosted invoice on eligible Safari / Apple Wallet set
 - Admin now reports scheduler status, most recent run and pending/review follow-up counts.
 - New invoices use the customer's name, payment due on the order date, and an unpaid memo that does not imply payment received. Existing invoice 3275 was not rewritten.
 - Public QuickBooks launch, GA4 acknowledgement/key and a real customer purchase remain separate checks. A worker HTTP 200 or unpaid invoice does not prove processor settlement or inbox delivery.
+
+
+## 2026-09-15 — public QuickBooks checkout launched
+
+- Application commit **9e28d59**, production deployment **dpl_D6eT1CwqrFV2mM7xBMrP1cCqv9mE**, https://tssprint-oyxci8he2-jordis-projects-94d2df39.vercel.app, promoted to **https://tssprint.com**. Production QUICKBOOKS_CHECKOUT_ENABLED=true is persisted for future releases.
+- Included customer-task cart changes through bfe11da / application 22eef01 before promotion. Preserve this combined release in future deployments.
+- Vercel file-upload quota blocked CLI uploads. The existing authorized GitHub integration built the committed task branch successfully without file uploads; main was not changed.
+- Live checkout-config returned enabled=true and quickBooksOnly=true. Live PayPal create-order and Square create-payment reject new charges with HTTP 409; Square config reports use_quickbooks. Existing completed-payment recovery remains available.
+- Deployed negative tests rejected a one-cent business-card price and an unapproved promo with checkout_validation_failed / HTTP 400, before invoice creation. Unauthorized worker request returned HTTP 401.
+- 67 scoped checkout, QuickBooks recovery/delivery and analytics tests passed; combined build and scoped lint passed.
+- Chrome verified the live sticker send-later flow reaches checkout with the item, AUTO10 discount, Total before tax and Review total with tax. Desktop and 390px mobile inspected; mobile document width equalled its viewport width, no horizontal overflow. Viewport override reset. No contact form submitted, invoice created or card charged during this launch check.
+- Existing unpaid verification invoice 3275 already showed $120.87 after discount + $12.99 sales tax = $133.86, with card and Apple Pay choices visible on Intuit's hosted page. This is not proof of a successful charge.
+- Unmapped categories remain Mylar Packaging, Event Displays and Table Covers. Their checkout requests a shop invoice rather than using an untaxed payment fallback. Taxability in QuickBooks alone does not establish the exact product mapping; finish those mappings using actual catalog evidence.
+- Remaining: GA4 User Data Collection Acknowledgement and server API secret; a specifically authorized real purchase, card/eligible Apple Pay completion, saved paid order, actual receipt arrival and GA4 report verification. Admin in the currently controlled Chrome profile shows its login screen; no credentials were changed.
