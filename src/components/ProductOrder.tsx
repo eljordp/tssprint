@@ -1,10 +1,13 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { motion } from 'framer-motion'
 import { ShoppingCart, Check, Plus, Sparkles, ArrowRight } from 'lucide-react'
 import { useCart } from '@/context/CartContext'
 import { getPricing, loadPricing, type ProductCategory, type ProductTier } from '@/lib/pricing'
 
+import ProductionArtwork, { type ArtworkSelection } from '@/components/ProductionArtwork'
+
 interface Props {
+  artworkFirst?: boolean
   categoryNames: string[]
   onCategoryChange?: (categoryName: string) => void
   checkoutMode?: 'cart' | 'estimate'
@@ -57,7 +60,7 @@ function createCartItemId(categoryName: string, size: string) {
   return `${categoryName}-${size}-${Date.now()}`
 }
 
-export default function ProductOrder({ categoryNames, onCategoryChange, checkoutMode = 'cart', onEstimateRequest }: Props) {
+export default function ProductOrder({ categoryNames, onCategoryChange, checkoutMode = 'cart', onEstimateRequest, artworkFirst = false }: Props) {
   const { addItem } = useCart()
   const [pricing, setPricing] = useState(() => getPricing())
 
@@ -80,6 +83,17 @@ export default function ProductOrder({ categoryNames, onCategoryChange, checkout
   const [selectedAddOns, setSelectedAddOns] = useState<Set<string>>(new Set())
   const [added, setAdded] = useState(false)
   const [activeGroup, setActiveGroup] = useState(0)
+
+  const [artwork, setArtwork] = useState<ArtworkSelection>({ status: 'idle' })
+  const orderRegion = useRef<HTMLDivElement>(null)
+  const [orderVisible, setOrderVisible] = useState(false)
+  useEffect(() => {
+    const target = orderRegion.current
+    if (!artworkFirst || !target) return
+    const observer = new IntersectionObserver(([entry]) => setOrderVisible(entry.isIntersecting))
+    observer.observe(target)
+    return () => observer.disconnect()
+  }, [artworkFirst])
 
   const category = categories[activeCategory]
   const item = category?.items[selectedItem]
@@ -124,14 +138,16 @@ export default function ProductOrder({ categoryNames, onCategoryChange, checkout
     })
   }
 
+  const artworkBlocked = artworkFirst && (artwork.status === 'uploading' || artwork.status === 'error')
   const handleAddToCart = () => {
+    if (artworkBlocked) return
     const addOns = category.addOns
       .filter(a => selectedAddOns.has(a.name))
       .map(a => ({ name: a.name, price: +(a.value * (isPerUnit ? effectiveQty : 1)).toFixed(2) }))
 
     addItem({
       id: createCartItemId(category.name, item.size),
-      name: `${item.size}`,
+      name: `${category.name} — ${item.size}`,
       category: category.name,
       artworkIntent: 'send_later',
       pieceCount: effectiveQty,
@@ -139,6 +155,7 @@ export default function ProductOrder({ categoryNames, onCategoryChange, checkout
       option: effectiveQty > 1 ? `${effectiveQty} pcs` : '1',
       price: cartBasePrice,
       quantity: 1,
+      ...(artworkFirst ? { artworkIntent: artwork.artwork ? 'uploaded' as const : 'send_later' as const, artwork: artwork.artwork } : {}),
       addOns: addOns.length > 0 ? addOns : undefined,
     })
     setAdded(true)
@@ -157,6 +174,8 @@ export default function ProductOrder({ categoryNames, onCategoryChange, checkout
   }
 
   const resetSelections = (catIdx: number) => {
+    if (catIdx === activeCategory) return
+    setArtwork({ status: 'idle' })
     setActiveCategory(catIdx)
     setSelectedItem(0)
     setSelectedQtyIndex(0)
@@ -172,12 +191,13 @@ export default function ProductOrder({ categoryNames, onCategoryChange, checkout
 
   return (
     <motion.div
+      ref={orderRegion}
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay: 0.2 }}
-      className="max-w-5xl mx-auto"
+      className={artworkFirst ? "max-w-6xl mx-auto pb-20 md:pb-0" : "max-w-5xl mx-auto"}
     >
-      <h2 className="text-2xl md:text-3xl font-black mb-2 text-center">
+      <h2 className={artworkFirst ? "sr-only" : "text-2xl md:text-3xl font-black mb-2 text-center"}>
         {checkoutMode === 'estimate' ? 'Build a Price Guide' : 'Shop Products'}
       </h2>
       {checkoutMode === 'estimate' && (
@@ -188,7 +208,7 @@ export default function ProductOrder({ categoryNames, onCategoryChange, checkout
 
       {/* Category tabs */}
       {categories.length > 1 && (
-        <div className="flex flex-wrap gap-2 justify-center mb-8">
+        <div className="flex flex-wrap gap-2 justify-center mb-5">
           {categories.map((cat, i) => (
             <button
               key={cat.name}
@@ -205,13 +225,19 @@ export default function ProductOrder({ categoryNames, onCategoryChange, checkout
         </div>
       )}
 
-      <div className="grid md:grid-cols-2 gap-8">
-        {/* Left: Product selection */}
+      <div className="grid md:grid-cols-2 gap-6 md:gap-8 items-start">
+        {artworkFirst && <div className="md:sticky md:top-24"><ProductionArtwork key={category.name} size={item.size} onChange={setArtwork} /></div>}
+        <div className={artworkFirst ? 'space-y-4' : 'contents'}>
+        {/* Product selection */}
         <div className="space-y-6">
           {/* Products - grouped by sub-category */}
           <div>
             <label className="block text-sm font-bold mb-3 uppercase tracking-wider">Select Product</label>
-            {hasGroups ? (
+            {artworkFirst ? (
+              <select aria-label="Select product" value={selectedItem} onChange={event => { setSelectedItem(Number(event.target.value)); setSelectedQtyIndex(0) }} className="w-full rounded-xl border border-border bg-card px-4 py-3 text-sm">
+                {category.items.map((product, index) => <option key={product.size} value={index}>{product.size}</option>)}
+              </select>
+            ) : hasGroups ? (
               <div className="space-y-4">
                 {/* Sub-category filter buttons */}
                 <div className="flex flex-wrap gap-2">
@@ -336,12 +362,12 @@ export default function ProductOrder({ categoryNames, onCategoryChange, checkout
 
           {/* Add-Ons */}
           {category.addOns.length > 0 && (
-            <div className="rounded-2xl border border-border bg-card p-5">
-              <div className="flex items-center gap-2 mb-4">
+            <details open={artworkFirst ? undefined : true} className="rounded-2xl border border-border bg-card p-4">
+              <summary className="flex items-center gap-2 cursor-pointer">
                 <Sparkles size={16} className="text-primary" />
-                <label className="text-sm font-bold uppercase tracking-wider">Premium Add-Ons</label>
-              </div>
-              <p className="text-xs text-muted-foreground mb-4">Enhance your order with premium upgrades.</p>
+                <span className="text-sm font-bold uppercase tracking-wider">Premium Add-Ons{selectedAddOns.size > 0 ? ` (${selectedAddOns.size})` : ""}</span><Plus size={14} className="ml-auto" />
+              </summary>
+              <p className="text-xs text-muted-foreground my-4">Enhance your order with premium upgrades.</p>
               <div className="grid grid-cols-2 gap-2">
                 {category.addOns.map(addon => (
                   <button
@@ -361,13 +387,14 @@ export default function ProductOrder({ categoryNames, onCategoryChange, checkout
                   </button>
                 ))}
               </div>
-            </div>
+            </details>
           )}
         </div>
 
-        {/* Right: Order summary */}
+        {/* Order summary */}
         <div>
           <div className="bg-card border border-border rounded-2xl p-6 sticky top-24">
+            {artworkFirst && <p className="text-xs text-muted-foreground mb-3">{artwork.artwork ? 'Production artwork attached' : artworkBlocked ? 'Finish uploading or choose send later' : 'Artwork: send after ordering'}</p>}
             <h3 className="font-bold text-lg mb-4">{checkoutMode === 'estimate' ? 'Estimate Summary' : 'Order Summary'}</h3>
             <div className="space-y-2 text-sm mb-6">
               <div className="flex justify-between">
@@ -419,8 +446,8 @@ export default function ProductOrder({ categoryNames, onCategoryChange, checkout
             ) : (
               <button
                 onClick={handleAddToCart}
-                disabled={bulk && customQty <= 0}
-                className={`btn-primary w-full ${added ? 'bg-green-600' : ''}`}
+                disabled={artworkBlocked || (bulk && customQty <= 0)}
+                className={`btn-primary w-full disabled:opacity-50 disabled:cursor-not-allowed ${added ? 'bg-green-600' : ''}`}
               >
                 {added ? (
                   <>Added to Cart! <Check size={18} /></>
@@ -431,7 +458,12 @@ export default function ProductOrder({ categoryNames, onCategoryChange, checkout
             )}
           </div>
         </div>
+        </div>
       </div>
+      {artworkFirst && orderVisible && <div className="md:hidden fixed bottom-0 left-0 right-0 z-40 bg-card border-t border-border px-4 pt-3 pb-[max(12px,env(safe-area-inset-bottom))] flex items-center gap-4">
+        <div className="shrink-0"><p className="font-bold text-lg">${totalPrice.toFixed(2)}</p><p className="text-xs text-muted-foreground">{effectiveQty} pcs · ${(totalPrice / effectiveQty).toFixed(2)}/ea</p></div>
+        <button type="button" onClick={handleAddToCart} disabled={artworkBlocked} className="btn-primary flex-1 justify-center disabled:opacity-50">{added ? 'Added!' : artwork.status === 'uploading' ? 'Uploading…' : 'Add to Cart'}</button>
+      </div>}
     </motion.div>
   )
 }

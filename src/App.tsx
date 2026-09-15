@@ -293,6 +293,7 @@ function ScrollManager() {
 
 function DesktopPrinterIntro() {
   const [show, setShow] = useState(false)
+  const { pathname } = useLocation()
 
   useEffect(() => {
     const desktop = window.matchMedia('(min-width: 1024px)')
@@ -305,7 +306,7 @@ function DesktopPrinterIntro() {
     return () => desktop.removeEventListener('change', update)
   }, [])
 
-  if (!show) return null
+  if (!show || pathname === '/services/business-print') return null
   return (
     <Suspense fallback={null}>
       <PrinterIntro />
