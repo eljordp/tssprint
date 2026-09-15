@@ -1,4 +1,5 @@
 import crypto from 'node:crypto'
+import { readCatalog } from './quickbooks-catalog.js'
 import { accountingRequest, configuration, getConnection } from './quickbooks-api.js'
 import { QuickBooksError, digest, validNonce } from './quickbooks-core.js'
 import { normalizeCheckout } from './paypal-api.js'
@@ -57,12 +58,12 @@ export async function prepareCheckout(body, rateKey, { db = supabaseFetch, norma
     if (!record.invoice_id && Date.now() - Date.parse(record.created_at) > 23 * 3600000) throw new QuickBooksError('creation_review_required', 409)
     if (!record.invoice_payload) {
       const [settings, products] = await Promise.all([
-        call('/preferences', ctx), call('/query', { ...ctx, body: { query: 'select * from Item where Active = true maxresults 100' } }),
+        call('/preferences', ctx), readCatalog(call, ctx),
       ])
       const prefs = settings.Preferences
       if (prefs?.CurrencyPrefs?.HomeCurrency?.value !== 'USD' || prefs?.TaxPrefs?.UsingSalesTax !== true || prefs?.TaxPrefs?.PartnerTaxEnabled !== true) throw new QuickBooksError('tax_configuration_required', 409)
       // Check every mapping before creating a contact or an invoice.
-      mappedInvoice(record.checkout, products.QueryResponse?.Item || [], '1', record.id)
+      mappedInvoice(record.checkout, products, '1', record.id)
       if (!record.customer_payload) {
         const c = record.checkout.customer
         await save({ customer_payload: { DisplayName: `${c.firstName} ${c.lastName} · Web ${record.id.slice(0, 8)}`, GivenName: c.firstName, FamilyName: c.lastName, PrimaryEmailAddr: { Address: c.email }, ...(c.phone ? { PrimaryPhone: { FreeFormNumber: c.phone } } : {}) } })
@@ -72,7 +73,7 @@ export async function prepareCheckout(body, rateKey, { db = supabaseFetch, norma
         if (!numericId(result.Customer?.Id)) throw new QuickBooksError('invalid_customer_response')
         await save({ customer_id: result.Customer.Id })
       }
-      await save({ invoice_payload: mappedInvoice(record.checkout, products.QueryResponse?.Item || [], record.customer_id, record.id) })
+      await save({ invoice_payload: mappedInvoice(record.checkout, products, record.customer_id, record.id) })
     }
     if (!record.invoice_id) {
       // Do not reissue an ambiguous creation after the provider deduplication

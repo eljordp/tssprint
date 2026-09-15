@@ -1,4 +1,5 @@
 import { accountingRequest, configuration, getConnection } from './quickbooks-api.js'
+import { readCatalog } from './quickbooks-catalog.js'
 import { QuickBooksError } from './quickbooks-core.js'
 
 // Admin-only, read-only discovery. Never infer a merchant's tax policy from an
@@ -9,7 +10,7 @@ export async function checkoutReadiness({ connection = getConnection, config = c
   const ctx = { environment: config().environment, realmId: current.realm_id }
   const [preferences, catalog] = await Promise.all([
     call('/preferences', ctx),
-    call('/query', { ...ctx, body: { query: 'select * from Item where Active = true maxresults 100' } }),
+    readCatalog(call, ctx),
   ])
   const prefs = preferences.Preferences || {}
   return {
@@ -21,7 +22,7 @@ export async function checkoutReadiness({ connection = getConnection, config = c
     automatedSalesTax: prefs.TaxPrefs?.PartnerTaxEnabled ?? null,
     onlinePayments: prefs.SalesFormsPrefs?.AllowOnlineCreditCardPayment ?? null,
     autoEmail: prefs.SalesFormsPrefs?.AutoEmailOnTxnCreation ?? null,
-    items: (catalog.QueryResponse?.Item || []).map(item => ({
+    items: catalog.map(item => ({
       id: item.Id, name: item.FullyQualifiedName || item.Name, type: item.Type,
       taxable: item.Taxable ?? null, incomeAccount: item.IncomeAccountRef?.name || null,
     })),
