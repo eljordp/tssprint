@@ -147,3 +147,42 @@ Public verification, September 14 evening, following the approximately 21:03 PDT
 - No order, purchase, customer message or new reminder automation was submitted by this public-page verification.
 
 The user requested a return to the original page work after the historical/font research. Research is complete for now; retain Noto Sans. Prioritize remaining product evidence, complete cart editing, and independently verified customer outcomes over further font exploration.
+
+## Approved cart plan shipped — September 14, 2026, 21:40 PDT
+
+User approved implementation of the [next-steps plan](customer-next-steps-plan-2026-09-14.md). This entry records the first completed release and remaining dependencies; it does not claim every operational acceptance test is complete.
+
+**Live release:** `6d95167`, including cart implementation `f34a656` and the other task's analytics `4d479fd` / contact-submit `ae3ab3b`. Artifact [tssprint-7cgh53fg4](https://tssprint-7cgh53fg4-jordis-projects-94d2df39.vercel.app), deployment `dpl_Av72JrmyMaNuyKsF8VLYhNUoBYpS`. Staged with production configuration without moving the main domain, then promoted after browser checks. `vercel inspect https://tssprint.com` confirmed READY on this artifact; coordination preserved the other task's admin/payment work.
+
+### Customer changes and evidence
+
+- Cart and checkout now edit saved business cards, flyers/door hangers, postcards, vehicle magnets and packaging. Versioned configuration uses existing catalog category/size keys; legacy carts are restored only when saved fields are unambiguous. Missing/unavailable configurations produce a recovery state. Sticker editing remains intact; quote-only services remain estimates.
+- Save replaces the same line, keeps batch count and artwork, and recalculates selected catalog quantities/upgrades. Cancel leaves the original intact. Changing variants removes incompatible add-ons with an explanation. All-batch subtotal is explicit during editing.
+- Packaging frontend product names now match the server's canonical names. Jar quantities use `pcs`; the product name specifies jars. Catalog minimums prevent quantities the server would reject.
+- Local UI: all five families added/edited/saved; multi-item preservation, two-batch cards, canceled edits, minimum-quantity blocking, variant/add-on changes, and checkout-to-edit return passed. Phone 390px inspected. This local Vite server has no serverless API runtime; its unavailable online-cart warning was not a production defect.
+- Staged actual storage upload: disposable `tss-cart-edit-test.svg` attached to card and pouch. Card 250/$65 → 500/$105; pouch 250/$312.50 → 500/$575, gloss/black retained. Save/reload preserved each attachment and one correct line; the other cart item stayed intact. Checkout showed subtotal $680, AUTO10 -$68, total $612. No contact details, email, quote or paid order submitted.
+- Live phone: card 250/$65 → edit 500/$105 → save/reload retained one correct item and $94.50 discounted total. Test line items cleared from local, stage and live carts. Uploaded test objects were not paid orders or staff submissions. Temporary viewport reset.
+- **50 relevant tests passed**, covering pricing, cart/recovery, product editing, checkout enforcement, analytics and contact-submit failure isolation. Lint passed; full build/prerender produced 31 public routes. Seven changed/adjacent live paths returned 200: business print, mylar, cart, checkout, stickers, signage, events. Routine HTTP checks do not imply payment completion.
+
+### Comparable rescore
+
+Customer-interface weighted score **7.60 → 7.75/10 (rounded 7.8)**. Keep all historical rubric weights. Cart/checkout rises **7.5 → 8.5** (15% weight) because the missing non-sticker editing path now works with retained options/artwork. All other dimensions are unchanged; no speed or conversion lift inferred. Current page judgments: business print **7.5 → 8**, packaging **6.5 → 7**, cart **7.5 → 8.5**, checkout interface **7 → 8**. Other page scores unchanged. Material gaps still constrain packaging; provider readiness remains separate. See the [updated page review](customer-page-review-2026-09-14.md).
+
+### Operational evidence reported by the coordinating task
+
+“Address preview readiness gaps” (`01a0a24f-078b-7a80-a884-c78c8ef65513`) reported this evening:
+
+- Correct GA4 property `541419462`, stream `G-4B9FXT1HQ9`, received `artwork_upload_started`, `artwork_upload_succeeded`, `add_to_cart`, `begin_checkout` and `delivery_method_selected`. Explicit sanitized UTM changes shipped in this release. No purchase event or transaction reconciliation was claimed. Testing developer filter remains Testing; do not call all staff/test filtering fully enforced.
+- Resend showed six existing controlled migration messages **Delivered**: customer/staff quote, customer/staff order, cart recovery and password reset. This is provider delivery evidence, not inbox-placement confirmation or proof that the recipient completed reset/restore. No duplicate emails sent this turn.
+- Authenticated admin SQL checks passed notes save/readback, missing-proof rejection, approved-state transition, actor audit and non-admin privacy; test transactions rolled back. These are not a completed paid customer order or permission for live status notifications.
+- Durable contact delivery queue work is separate and **not included** in `6d95167`. Do not describe it as deployed until that task supplies its own verified release.
+
+Historical live tracking **~3/10** is not a current measurement. There is now observed event receipt and provider-delivery evidence, but a fresh numeric operations score would need the remaining purchase, recovery-completion, attribution, exclusion and failure-path checks. No invented new overall tracking number.
+
+### Material follow-up and remaining dependencies
+
+Targeted Drive/Instagram review is in the [source addendum](asset-sources/marketing-drive-2026-09-14.md#targeted-follow-up--september-14-approximately-21312139-pdt). Food Packaging's 19 listed files remain PDFs; no new physical pouch sample selected. Instagram's Olivia baby-shower image is real signage, not a printed table cover. **A real backdrop source now exists:** [Assam Convention installation](https://www.instagram.com/thestickersmith/p/DagSItHEvWb/), identified by the shop caption as an 8×10-foot project. The Drive folder remains empty, but saying no shop backdrop evidence exists would now be wrong. Browser media export failed; no new backdrop asset was published from that clip.
+
+Shop questions are pending for base pouch print method and standard paper/sticker stock. Keep unconfirmed claims out of copy. Remaining actual-product images: matched stock/finish samples, printed pouch, multi-design sheet, postcard/magnet and printed table cover; an original Assam clip/still can cover the backdrop without a new shoot. No new generated product photos, font work, approval portal or promotional video.
+
+Still unverified: controlled paid purchase and invoice/receipt reconciliation; actual inbox placement and cart/reset completion; live expired-artwork/network-error exercises; measured slow-network/real-device performance and full accessibility; business-approved policy details and fulfillment outcomes. These remain explicit plan checkpoints rather than silently marked complete.

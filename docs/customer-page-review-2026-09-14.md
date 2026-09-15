@@ -1,8 +1,10 @@
 # Customer page review — September 14, 2026
 
-This is a customer-facing review of the whole public site. Scores are editorial judgments of clarity, useful imagery and the next step, not conversion measurements. The initial summary of this pass was **about 7/10 overall / 7.5/10 for marketing and product pages**. After recovering the September 8 rubric, the comparable September 14 customer-interface score is **7.6/10**, versus **5.75/10 originally** and **7.35/10 for the September 8 preview**. The earlier rounded summary was not a calculation using the historical weights and must not be read as evidence that the site deteriorated. See the [ledger's dated scoring history and common rubric](sticker-smith-ledger.md#dated-score-history-and-comparable-rubric).
+This is a customer-facing review of the whole public site. Scores are editorial judgments of clarity, useful imagery and the next step, not conversion measurements. The initial summary of this pass was **about 7/10 overall / 7.5/10 for marketing and product pages**. After recovering the September 8 rubric, the pre-cart-release September 14 customer-interface score was **7.6/10**, versus **5.75/10 originally** and **7.35/10 for the September 8 preview**. The earlier rounded summary was not a calculation using the historical weights and must not be read as evidence that the site deteriorated. See the [ledger's dated scoring history and common rubric](sticker-smith-ledger.md#dated-score-history-and-comparable-rubric).
 
 Completed payments, recovery email delivery and measured tracking remain separate gates. The historical **3/10 live tracking score and 5.6/10 prepared tracking implementation score are historical assessments, not fresh September 14 measurements**. This page pass does not re-certify that system or override later operational evidence from the Intuit/tracking task.
+
+After the approved cart release `6d95167` at approximately 21:35 PDT, the comparable interface score is **7.75/10 (rounded 7.8)**. Only the cart/checkout rubric dimension rises from 7.5 to 8.5; the other weighted dimensions stay unchanged. This is an editorial score, not a paid-order or conversion result.
 
 ## Every public page
 
@@ -17,10 +19,10 @@ Completed payments, recovery email delivery and measured tracking remain separat
 | Product labels `/custom-labels` | 7.5/10 | Correct roll starting point; fixed the same clipped mobile controls. |
 | Services `/services` | 8/10 | Service choices now precede process video. Actual vehicle and event photographs replace generic category imagery. |
 | Signage `/services/business-signage` | 8/10 | Four visual product choices, useful selected example, scope explanation and quote handoff. Interior glass photo is accurately labeled; a finished wall mural photo would improve this further. |
-| Events `/services/event-displays` | 7.5/10 | Real canopy/banner setup plus labeled event mockup. Frame versus graphic-only and accessories are clearer. Still need finished backdrop/table-cover photographs. |
-| Business print `/services/business-print` | 7.5/10 | Actual printed cards, labeled flyer artwork and simple format illustrations. Clear subtotal and finish explanations. Need confirmed paper weights/base finishes and photographs of postcards/magnets. |
+| Events `/services/event-displays` | 7.5/10 | Real canopy/banner setup plus labeled event mockup. Frame versus graphic-only and accessories are clearer. Actual Assam Convention backdrop footage found on shop Instagram; a usable original still is not yet installed. Finished table-cover photography remains needed. |
+| Business print `/services/business-print` | 8/10 | Actual printed cards, labeled flyer artwork and simple format illustrations. Saved size, quantity, upgrades and artwork can now be edited without duplicating the cart line. Need confirmed paper weights/base finishes and photographs of postcards/magnets. |
 | Vehicles `/services/vehicle-graphics` | 8/10 | Real vehicle/installation photos before upload, clear coverage and project-specific estimate. No unsupported stock guarantees. |
-| Packaging `/mylar` | 6.5/10 | Owner-supplied artwork replaces empty placeholder. Product and preview agree; foil has one charged option and invalid quantity is blocked. Physical pouch/finish photographs and exact base print-method specifications remain needed. |
+| Packaging `/mylar` | 7/10 | Owner-supplied artwork replaces empty placeholder. Saved finish/color, quantity and artwork editing works; quantity minimums and canonical server-facing product naming now agree. Physical pouch/finish photographs and exact base print-method specifications remain needed. |
 | Projects `/projects` | 8/10 | Useful named work and filters. Keep clearly separating finished work, artwork and mockups. |
 | Safeway `/case-studies/safeway-fleet-graphics` | 7.5/10 | Direct URL now generated for deployment. Removed unverified fleet count, material model, timing and rating. Actual truck and door-install photographs remain. |
 | Bhogal `/case-studies/bhogal-construction-truck-wrap` | 7.5/10 | Actual truck branding described without fabricated lead/ROI and full-wrap claims. Historical slug retained for existing links. |
@@ -31,8 +33,8 @@ Completed payments, recovery email delivery and measured tracking remain separat
 | Referral `/referral` | 6.5/10 | Honest shop-confirmed request instead of browser-only codes and apparent earnings. Durable code generation, conversion tracking and payout workflow still need implementation. |
 | Help `/order-help` | 8/10 | Direct proof-by-email instructions and pickup guidance. Formal policy drafts need business review separately. |
 | Account `/account` | 7/10 | Login/recovery entry readable. Referral tab no longer presents local browser data as verified earnings. Delivery of password-reset email and signed-in order history not certified by this public UI pass. |
-| Cart `/cart` | 7.5/10 | Sticker edit preserves one item and updates finish/quantity/price. Batch versus pieces clear. Secondary products can change batches or be removed; a full saved-configuration editor for every product is a remaining improvement. |
-| Checkout `/checkout` | 7/10 UI only | Order summary, edit/remove and pickup choice are readable. Empty cart guard works. No payment was submitted; Intuit and provider readiness belong to the separate task. |
+| Cart `/cart` | 8.5/10 | Sticker editing retained; business cards, flyers, postcards, magnets and packaging now edit configuration on the same line. Batches, attachments and other items are preserved. Cancel and minimum quantity checks passed. |
+| Checkout `/checkout` | 8/10 UI only | All five supported non-sticker families link back to their saved editor and return to checkout. Staged card/pouch totals and retained artwork are readable. Empty cart guard works. No payment was submitted; Intuit and provider readiness belong to the separate task. |
 | Confirmation `/order-confirmation` | 7.5/10 fallback | Missing-reference state sends customers to their order history. Paid confirmation/email reconciliation requires a completed payment test. |
 | Hayward `/hayward` | 7.5/10 | Actual shop photograph, appointment pickup, consistent minimum/timing. Removed unsupported walk-in and same-day promises. |
 | Oakland `/oakland` | 7.5/10 | Service-specific request handoff; removed “no hard minimum” contradiction. |
@@ -65,7 +67,15 @@ Existing short entrances and scroll reveals already cover the marketing pages. A
 1. Finish and verify real payment/provider setup, then paid order → confirmation → admin → invoice/reconciliation → customer email. Do not call Apple Pay/PayPal/Intuit ready from a logo or button alone.
 2. Check real GA4/ad-platform event receipt, consent, source attribution and abandoned-cart delivery with identifiable test evidence.
 3. Confirm exact paper stocks, base packaging print method, material availability and product-specific lead times; obtain matched finished-product photos where the ledger identifies gaps.
-4. Implement durable referrals before restoring instant codes/earnings, and a full configuration editor for non-sticker cart items.
+4. Keep automated referral earnings deferred; full configuration editing for current purchasable non-sticker families shipped in `6d95167`.
 5. Review the existing policy drafts with the business owner and publish the approved terms/privacy language.
 
 These are explicit follow-ups, not claims that the audit is complete end to end at the payment or business-operations layer.
+
+
+### Cart-release evidence — approximately 21:20–21:37 PDT
+
+- Local: all five families add/edit/save without duplicates; two-batch card keeps 1,000 pieces after changing to 500 per batch; cancel leaves original unchanged. Pouch options restore, quantities below the catalog minimum disable saving, switching to jars clears incompatible upgrades, and editing from checkout returns there.
+- Staged `6d95167`: uploaded disposable SVG to a card and a pouch. Card 250/$65 → 500/$105; pouch 250/$312.50 → 500/$575 with gloss/black preserved. Both filenames survived save and reload, other items stayed intact, and checkout displayed $680 subtotal / $68 discount / $612 total. No payment was submitted.
+- Live 390px: card 250/$65 → edit 500/$105 → save/reload, one correct line and $94.50 after 10% discount. Test carts were emptied; temporary viewport reset. Saved upload objects were not turned into orders or sent to staff.
+- 50 combined pricing/cart/editing/checkout/analytics/contact tests pass; lint and full 31-route prerender pass. Earlier test counts above describe earlier revisions.

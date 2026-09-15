@@ -40,3 +40,21 @@ Remaining material-evidence gaps: matched matte/gloss/clear/paper/raised-finish 
 Follow-up: [material photographs](material-photographs-2026-09-14.md) adds credited real reference photos to the finish guide after the owner rejected generated samples. These references improve comparison but do not establish the shop’s exact stock.
 
 Correction, September 14 evening audit: Elevated 925 is a promotional composite, not a finished-packaging photograph. Candy Shock and Atomic Shock are design mockups. Updated captions distinguish these from physical work.
+
+
+## Targeted follow-up — September 14, approximately 21:31–21:39 PDT
+
+This is a focused gap review, not a second complete library audit.
+
+- Reopened [Food Packaging Design](https://drive.google.com/drive/u/1/folders/1dCPCKWu1hS3CZ5bNfCHSYttlmASjTqBv): the 19 listed files are PDFs, including Olive Land variants, Thiq Cookies, Trafficantes, Trap Jerky and Zeamoss. No new physical-pouch photograph was selected. File extensions alone do not prove every PDF lacks embedded photos; not all were reopened visually.
+- Opened [The Sticker Smith Instagram](https://www.instagram.com/thestickersmith/), then inspected the actual posts rather than accepting generated image descriptions. [Olivia's baby-shower post](https://www.instagram.com/p/DZ-yqITydPQ/) is real entry signage; the visible tablecloth is unbranded staging, so reject it as evidence of a printed table cover.
+- **Correct the backdrop gap:** [Assam Convention post](https://www.instagram.com/thestickersmith/p/DagSItHEvWb/) shows installed backdrop and event wayfinding footage. Shop caption identifies an 8×10-foot backdrop printed/installed for the 47th Assam Convention at DoubleTree San Jose. This establishes a real shop project, not the exact hardware/material included in today's catalog price. It was published July 7; reviewed September 14. The prior statement that Drive's Backdrops folder was empty remains accurate, but there is now an identified Instagram source outside that folder.
+- Browser export of the observed video fragments failed. No screenshot composite, generated texture or low-quality replacement was published. Source clip/original frame remains needed for a clean website crop; the source URL is retained here.
+
+### One consolidated shop list
+
+**Facts:** base pouch price (printed label on pouch versus direct print); standard card/postcard paper weight, finish and printed sides; actual sticker stock/product names and available laminates; hardware included with each backdrop/table-cover choice; lead times by product after approval. Check catalog/admin records first; no technical claim should be inferred from appearance.
+
+**Photographs:** same design on actual matte and gloss stock, plus clear/paper/raised finish if offered; one finished printed pouch with detail; one multi-design sheet; actual postcard/magnet; printed table cover. The Assam Convention original clip/still can close the backdrop gap, so a new backdrop shoot is not necessary if that source is available. Daylight, neutral background, full product plus a close-up; preserve real surface reflections. No new AI photos or promotional video are required.
+
+Current selection remains the already-labeled site artwork/reference images until genuine matching replacements are available. Do not claim these source gaps are closed merely because a related image exists.

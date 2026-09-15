@@ -1,6 +1,6 @@
 # Sticker Smith — next customer improvements
 
-Created September 14, 2026, 21:09 PDT. Status: proposed implementation sequence; this turn changes documentation only. Audience: Jordan and the two existing website tasks. Canonical plan lives here, linked from the [Sticker Smith ledger](sticker-smith-ledger.md). This continues the deployed page work rather than creating a new redesign.
+Created September 14, 2026, 21:09 PDT. Status: approved and in progress. Cart editing is deployed and verified; remaining material facts and operational outcomes are tracked below. Audience: Jordan and the two existing website tasks. Canonical plan lives here, linked from the [Sticker Smith ledger](sticker-smith-ledger.md). This continues the deployed page work rather than creating a new redesign.
 
 ## Starting point and ownership
 
@@ -85,3 +85,11 @@ Durable automated referral earnings/payouts, new proof portals, another font sea
 4. Combined release verified, ledger updated, remaining unknowns and comparable ratings reported.
 
 Each checkpoint gets a concise progress update. Planning approval does not mean an outcome has already been implemented or tested.
+
+
+## Approved-plan progress — September 14, 21:40 PDT
+
+- **Checkpoint 1 shipped:** combined release `6d95167`, deployment `dpl_Av72JrmyMaNuyKsF8VLYhNUoBYpS`, verified at tssprint.com. Business cards, flyers/door hangers, postcards, magnets and packaging now restore/edit their saved configuration; existing sticker editing is retained. Staged real uploads retained card/pouch artwork through edit, save and reload. Local multi-batch, cancel, invalid minimum and all-five-family checks passed. Live phone card edit/reload passed. Expired artwork access and network-failure recovery were not separately exercised in the live browser.
+- **Checkpoint 2 reviewed, partially blocked on shop facts/assets:** targeted food-packaging Drive review still shows 19 PDFs, no physical-pouch photo selected. Found actual Assam Convention backdrop installation on the shop's Instagram; original video export failed, so it is a sourced candidate, not a newly installed website asset. Consolidated remaining requirements are in the material-source addendum. Questions sent for base pouch print method and paper/sticker stock facts; no specifications invented.
+- **Checkpoint 3 coordinated:** the other task confirmed live GA4 receipt for upload, add-to-cart, begin-checkout and delivery-selection events; six existing controlled migration emails show Delivered in Resend. That does not establish inbox placement, successful cart-link/reset completion or a paid transaction. Its authenticated admin SQL exercises passed and rolled back. Durable contact delivery work is separate and was not included in this release.
+- **Checkpoint 4 release verified:** 50 relevant tests, lint and 31-route prerender passed. Seven changed/adjacent live paths returned 200; production alias resolves to the tested deployment. Customer-interface score is now 7.75/10 (rounded 7.8); paid-flow, real-device performance, full accessibility and fulfillment remain unverified separately.

@@ -1,6 +1,6 @@
 # Material comparison photography
 
-Audience: sticker customers comparing finishes. Replaces the repeated unrelated bottle-label photograph in MaterialGuide and adds photographs to the comparison cards. Canonical delivery assets: `src/assets/optimized/materials/`. Status: local build and browser verification passed; production promotion pending.
+Audience: sticker customers comparing finishes. Replaces the repeated unrelated bottle-label photograph in MaterialGuide and adds photographs to the comparison cards. Canonical delivery assets: `src/assets/optimized/materials/`. Status: these reference assets are included in the live combined release `6d95167` (September 14); earlier local/browser checks are documented below. Exact TSS stock and reuse-rights confirmation remain separate from source attribution.
 
 ## Direction and feedback
 
