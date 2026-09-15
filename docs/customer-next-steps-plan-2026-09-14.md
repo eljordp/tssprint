@@ -223,3 +223,8 @@ Next ordered work:
 2. Make begin_checkout wait for resolved automatic discounts. Decide GA4 test-filter activation after validating exclusions; do not interpret QA-contaminated sample counts as conversion rates.
 3. Complete the payment task's GA4 acknowledgement/server measurement setup, then an explicitly authorized real paid invoice → saved paid order → inbox receipt → one purchase event. Invoice3275 is still unpaid; no charge performed here.
 4. Broaden real-device, keyboard and screen-reader checks beyond the verified shared navigation/cart paths, then finish exact material/stock evidence. Keep602-entry review deferred.
+
+
+### September 15 morning update
+
+Mobile responsive-photo delivery, route preloads and promo-settled checkout are live in dpl_Ah9LeaFxJynL9tcfLLotjntTDYNr. Measured mobile PageSpeed is 71 stickers / 72 signage, so remaining performance work is startup rendering/unused JS, not another image redesign. See accessibility-performance-2026-09-15.md for evidence and cautions. GA4 secret creation/configuration and a real paid invoice/receipt/purchase reconciliation remain pending. Existing invoice3275 is still unpaid. The failed newer df89084 product-tax mappings are not included in this release. Do not repeat completed cart/reset tests or begin the deferred 602-entry Drive sweep.
