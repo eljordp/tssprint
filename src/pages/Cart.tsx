@@ -27,16 +27,19 @@ export default function Cart() {
 
   const [quoteOpen, setQuoteOpen] = useState(false)
   const [quoteEmail, setQuoteEmail] = useState('')
+  const [quoteError, setQuoteError] = useState('')
   const [quoteStatus, setQuoteStatus] = useState<'idle' | 'sending' | 'sent' | 'error'>('idle')
 
   const handleQuote = async (e: FormEvent) => {
     e.preventDefault()
-    if (!quoteEmail) return
+    if (!quoteEmail || quoteStatus === 'sending') return
+    setQuoteError('')
     setQuoteStatus('sending')
     try {
       await emailCart(quoteEmail)
       setQuoteStatus('sent')
-    } catch {
+    } catch (error) {
+      setQuoteError(error instanceof Error ? error.message : 'Could not send the link. Your items remain in this browser.')
       setQuoteStatus('error')
     }
   }
@@ -259,8 +262,8 @@ export default function Cart() {
                         )}
                       </button>
                       {quoteStatus === 'error' && (
-                        <p className="text-xs text-destructive text-center">
-                          Couldn't send — try again or email thestickersmith@gmail.com.
+                        <p role="alert" className="text-xs text-destructive text-center">
+                          {quoteError}
                         </p>
                       )}
                     </form>
