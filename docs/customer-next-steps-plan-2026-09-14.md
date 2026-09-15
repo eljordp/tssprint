@@ -213,3 +213,13 @@ Live release **dpl_BXbVEVKWJ6L5YL3vkieFZN8NcYZE**, combined application **22eef0
 Admin → Reports → Sales & traffic → Cart recovery now separates Customer carts and Test carts. Expand Recovery details for cart/source IDs, email acceptance, restoration time and payment reference. Test status remains sticky on later saves and is inherited through restoration. The second controlled email source/destination are reconciled in live admin (accepted23:50:06, restored23:51:27 September14; no payment). The first source's failed restoration sync remains unproven; detailed limits and IDs are in the ledger. Customer list still includes old explicitly unverified/empty records, which must not be interpreted as a clean abandonment history.
 
 Next: GA4 receipt/attribution and missing milestone verification; authorized full payment/receipt/admin reconciliation after payment readiness; broader accessibility/device/performance and exact material evidence. Keep intentional entry gate, direct email proof process and the deferred602-entry Drive review unchanged. Current ratings remain customer7.75, tracking6 provisional, admin7.5 provisional.
+
+## Execution update — September 15, 01:33 PDT
+
+GA4 receipt and UTM/item attribution independently verified. Shared keyboard/contrast/font fixes deployed in ddca322, preserving the current public QuickBooks checkout. Sticker automated accessibility95→100; desktop performance92→95; mobile performance remains68. Signage mobile69/100 with10.1sLCP. See [dated audit](./accessibility-performance-2026-09-15.md) for measurements, caveats and verification.
+
+Next ordered work:
+1. Improve responsive image delivery and initial route rendering, prioritizing signage's LCP image and sticker thumbnails; compare new lab results without confusing them with the overall customer score.
+2. Make begin_checkout wait for resolved automatic discounts. Decide GA4 test-filter activation after validating exclusions; do not interpret QA-contaminated sample counts as conversion rates.
+3. Complete the payment task's GA4 acknowledgement/server measurement setup, then an explicitly authorized real paid invoice → saved paid order → inbox receipt → one purchase event. Invoice3275 is still unpaid; no charge performed here.
+4. Broaden real-device, keyboard and screen-reader checks beyond the verified shared navigation/cart paths, then finish exact material/stock evidence. Keep602-entry review deferred.
