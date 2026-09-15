@@ -39,7 +39,7 @@ export default async function handler(req, res) {
       if (action === 'checkout') {
         if (!checkoutEnabled()) {
           // Admin can verify the prepared flow before public availability.
-          await requireAdmin(req)
+          try { await requireAdmin(req) } catch { throw new QuickBooksError('admin_access_required', 403) }
         }
         const ip = String(req.headers['x-forwarded-for'] || req.socket?.remoteAddress || 'unknown').split(',')[0].trim()
         result = await prepareCheckout(body, digest(`${configuration().key}:${ip}`))

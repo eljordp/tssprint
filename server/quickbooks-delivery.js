@@ -1,16 +1,26 @@
+import { brandedEmail } from './email-layout.js'
 import { supabaseFetch } from './square-api.js'
 import { markCartPaid } from './cart-api.js'
 const needsSendReview = job => !!job.first_send_at && Date.now() - Date.parse(job.first_send_at) >= 23 * 3600000
 const escape = value => String(value || '').replace(/[&<>"']/g, c => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' })[c])
 export function orderEmailPayload(row, kind, env) {
   const c = row.checkout.customer
-  const lines = row.checkout.items.map(item => `<li>${escape(item.category || item.name)} · ${escape(item.option)} · ${escape(item.size)} · ${item.quantity} batch(es)${item.addOns.length ? ` · ${escape(item.addOns.map(a => a.name).join(', '))}` : ''}</li>`).join('')
-  const details = `<p>Order ${escape(row.order_id)} · QuickBooks invoice ${escape(row.invoice_number)}</p><ul>${lines}</ul><p>Subtotal: $${row.checkout.subtotal.toFixed(2)}<br>Discount: $${row.checkout.discount.toFixed(2)}<br>Tax: $${Number(row.tax).toFixed(2)}<br>Total: $${Number(row.total).toFixed(2)}</p>`
-  const next = '<p>Payment is recorded in QuickBooks. Artwork review, proof approval and production are separate steps. Nothing prints until the proof is approved.</p>'
-  if (kind === 'staff_email') return { from: env.FROM_EMAIL, to: (env.CONTACT_NOTIFICATION_EMAILS || env.CONTACT_OWNER_EMAIL || 'mrjxrdip@icloud.com,thestickersmith@gmail.com').split(',').map(s => s.trim()).filter(Boolean), reply_to: c.email,
-    subject: `Paid website order ${row.order_id}`, html: `<h2>Website order received</h2><p>${escape(c.firstName)} ${escape(c.lastName)} · ${escape(c.email)}</p>${details}${next}<p><a href="https://tssprint.com/admin?tab=orders">Review order and production artwork</a></p>` }
-  return { from: env.FROM_EMAIL, to: [c.email], reply_to: 'thestickersmith@gmail.com', subject: `Your Sticker Smith order ${row.order_id}`,
-    html: `<h2>Thanks, ${escape(c.firstName)}!</h2>${details}${next}<p>${c.deliveryMethod === 'pickup' ? 'Pickup: 23673 Connecticut St, Hayward. Wait for your ready-for-pickup message.' : `Delivery: ${escape(c.address)}, ${escape(c.city)}, ${escape(c.state)} ${escape(c.zip)}`}</p><p>If you chose to send artwork later or need design help, reply to this email with your order reference.</p>` }
+  const cash = value => `$${Number(value).toFixed(2)}`
+  const lines = row.checkout.items.map(item => `<tr><td style="padding:14px 0;border-bottom:1px solid #e8ecef;font-size:14px;line-height:22px"><strong style="color:#15191d">${escape(item.category || item.name)}</strong><br>${escape(item.option)} · ${escape(item.size)}${item.quantity > 1 ? ` · ${item.quantity} batches` : ''}${item.addOns.length ? `<br>${escape(item.addOns.map(a => a.name).join(', '))}` : ''}</td><td valign="top" align="right" style="padding:14px 0 14px 12px;border-bottom:1px solid #e8ecef;white-space:nowrap;font-size:14px;font-weight:bold">${cash(item.unitPrice * item.quantity)}</td></tr>`).join('')
+  const details = `<p style="margin:0 0 20px;font-size:13px;color:#68747d;overflow-wrap:anywhere">Invoice ${escape(row.invoice_number)}<br>Order ${escape(row.order_id)}</p><table role="presentation" width="100%" cellspacing="0" cellpadding="0">${lines}</table><p style="margin:20px 0;font-size:14px;line-height:24px">Subtotal: ${cash(row.checkout.subtotal)}<br>Discount: −${cash(row.checkout.discount)}<br>Tax: ${cash(row.tax)}</p><p style="margin:0 0 28px;padding:16px;background:#edf8fc;border-radius:8px;font-size:20px;color:#101418"><strong>Total: ${cash(row.total)}</strong></p>`
+  const next = '<h2 style="margin:24px 0 8px;font-size:18px;line-height:24px;color:#101418">What happens next</h2><p style="margin:0 0 16px">We review your artwork and send a proof for approval. Production starts after you approve it.</p>'
+  const staff = kind === 'staff_email'
+  const body = staff
+    ? `<p style="margin:0 0 20px">${escape(c.firstName)} ${escape(c.lastName)} · ${escape(c.email)}</p>${details}${next}`
+    : `<p style="margin:0 0 20px">Thanks, ${escape(c.firstName)}. Your payment is recorded in QuickBooks and your order is saved.</p>${details}${next}<p style="margin:0 0 16px">${c.deliveryMethod === 'pickup' ? 'Pickup is at 23673 Connecticut St, Hayward. Wait for your ready-for-pickup message.' : `Delivery: ${escape(c.address)}, ${escape(c.city)}, ${escape(c.state)} ${escape(c.zip)}`}</p><p style="margin:0">Sending artwork later or need design help? Reply with your order reference and we’ll help.</p>`
+  return { from: env.FROM_EMAIL,
+    to: staff ? (env.CONTACT_NOTIFICATION_EMAILS || env.CONTACT_OWNER_EMAIL || 'mrjxrdip@icloud.com,thestickersmith@gmail.com').split(',').map(s => s.trim()).filter(Boolean) : [c.email],
+    reply_to: staff ? c.email : 'thestickersmith@gmail.com',
+    subject: staff ? `Website order received · Invoice ${row.invoice_number}` : `Order received · The Sticker Smith · ${row.invoice_number}`,
+    html: brandedEmail({ preview: `Payment recorded. Artwork review and proof approval come next. Invoice ${row.invoice_number}.`, eyebrow: 'Payment recorded', title: staff ? 'New website order.' : 'Your print project is in.', body,
+      actionUrl: staff ? 'https://tssprint.com/admin?tab=orders' : `mailto:thestickersmith@gmail.com?subject=${encodeURIComponent(`Order ${row.order_id}`)}`,
+      actionLabel: staff ? 'Review order & artwork' : 'Contact us about this order' }),
+  }
 }
 export async function processQuickBooksDelivery(checkoutId = null, { db = supabaseFetch, send = fetch, env = process.env, cart = markCartPaid } = {}) {
   const jobs = await db('/rest/v1/rpc/claim_quickbooks_delivery', { method: 'POST', body: JSON.stringify({ p_checkout_id: checkoutId }) })
@@ -29,8 +39,8 @@ export async function processQuickBooksDelivery(checkoutId = null, { db = supaba
       if (job.kind === 'analytics') {
         if (!row.checkout.ga4) { await patch({ status: 'completed', last_error: 'No eligible GA4 client identity; no analytics event sent.' }); continue }
         if (!env.GA4_API_SECRET || !/^G-[A-Z0-9]+$/.test(env.VITE_GA4_MEASUREMENT_ID || '')) throw new Error('GA4 server configuration missing')
-        if (Date.now() - Date.parse(row.updated_at) > 70 * 3600000) { await patch({ status: 'needs_review', last_error: 'Payment is outside the GA4 backdating window.' }); continue }
-        const payload = job.request_payload || { client_id: row.checkout.ga4.clientId, timestamp_micros: Date.parse(row.updated_at) * 1000, events: [{ name: 'purchase', params: {
+        if (Date.now() - Date.parse(job.created_at) > 70 * 3600000) { await patch({ status: 'needs_review', last_error: 'Payment is outside the GA4 backdating window.' }); continue }
+        const payload = job.request_payload || { client_id: row.checkout.ga4.clientId, timestamp_micros: Date.parse(job.created_at) * 1000, events: [{ name: 'purchase', params: {
           transaction_id: row.order_id, currency: 'USD', value: row.checkout.total, tax: Number(row.tax), shipping: 0,
           ...(row.checkout.ga4.sessionId ? { session_id: Number(row.checkout.ga4.sessionId) } : {}), engagement_time_msec: 1,
           ...(row.checkout.promoCode ? { coupon: row.checkout.promoCode } : {}),

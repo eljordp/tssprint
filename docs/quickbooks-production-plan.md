@@ -23,3 +23,20 @@ Customers review an itemized, server-priced order, continue to Intuit's hosted i
 - https://developer.intuit.com/app/developer/qbo/docs/api/accounting/most-commonly-used/invoice
 
 Apple Pay is offered by the hosted invoice on eligible Safari / Apple Wallet setups. An OAuth connection does not establish that the merchant can collect a card payment.
+
+## Verification checkpoint — September 14, 2026 (late evening)
+- Applied private checkout, delivery queue, request-limit and webhook-event tables to production Supabase.
+- Fixed the live `orders_payment_status_check` to accept accounting `payment_recorded`, separate from processor `captured`.
+- Verified actual database atomic finalization, four follow-up jobs, duplicate finalization, and denied public access in a rollback-only transaction. No fixture orders retained and no emails sent.
+- Missing attribution now defaults to an empty object, preserving orders when analytics is unavailable.
+- Saved Intuit production Invoice and Payment subscriptions with CloudEvents enabled and stored the webhook verifier as a protected production Vercel secret. Delivery still needs a deployed endpoint and an observed provider event.
+- Local tests: 33 QuickBooks tests and 23 checkout/analytics tests passed; TypeScript/build and scoped lint passed before the final email markup review.
+- Prepared branded QuickBooks receipts using the existing white script logo, individual line prices, sales tax, total, and proof-approval next steps. Local Chrome preview inspected.
+- User supplied quarterly filing and January period start. Existing agency start date January 1, 2012 and accrual method were preserved. No tax rate was hardcoded.
+
+### Remaining release gates
+- Deploy latest combined customer/recovery changes with this checkout patch; public QuickBooks flag remains off during staff verification.
+- Inspect a real unpaid website invoice and Intuit payment page; confirm tax and card availability. No production invoice or charge created at this checkpoint.
+- Configure and verify GA4 Measurement Protocol purchase delivery; transport acceptance alone is not report verification.
+- Resolve existing PayPal/Square paths that currently omit separate tax before presenting them beside taxed QuickBooks checkout.
+- Complete catalog mappings for remaining purchasable categories, then authorized real card payment, eligible-device Apple Pay, receipt and paid-order checks.

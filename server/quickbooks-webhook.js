@@ -42,7 +42,9 @@ export async function processWebhookEvents() {
     try {
       let invoiceIds = [event.entity_id]
       if (event.entity === 'payment') {
-        const data = await accountingRequest(`/payment/${event.entity_id}`, ctx)
+        let data = {}
+        try { data = await accountingRequest(`/payment/${event.entity_id}`, ctx) }
+        catch (error) { if (error.providerStatus !== 404) throw error }
         invoiceIds = [...new Set((data.Payment?.Line || []).flatMap(line => (line.LinkedTxn || []).filter(link => link.TxnType === 'Invoice' && id(link.TxnId)).map(link => String(link.TxnId))))]
         // A deleted/unlinked payment can still belong to a previously paid order.
         const previous = await supabaseFetch(`/rest/v1/quickbooks_checkouts?realm_id=eq.${ctx.realmId}&payment_ids=cs.${encodeURIComponent(JSON.stringify([event.entity_id]))}&select=invoice_id`)

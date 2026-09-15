@@ -32,7 +32,12 @@ export default function PaymentStatus() {
     if (!invoice?.orderId || invoice.status !== 'payment_recorded' || cleared.current) return
     cleared.current = true
     // A customer may have built a different cart while this invoice was open.
-    if (items.length === invoice.items.length && items.every(item => invoice.items.some(saved => saved.id === item.id && saved.quantity === item.quantity && saved.price === item.price))) { clearCart(); void markConverted() }
+    if (items.length === invoice.items.length && items.every(item => invoice.items.some(saved =>
+      saved.id === item.id && saved.quantity === item.quantity && saved.price === item.price &&
+      saved.option === item.option && saved.size === item.size &&
+      JSON.stringify(saved.addOns) === JSON.stringify(item.addOns) &&
+      JSON.stringify(saved.artwork) === JSON.stringify(item.artwork)
+    ))) { clearCart(); void markConverted() }
     try { sessionStorage.removeItem('tss_qb_attempt'); sessionStorage.removeItem('tss_checkout_draft') } catch { /* Order remains on the server. */ }
   }, [invoice, items, clearCart, markConverted])
   const paid = invoice?.status === 'payment_recorded' && !!invoice.orderId

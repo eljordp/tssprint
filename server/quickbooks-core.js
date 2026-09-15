@@ -67,7 +67,9 @@ export async function readIntuitResponse(response, operation, logger = console.i
       : response.status === 401 ? 'unauthorized'
       : response.status === 429 ? 'rate_limited'
       : response.status >= 500 ? 'provider_unavailable' : 'provider_request_failed'
-    throw new QuickBooksError(code, response.status === 429 ? 429 : 502, tid)
+    const error = new QuickBooksError(code, response.status === 429 ? 429 : 502, tid)
+    error.providerStatus = response.status
+    throw error
   }
   return data
 }
