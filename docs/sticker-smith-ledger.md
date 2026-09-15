@@ -186,3 +186,15 @@ Targeted Drive/Instagram review is in the [source addendum](asset-sources/market
 Shop questions are pending for base pouch print method and standard paper/sticker stock. Keep unconfirmed claims out of copy. Remaining actual-product images: matched stock/finish samples, printed pouch, multi-design sheet, postcard/magnet and printed table cover; an original Assam clip/still can cover the backdrop without a new shoot. No new generated product photos, font work, approval portal or promotional video.
 
 Still unverified: controlled paid purchase and invoice/receipt reconciliation; actual inbox placement and cart/reset completion; live expired-artwork/network-error exercises; measured slow-network/real-device performance and full accessibility; business-approved policy details and fulfillment outcomes. These remain explicit plan checkpoints rather than silently marked complete.
+
+## Operations release — September 14, approximately 21:56 PDT
+
+Separate operations task released **84a330b**, deployment **dpl_8NQypvQjuu8cuWii3WHM4MoXE2go**, preserving customer release6d95167 and ledger911e042. New quotes atomically queue staff/customer email, customer sync and opt-in subscription separately. Private admin statuses/retry, leases, frozen idempotent email requests and unsubscribe preservation are live. Vercel Hobby daily backup is configured at14:00UTC; immediate dispatch handles ordinary submissions. Uncertain sends beyond23h stop for provider review. No historical quotes replayed or new test emails sent. New email approval is pending.
+
+Preview/local domains now suppress ordinary customer analytics; explicit GA4 debug remains marked internal. Stage page verified zero GA4 loaders. Prior QA may exist in reports; GA4 filters remain Testing pending processed-label checks. Do not use that activity to rank services.
+
+Live admin: all eight main sections loaded; Cmd-K/product search navigation worked; a no-change production-detail save/reload passed, invalid HTTP tracking URL was retained with Not saved, original value restored. Separate rollback SQL tests verified proof gating, audit and access isolation.
+
+QuickBooks **sandbox** invoice1038: $65 cards + $25 soft-touch − $13.50 discount = **$76.50**. Hosted link returned, simulated payment reconciled, same invoice reused. This is no real card charge, settlement, invoice email, Apple Pay or public QuickBooks checkout proof. Intuit is signed out and needs user sign-in. Production assessment/policies/credentials, customer checkout/order linkage and bounded real transaction verification remain unfinished.
+
+Validation:62 combined tests before final small additions, then21 targeted analytics/contact tests; build and targeted lint passed. Live empty retry action returned Checked0duejobs. Large-chunk warning remains; no measured speed/accessibility/conversion score added.
