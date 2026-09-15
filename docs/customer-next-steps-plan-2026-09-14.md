@@ -4,7 +4,7 @@ Created September 14, 2026, 21:09 PDT. Status: approved and in progress. Cart ed
 
 ## Current completion plan — September 14, 22:24 PDT
 
-This section supersedes the original execution order below; earlier checkpoints remain history. Status: proposed in response to the user's request to plan remaining work. No application changes or deployment in this planning pass. Current application baseline is `7e54d3d`, incorporating operations `84a330b`; last verified customer-interface assessment is 7.75/10. The 602 Drive entries remain inventoried, **not fully visually reviewed**, and a full review is deferred at the user's explicit direction. Use known shortlisted sources only when a specific gap warrants it. No routine messages to the other task.
+This section supersedes the original execution order below; earlier checkpoints remain history. Status: approved by the user; first implementation batch shipped. The original planning pass made no application changes. See the execution update below for current state. Current application baseline is `7e54d3d`, incorporating operations `84a330b`; last verified customer-interface assessment is 7.75/10. The 602 Drive entries remain inventoried, **not fully visually reviewed**, and a full review is deferred at the user's explicit direction. Use known shortlisted sources only when a specific gap warrants it. No routine messages to the other task.
 
 ### 1. Make sticker formats clear and consistent
 
@@ -150,3 +150,34 @@ Each checkpoint gets a concise progress update. Planning approval does not mean 
 
 
 September14, approximately22:11PDT follow-up: user approved Instagram imagery. The first Assam carousel slide yielded a full-resolution real photo; added to backdrop selector, event gallery and project detail. This closes the actual-backdrop-image gap. Original and exact crop/source are retained in the source record. Pouch/material stock and other unmatched photos remain unresolved; no unrelated claims were inferred from this event photo.
+
+
+## Execution update — September 14, 22:45 PDT
+
+First batch deployed as combined `ff1d13d` / `dpl_34TS8CmkWxEBt7rxCHPAe33PjnqR`; includes the newer policy release9833c85. Details and dated evidence are in the ledger.
+
+- **Phase1 implemented to available facts:** visible format choices, consistent defaults, honest units and multi-design/machine-roll quote handoff with retained artwork. True per-sheet instant pricing and precise manufacturing compatibility still require verified shop facts.
+- **Phase2 first reporting repair shipped:** independent page reach, ordered session milestones, optional upload outcomes, bounded pagination/completeness. Live authenticated data loads passed. Paid-transaction linkage, GA4 processed filters and historical QA separation remain pending; the current small sample is not sales-performance evidence.
+- **Phase3 partly shipped:** sticker/support-page copy and FAQ cleanup plus accurate image labels. Existing policy pages/disclosures merged from the other task. Remaining asset/stock gaps unchanged; full602-entry review deferred.
+- **Phase4 additional verification passed:** actual staged quote artwork retention/reload; sheet-to-roll cart edit/reload without duplication; empty-file errors/retry/send-later recovery; eight live admin sections and new reports. No new quote/email/payment sent. Actual recovery-link recipient completion and interrupted/expired file exercises remain open.
+- **Phase5 dependency advanced:** production QuickBooks environment confirmed active, connection still disconnected; payment task has the combined release reference.
+- **Phase6 partial:** 60 tests, scoped lint, 33-route prerender, narrow-screen format checks and eight live HTTP paths passed. This is not real-device or full accessibility/performance certification.
+
+Next independent implementation/verification work: remaining upload failure cases and saved-cart/recovery completion using controlled records; collect only missing stock/pricing facts from existing records or one consolidated shop response. Do not repeat completed format/cart implementation or start a full media-library audit.
+
+
+## Cal feedback correction — September 14, 23:02 PDT
+
+Owner relayed that Cal found sticker ordering too elaborate, disliked the material dropdown, preferred the same-design material comparison, and uploaded a PDF with no preview. Owner confirmed PDF and asked to check the other file types. This is direct usability evidence; do not raise the customer score merely because more controls or explanatory copy shipped.
+
+Implemented locally: visible six-material buttons, same-design real gloss/matte comparison directly visible, material details optional, shorter format choices and pricing copy, one upload action plus compact send-later/design-help choices. Earlier generated six-material set was rejected by the owner and was never published (see material-photographs source ledger); this correction reuses the real Jukebox paired photograph, not the rejected AI set. A complete matched set of the shop’s actual six materials remains a future photography task.
+
+Confirmed PDF root cause: the old sticker preview accepted browser images only even though PDF production uploads were accepted. Added lazy first-page PDF rendering using pinned PDF.js 6.3.289 with local worker/font/CMap/ICC/WASM assets. Reference: https://mozilla.github.io/pdf.js/examples/ (consulted September 14). PDF-compatible AI also renders. Image previews show the whole file without clipping it into an arbitrary sticker shape. Shared ProductOrder/contact/vehicle quote uploader uses the same renderer. Production originals and their private storage access are unchanged.
+
+Small local thumbnails are cached by exact saved artwork path (maximum eight entries, 200 KB each), supporting same-browser cart editing/reload. This does not promise previews for old uploads, other devices, cleared/disabled/full storage, or evicted/oversized thumbnails; the original file remains attached, with an explicit reselect-to-preview message. Preview rendering and upload success have separate statuses. Abort handling prevents a replaced/removed file’s late preview from returning.
+
+Local verification: PDF (two-page raster and single-page vector/text), PNG, JPG, SVG, WebP, GIF and PDF-compatible AI render. Broken PDF/PNG, locked PDF, EPS/TIFF and empty file show clear fallback without a stale image. EPS, PSD, TIFF, HEIC and older non-PDF AI are accepted production types but do not have inline previews; export PDF/PNG/JPG for these. Shared uploader PDF→PNG replacement and failed-upload retry preserve the visible preview. 390px mobile vector preview/material buttons visually checked; no horizontal overflow (382px content/viewport). Local Vite has no upload API, so local tests deliberately show upload failure independently of successful rendering. Real storage/cart checks remain for the staged release.
+
+Automated checks: 21 preview-cache/pricing/cart-edit/quote tests pass, including cache bounds/isolation/failure behavior and unsupported/empty/oversize file messages; scoped ESLint and TypeScript/build pass. Build renders 33 public routes. New PDF package has no npm audit finding; pre-existing dependency findings remain separate maintenance work.
+
+Latest live release changed during this work: QuickBooks readiness commit ba67ea1 at approximately 22:55 PDT. Preserve it in the combined release. No payment, quote submission, customer email, or 602-entry Drive review performed for this correction. Production verification and final release ID will be appended after staging.

@@ -29,3 +29,6 @@ dist-ssr
 .vercel
 supabase/.temp/
 .env*
+
+# Copied from the pinned PDF.js package by Vite.
+public/pdfjs/
