@@ -60,7 +60,7 @@ export async function prepareCheckout(body, rateKey, { db = supabaseFetch, norma
       mappedInvoice(record.checkout, products.QueryResponse?.Item || [], '1', record.id)
       if (!record.customer_payload) {
         const c = record.checkout.customer
-        await save({ customer_payload: { DisplayName: `TSS web ${record.id}`, GivenName: c.firstName, FamilyName: c.lastName, PrimaryEmailAddr: { Address: c.email }, ...(c.phone ? { PrimaryPhone: { FreeFormNumber: c.phone } } : {}) } })
+        await save({ customer_payload: { DisplayName: `${c.firstName} ${c.lastName} · Web ${record.id.slice(0, 8)}`, GivenName: c.firstName, FamilyName: c.lastName, PrimaryEmailAddr: { Address: c.email }, ...(c.phone ? { PrimaryPhone: { FreeFormNumber: c.phone } } : {}) } })
       }
       if (!record.customer_id) {
         const result = await call('/customer', { ...ctx, method: 'POST', requestId: `tss-c-${record.id}`, body: record.customer_payload })
@@ -129,14 +129,17 @@ export async function refreshCheckout(row, { db = supabaseFetch, call = accounti
   if (row.status === 'payment_recorded' && row.order_id && !force) return publicCheckout(row)
   return withCheckoutLock(row, async (record, save, ctx) => { await inspectInvoice(record, save, ctx, { db, call }); return publicCheckout(record) }, { db, context })
 }
-export async function reconcileCheckouts({ realmId, invoiceIds } = {}) {
+export async function reconcileCheckouts({ realmId, invoiceIds, deadline = Date.now() + 35000, limit = 10 } = {}) {
   const ctx = await checkoutContext()
   if (realmId && realmId !== ctx.realmId) return 0
   if (invoiceIds && (!invoiceIds.length || invoiceIds.some(id => !numericId(id)))) return 0
   const filter = invoiceIds ? `&invoice_id=in.(${invoiceIds.join(',')})` : `&next_check_at=lte.${encodeURIComponent(new Date().toISOString())}&status=neq.payment_recorded`
-  const rows = await supabaseFetch(`${table}?environment=eq.${ctx.environment}&realm_id=eq.${ctx.realmId}&invoice_id=not.is.null${filter}&order=next_check_at.asc&limit=10`)
+  const rows = await supabaseFetch(`${table}?environment=eq.${ctx.environment}&realm_id=eq.${ctx.realmId}&invoice_id=not.is.null${filter}&order=next_check_at.asc&limit=${Math.max(1, Math.min(10, limit))}`)
   let checked = 0
-  for (const row of rows) { try { await refreshCheckout(row); checked++ } catch { /* Saved issue remains visible to staff. */ } }
+  for (const row of rows) {
+    if (Date.now() >= deadline) break
+    try { await refreshCheckout(row, { force: true, call: (path, options) => accountingRequest(path, { ...options, deadline }) }); checked++ } catch { /* Saved issue remains visible to staff. */ }
+  }
   return checked
 }
 export async function listCheckouts() {

@@ -33,30 +33,45 @@ export async function acceptWebhook(raw, signature) {
   if (records.length) await supabaseFetch('/rest/v1/quickbooks_webhook_events?on_conflict=id', { method: 'POST', headers: { Prefer: 'resolution=ignore-duplicates,return=minimal' }, body: JSON.stringify(records) })
   return records.length > 0
 }
-export async function processWebhookEvents() {
-  const current = await getConnection()
-  if (current?.status !== 'connected') return
-  const ctx = { realmId: current.realm_id, environment: configuration().environment }
-  const events = await supabaseFetch(`/rest/v1/quickbooks_webhook_events?realm_id=eq.${ctx.realmId}&processed_at=is.null&order=created_at.asc&limit=20`)
+export async function processWebhookEvents({ db = supabaseFetch, connection = getConnection, config = configuration, call = accountingRequest, refresh = refreshCheckout, deadline = Date.now() + 35000, limit = 3 } = {}) {
+  const current = await connection()
+  if (current?.status !== 'connected') return { processed: 0, retried: 0 }
+  const ctx = { realmId: current.realm_id, environment: config().environment }
+  const events = await db('/rest/v1/rpc/claim_quickbooks_webhooks', { method: 'POST', body: JSON.stringify({ p_realm_id: ctx.realmId, p_limit: limit }) })
+  let processed = 0, retried = 0
+  const boundedCall = (path, options) => {
+    if (Date.now() >= deadline) throw new QuickBooksError('worker_time_budget')
+    return call(path, { ...options, deadline })
+  }
   for (const event of events) {
+    const patch = values => db(`/rest/v1/quickbooks_webhook_events?id=eq.${event.id}&lease_id=eq.${event.lease_id}`, { method: 'PATCH', body: JSON.stringify({ ...values, lease_id: null, lease_until: null }) })
     try {
+      if (Date.now() >= deadline) throw new QuickBooksError('worker_time_budget')
       let invoiceIds = [event.entity_id]
       if (event.entity === 'payment') {
         let data = {}
-        try { data = await accountingRequest(`/payment/${event.entity_id}`, ctx) }
+        try { data = await boundedCall(`/payment/${event.entity_id}`, ctx) }
         catch (error) { if (error.providerStatus !== 404) throw error }
         invoiceIds = [...new Set((data.Payment?.Line || []).flatMap(line => (line.LinkedTxn || []).filter(link => link.TxnType === 'Invoice' && id(link.TxnId)).map(link => String(link.TxnId))))]
-        // A deleted/unlinked payment can still belong to a previously paid order.
-        const previous = await supabaseFetch(`/rest/v1/quickbooks_checkouts?realm_id=eq.${ctx.realmId}&payment_ids=cs.${encodeURIComponent(JSON.stringify([event.entity_id]))}&select=invoice_id`)
+        const previous = await db(`/rest/v1/quickbooks_checkouts?realm_id=eq.${ctx.realmId}&payment_ids=cs.${encodeURIComponent(JSON.stringify([event.entity_id]))}&select=invoice_id`)
         invoiceIds.push(...previous.map(row => row.invoice_id))
       }
       for (const invoiceId of [...new Set(invoiceIds)].filter(id)) {
-        const [row] = await supabaseFetch(`/rest/v1/quickbooks_checkouts?environment=eq.${ctx.environment}&realm_id=eq.${ctx.realmId}&invoice_id=eq.${invoiceId}`)
-        if (row) await refreshCheckout(row, { force: true })
+        const [row] = await db(`/rest/v1/quickbooks_checkouts?environment=eq.${ctx.environment}&realm_id=eq.${ctx.realmId}&invoice_id=eq.${invoiceId}`)
+        if (row) await refresh(row, { force: true, db, call: boundedCall, context: async () => ctx })
+        // A notification may arrive before invoice creation saves its ID locally.
+        // Polling of saved unpaid invoices is the independent recovery path.
       }
-      await supabaseFetch(`/rest/v1/quickbooks_webhook_events?id=eq.${event.id}`, { method: 'PATCH', body: JSON.stringify({ processed_at: new Date().toISOString() }) })
-    } catch { /* Durable event remains pending for a retry. */ }
+      await patch({ processed_at: new Date().toISOString(), last_error: null })
+      processed++
+    } catch (error) {
+      const code = error instanceof QuickBooksError ? error.code : 'webhook_processing_failed'
+      const delay = code === 'checkout_busy' || code === 'worker_time_budget' ? 1 : Math.min(30, 2 ** Math.min(event.attempts, 5))
+      await patch({ last_error: code, next_attempt_at: new Date(Date.now() + delay * 60000).toISOString() })
+      retried++
+    }
   }
+  return { processed, retried }
 }
 
 export async function boundedBody(req) {
