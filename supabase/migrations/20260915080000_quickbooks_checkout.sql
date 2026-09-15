@@ -1,4 +1,8 @@
 begin;
+-- Accounting confirmation is distinct from a processor capture.
+alter table public.orders drop constraint orders_payment_status_check;
+alter table public.orders add constraint orders_payment_status_check
+ check(payment_status in ('unverified','captured','not_captured','not_found','refunded','payment_recorded'));
 create table public.quickbooks_checkouts (
  id uuid primary key,
  token_hash text not null check(length(token_hash)=64),
@@ -77,7 +81,7 @@ begin
  insert into public.orders(id,customer_first_name,customer_last_name,customer_email,customer_phone,customer_address,customer_city,customer_state,customer_zip,items,total,status,payment_status,payment_provider,payment_reference,payment_verified_at,payment_amount,payment_currency,visitor_id,session_id,attribution)
  values(oid,c->>'firstName',c->>'lastName',c->>'email',c->>'phone',case when c->>'deliveryMethod'='pickup' then 'Local pickup' else c->>'address' end,
  case when c->>'deliveryMethod'='pickup' then 'Hayward' else c->>'city' end,case when c->>'deliveryMethod'='pickup' then 'CA' else c->>'state' end,case when c->>'deliveryMethod'='pickup' then '94545' else c->>'zip' end,
- r.checkout->'items',r.total,'processing','payment_recorded','quickbooks',r.invoice_id,now(),r.total,'USD',r.checkout->>'visitorId',r.checkout->>'sessionId',r.checkout->'attribution');
+ r.checkout->'items',r.total,'processing','payment_recorded','quickbooks',r.invoice_id,now(),r.total,'USD',r.checkout->>'visitorId',r.checkout->>'sessionId',coalesce(r.checkout->'attribution','{}'::jsonb));
  update public.quickbooks_checkouts set order_id=oid,status='payment_recorded',payment_ids=p_payments,last_error=null,updated_at=now() where id=p_id;
  insert into public.quickbooks_delivery_jobs(checkout_id,kind) values(p_id,'customer_email'),(p_id,'staff_email'),(p_id,'cart_link'),(p_id,'analytics');
  return oid;

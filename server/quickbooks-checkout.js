@@ -49,6 +49,7 @@ export async function prepareCheckout(body, rateKey, { db = supabaseFetch, norma
     if (row.request_hash !== requestHash) throw new QuickBooksError('checkout_changed', 409)
   }
   return withCheckoutLock(row, async (record, save, ctx) => {
+    if (!record.invoice_id && Date.now() - Date.parse(record.created_at) > 23 * 3600000) throw new QuickBooksError('creation_review_required', 409)
     if (!record.invoice_payload) {
       const [settings, products] = await Promise.all([
         call('/preferences', ctx), call('/query', { ...ctx, body: { query: 'select * from Item where Active = true maxresults 100' } }),
@@ -117,6 +118,9 @@ async function inspectInvoice(row, save, ctx, { db, call }) {
   if (state.status === 'payment_recorded' && !row.order_id) {
     const orderId = await db('/rest/v1/rpc/finalize_quickbooks_checkout', { method: 'POST', body: JSON.stringify({ p_id: row.id, p_lock_id: row.lock_id, p_payments: state.paymentIds }) })
     Object.assign(row, { order_id: orderId, payment_ids: state.paymentIds, status: 'payment_recorded' })
+  } else if (state.status === 'payment_recorded' && row.order_id) {
+    await db(`/rest/v1/orders?id=eq.${encodeURIComponent(row.order_id)}&payment_provider=eq.quickbooks`, { method: 'PATCH', body: JSON.stringify({ payment_status: 'payment_recorded', payment_verified_at: new Date().toISOString() }) })
+    await save({ payment_ids: state.paymentIds })
   }
 }
 export async function refreshCheckout(row, { db = supabaseFetch, call = accountingRequest, context = checkoutContext, force = false } = {}) {

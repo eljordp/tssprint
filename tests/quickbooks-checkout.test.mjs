@@ -96,3 +96,25 @@ test('lost invoice response retries same request; private status and atomic fina
   assert.equal(paid.status, 'payment_recorded'); assert.ok(paid.orderId); assert.equal(f.finalized, 1)
   await refreshCheckout(f.row, f); assert.equal(f.finalized, 1)
 })
+
+test('expired ambiguous creation never creates another customer or invoice', async () => {
+  const f = fixture(), body = { id: crypto.randomUUID(), token: crypto.randomBytes(32).toString('base64url'), checkout: { cart: 'fixture' } }
+  await assert.rejects(prepareCheckout(body, 'rate', f))
+  f.row.created_at = new Date(Date.now() - 24 * 3600000).toISOString()
+  f.row.customer_id = null
+  f.row.invoice_payload = null
+  let calls = 0
+  await assert.rejects(prepareCheckout(body, 'rate', { ...f, call: async () => { calls++; throw new Error('Must not call provider') } }), { code: 'creation_review_required' })
+  assert.equal(calls, 0)
+})
+test('changed paid invoices are flagged and a corrected invoice restores payment status without a duplicate order', async () => {
+  const f = fixture(), body = { id: crypto.randomUUID(), token: crypto.randomBytes(32).toString('base64url'), checkout: { cart: 'fixture' } }
+  await assert.rejects(prepareCheckout(body, 'rate', f)); await prepareCheckout(body, 'rate', f)
+  f.remote.Balance = 0; f.remote.LinkedTxn = [{ TxnType: 'Payment', TxnId: '40' }]
+  await refreshCheckout(f.row, f)
+  f.remote.Balance = 84.72; f.remote.LinkedTxn = []
+  assert.equal((await refreshCheckout(f.row, { ...f, force: true })).status, 'needs_review')
+  f.remote.Balance = 0; f.remote.LinkedTxn = [{ TxnType: 'Payment', TxnId: '40' }]
+  assert.equal((await refreshCheckout(f.row, { ...f, force: true })).status, 'payment_recorded')
+  assert.equal(f.finalized, 1)
+})
