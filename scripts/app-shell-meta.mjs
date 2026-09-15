@@ -1,6 +1,6 @@
 export const SITE_URL = 'https://tssprint.com'
 
-export const APP_SHELL_ROUTES = ['/cart', '/checkout', '/order-confirmation', '/account', '/admin']
+export const APP_SHELL_ROUTES = ['/cart', '/checkout', '/payment-status', '/order-confirmation', '/account', '/admin']
 
 const NOINDEX_ROBOTS = 'noindex,nofollow,noarchive'
 
@@ -16,6 +16,10 @@ export const APP_SHELL_ROUTE_META = {
   '/order-confirmation': {
     title: 'Order Confirmation | The Sticker Smith',
     description: 'Your Sticker Smith order has been received. Watch for your digital proof and next steps.',
+  },
+  '/payment-status': {
+    title: 'Payment Status | The Sticker Smith',
+    description: 'Check your Sticker Smith payment and saved order status.',
   },
   '/account': {
     title: 'Account | The Sticker Smith',

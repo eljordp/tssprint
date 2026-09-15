@@ -4,6 +4,8 @@ Status: on-site card checkout is deployed and enabled on tssprint.com. Real-mone
 
 ## Apple Pay setup — September 15 follow-up
 
+**Latest outcome:** the owner completed the $1 Apple Pay payment. Capture, saved paid order and the matching GA4 DebugView purchase are verified. Receipt inbox arrival and the QuickBooks connector import remain unverified. See the [live payment evidence and remaining checks](./live-owner-payment-verification.md); earlier handoff notes below are historical.
+
 - User approved keeping Intuit for cards, adding PayPal for on-site Apple Pay, and recording both in QuickBooks. Do not switch all payments to PayPal or restore the old untaxed PayPal checkout.
 - The live PayPal `tssprint` app initially showed Apple Pay not provisioned. Owner completed the merchant activation form and accepted PayPal's card and alternate-payment agreements. The live app now shows Apple Pay enabled.
 - Published PayPal's production domain association file at `https://tssprint.com/.well-known/apple-developer-merchantid-domain-association`; exact downloaded bytes verified against the live HTTP 200 response with `application/octet-stream`. Deployment `dpl_DBimYUmKAhkCE5KXv5sDjrfgd2RH`, source `3e19700`, promoted; direct QuickBooks config remains enabled.
