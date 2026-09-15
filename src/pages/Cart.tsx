@@ -193,7 +193,7 @@ export default function Cart() {
               Minimum ${MIN_ORDER} to checkout
             </button>
           ) : (
-            <Link to="/checkout" className="btn-primary hidden sm:inline-flex">Proceed to Checkout</Link>
+            <div className="hidden sm:block"><Link to="/checkout" className="btn-primary">Proceed to Checkout</Link></div>
           )}
         </div>
 
