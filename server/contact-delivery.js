@@ -95,7 +95,7 @@ export default async function contactDeliveryHandler(req, res) {
     requireTrustedBrowserRequest(req)
     const rate = consumeRateLimit(req, { key: 'contact-delivery', limit: 12, windowMs: 60000 })
     if (!rate.allowed) return sendJson(res, 429, { error: 'Please try again shortly.' })
-    const body = typeof req.body === 'object' && req.body !== null ? req.body : await readBody(req)
+    const body = typeof req.body === 'string' ? JSON.parse(req.body) : req.body || await readBody(req)
     if (body.admin === true) {
       try { await requireAdmin(req) } catch { return sendJson(res, 403, { error: 'Admin access required.' }) }
       return sendJson(res, 200, { processed: (await processContactJobs()).length })

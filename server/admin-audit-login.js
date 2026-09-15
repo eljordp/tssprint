@@ -1,4 +1,4 @@
-import { requireAdmin, sendJson, supabaseFetch } from '../../server/square-api.js'
+import { requireAdmin, sendJson, supabaseFetch } from './square-api.js'
 
 function header(req, name) {
   const value = req.headers[name.toLowerCase()]

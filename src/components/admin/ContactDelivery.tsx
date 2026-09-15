@@ -24,7 +24,7 @@ export default function ContactDelivery() {
     setBusy(true); setError('')
     try {
       const { data } = await supabase.auth.getSession()
-      const response = await fetch('/api/contact/dispatch', { method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${data.session?.access_token || ''}` }, body: JSON.stringify({ admin: true }) })
+      const response = await fetch('/api/admin/contact-delivery', { method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${data.session?.access_token || ''}` }, body: JSON.stringify({ admin: true }) })
       if (!response.ok) throw new Error('Retry failed')
       await load()
     } catch { setError('Could not process pending work. Saved quotes remain available.') }

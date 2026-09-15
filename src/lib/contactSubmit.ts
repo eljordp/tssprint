@@ -139,7 +139,7 @@ export async function submitContactRequest(data: ContactRequest): Promise<Contac
     // The insert trigger durably queued each downstream task in the same transaction.
     // Dispatch is best-effort: the scheduled worker can recover if this tab closes.
     try {
-      await fetch('/api/contact/dispatch', {
+      await fetch('/api/admin/contact-delivery', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ leadId: payload.id }),
