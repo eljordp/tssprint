@@ -219,6 +219,11 @@ export function shouldSuppressAnalytics() {
 
   if (window.__prerender) return true
 
+  // Preview deployments and localhost must never look like customer demand.
+  try {
+    if (!['tssprint.com', 'www.tssprint.com'].includes(new URL(window.location.origin).hostname)) return true
+  } catch { return true }
+
   // Never record internal/staff areas — keeps owner-facing stats to real customers.
   if (window.location.pathname.startsWith('/admin')) return true
   try {

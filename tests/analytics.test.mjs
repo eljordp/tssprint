@@ -87,3 +87,20 @@ test('campaign values reject email addresses and excessive lengths', () => {
   assert.equal(event.campaign_source, undefined)
   assert.equal(event.campaign_name, undefined)
 })
+
+test('preview and local builds suppress customer analytics unless GA4 debug is explicit', () => {
+  for (const origin of ['https://tssprint-stage.vercel.app', 'http://127.0.0.1:5179']) {
+    const { api, window } = setup()
+    window.location.origin = origin
+    assert.equal(api.shouldSuppressAnalytics(), true)
+    api.trackPageView('/stickers')
+    assert.equal(window.dataLayer, undefined)
+  }
+  const { api, window } = setup({ debug: true })
+  window.location.origin = 'https://tssprint-stage.vercel.app'
+  assert.equal(api.shouldSuppressAnalytics(), true)
+  api.trackPageView('/stickers')
+  const event = window.dataLayer.find(c => c[1] === 'page_view')[2]
+  assert.equal(event.debug_mode, true)
+  assert.equal(event.traffic_type, 'internal')
+})
