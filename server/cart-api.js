@@ -59,18 +59,20 @@ export default async function cartHandler(req, res) {
       const email = body.email == null ? null : String(body.email).trim().toLowerCase()
       if (email !== null && !emailValid(email)) return reply(res, 400, { error: 'Enter a valid email address.' })
       let sourceId = null
+      let sourceIsTest = false
       if (body.sourceToken) {
         const sourceLink = readRecovery(body.sourceToken, signingKey())
-        const source = checked(await db.from('cart_sessions').select('id,email,converted,expires_at').eq('id', sourceLink.id).maybeSingle())
+        const source = checked(await db.from('cart_sessions').select('id,email,converted,expires_at,is_test').eq('id', sourceLink.id).maybeSingle())
         if (!source || source.converted || tokenHash(source.email) !== sourceLink.emailHash || Date.parse(source.expires_at) < Date.now()) throw new Error('Invalid cart link.')
         sourceId = source.id
+        sourceIsTest = source.is_test === true
       }
       const changes = {
         items, email, total_price: cartSubtotal(items), updated_at: now, last_activity_at: now,
         expires_at: new Date(Date.now() + 30 * 86400000).toISOString(),
         visitor_id: String(body.identity?.visitorId || '').slice(0, 120) || null,
         session_id: String(body.identity?.sessionId || '').slice(0, 120) || null,
-        attribution: body.identity?.attribution || cart?.attribution || {}, is_test: body.isTest === true,
+        attribution: body.identity?.attribution || cart?.attribution || {}, is_test: body.isTest === true || cart?.is_test === true || sourceIsTest,
         ...(body.stage === 'checkout' ? { checkout_started_at: cart?.checkout_started_at || now } : {}),
         ...(body.stage === 'payment_issue' ? { payment_issue_at: now } : {}),
         ...(sourceId ? { recovery_source_id: sourceId } : {}),

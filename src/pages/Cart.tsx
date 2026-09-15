@@ -68,7 +68,7 @@ export default function Cart() {
     )
   }
   return (
-    <section className="py-8 md:py-16">
+    <section className="pt-8 pb-28 sm:pb-8 md:py-16">
       <div className="section-container max-w-4xl">
         <motion.h1 initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="text-3xl md:text-5xl font-black mb-8">Your Cart</motion.h1>
         {syncStatus === 'error' && <div role="status" className="mb-4 rounded-xl border border-yellow-500/30 p-4 text-sm">Your items are saved in this browser. Online cart saving is temporarily unavailable. <button onClick={retrySync} className="text-primary font-bold">Retry saving</button></div>}
@@ -78,7 +78,7 @@ export default function Cart() {
             <div key={item.id} id={`item-${item.id}`} className="scroll-mt-24 bg-card border border-border rounded-2xl p-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
               <div className="min-w-0">
                 <h3 className="font-bold break-words">{item.name}</h3>
-                {cartEditHref(item) && <Link className="inline-block mt-2 text-xs font-bold text-primary" to={cartEditHref(item)!}>Edit size, finish, quantity or artwork</Link>}
+                {cartEditHref(item) && <Link className="inline-flex min-h-11 items-center mt-1 text-sm font-bold text-primary" to={cartEditHref(item)!}>Edit size, finish, quantity or artwork</Link>}
                 <p className="text-sm text-muted-foreground">{item.option} · {item.size}</p>
                 <p className="text-xs text-muted-foreground mt-1">{item.quantity} {item.quantity === 1 ? 'batch' : 'batches'}{item.pieceCount ? ` · ${item.pieceCount * item.quantity} pieces total` : ''}. Changing batches repeats this exact configuration.</p>
                 {item.addOns?.length ? (
@@ -193,7 +193,7 @@ export default function Cart() {
               Minimum ${MIN_ORDER} to checkout
             </button>
           ) : (
-            <Link to="/checkout" className="btn-primary">Proceed to Checkout</Link>
+            <Link to="/checkout" className="btn-primary hidden sm:inline-flex">Proceed to Checkout</Link>
           )}
         </div>
 
@@ -274,6 +274,10 @@ export default function Cart() {
           </AnimatePresence>
         </div>
       </div>
+      <nav aria-label="Cart checkout" className="sm:hidden fixed bottom-0 inset-x-0 z-40 border-t border-border bg-background/95 backdrop-blur px-4 pt-3 pb-[max(12px,env(safe-area-inset-bottom))] flex items-center justify-between gap-3">
+        <div><p className="text-xs text-muted-foreground">Cart total</p><p className="text-xl font-black">${discountedTotal.toFixed(2)}</p></div>
+        {belowMin ? <span className="text-sm text-muted-foreground">Add ${shortfall.toFixed(2)} to check out</span> : <Link to="/checkout" className="btn-primary min-h-11">Checkout <ArrowRight size={16} /></Link>}
+      </nav>
     </section>
   )
 }
