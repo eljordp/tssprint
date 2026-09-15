@@ -1,6 +1,16 @@
 # Direct payments on tssprint.com
 
-Status: local implementation prepared and tested; direct payments are NOT enabled or deployed. Updated 2026-09-15.
+Status: implementation deployed to a READY, unpromoted production-target release; direct payments are NOT enabled on tssprint.com. Updated 2026-09-15.
+
+## Release verification — September 15
+
+- Signed-in Intuit dashboard confirms app `2c74468e-cabf-4bdc-ae91-29d33195ad87` is IN PRODUCTION. Both Accounting and Payments permissions are selected. This does not establish the live connection's granted scopes or a successful merchant charge.
+- Preserved the latest live source (`5cae66f`, Google sitelink signals and preceding sticker/mobile updates) in merge `31fdb8b`.
+- Staged release `dpl_FsEGE1RXJUGPAtSpgJFWG5HiL1XH` is READY at `tssprint-5qfw0ntjc-jordis-projects-94d2df39.vercel.app`; it has not been promoted. Its configuration returns `enabled:true`, `direct:false`, `environment:production`. A charge request returns `direct_payments_unavailable` as intended.
+- All 64 QuickBooks tests and the merged production bundle build passed.
+- Intuit API Explorer's sandbox-only $1 dummy-card charge returned HTTP 401 (Intuit transaction ID `1-6aa98fbf-5896bddb006bc093196c1ff9`). No successful charge is claimed. The selected sandbox has Accounting and Payments enabled. Prepared a fresh sandbox OAuth consent page; it is awaiting the user's Connect action.
+- Supabase dashboard session expired. Its GitHub sign-in is open, awaiting the user. Both new database migrations remain unapplied.
+- Next: complete those two browser actions, apply and verify migrations, verify real sandbox token → charge → accounting Payment behavior, connect production Payments from the deployed admin, and perform the user-authorized live payment check before public activation.
 
 ## Implementation progress
 
@@ -8,7 +18,7 @@ Status: local implementation prepared and tested; direct payments are NOT enable
 - Added the token-only Payments client and a direct-charge flow under the existing durable checkout lock. Captured charges are verified for identity, currency and amount before accounting finalization. Repeat submissions recover the original transaction; a lost charge response with no transaction ID requires review instead of another charge.
 - New direct checkouts disable hosted invoice payment and display tax and card fields inline. This first version calculates tax after a deliberate on-page action, avoiding invoice creation on every keystroke. Accounting still uses an invoice internally; customers do not navigate to it before card entry.
 - Known declines can retry another card up to three attempts on the same invoice. Unknown outcomes cannot expose a fresh Pay action.
-- The new flow stays behind `QUICKBOOKS_DIRECT_PAYMENTS_ENABLED`; that flag remains unset. Existing invoice checkout stays active.
+- The new flow stays behind `QUICKBOOKS_DIRECT_PAYMENTS_ENABLED`; it is explicitly false in the staged release. Existing invoice checkout stays active.
 
 ### Verified during implementation
 
@@ -19,7 +29,7 @@ Status: local implementation prepared and tested; direct payments are NOT enable
 
 ### Still required before enabling production
 
-1. Sign in to the open Intuit Developer tab; the live session is currently signed out. Verify this app’s production Payments entitlement and reconnect the same company with both scopes.
+1. Intuit Developer is now signed in and the app's two API permissions are selected. Reconnect the same production company with both scopes and verify merchant Payments access.
 2. Apply both migrations, verify the actual provider charge/decline response contract, and test the accounting Payment record with `CCTransId`. Confirm deposit/fee reconciliation; do not assume the current recorded-payment metadata automatically handles it.
 3. Test the real charge-and-accounting sequence in a sandbox before the approved small production payment. The public charge route currently requires production checkout to be enabled; a staff-only sandbox exercise path must be added or the service functions exercised in a sandbox test runner. Do not switch the live company to sandbox to run this test.
 4. Resolve direct Apple Pay processing with Intuit. The public Tokens/Charges references and latest release notes inspected do not document an Apple Pay payload. This is an unresolved capability, not proof of universal non-support. No Apple Pay button has been added to the direct card form.
@@ -31,7 +41,7 @@ Additional primary references inspected in Chrome: [browser tokenization](https:
 
 Customer flow: cart → one checkout with delivery, artwork summary, discounts, tax and payment → confirmation on tssprint.com. Remove the mandatory invoice review page and hosted QuickBooks payment redirect from the new direct-card journey. Keep QuickBooks as the intended payment processor and accounting system.
 
-The current implementation creates an invoice, navigates to `/payment-status`, then links to QuickBooks for payment. `server/quickbooks-api.js` requests only `com.intuit.quickbooks.accounting`. The Accounting API payment record is not the Payments API operation that charges a card.
+The current public checkout creates an invoice, navigates to `/payment-status`, then links to QuickBooks for payment. The staged code adds a separate Payments permission and direct charge operation. The Accounting API payment record is not the Payments API operation that charges a card.
 
 ## Execution order
 
@@ -97,4 +107,4 @@ Reviewed 2026-09-15. Sources describe provider capability, not approval of this 
 | [Intuit Payments OAuth documentation](https://developers.intuit.com/app/developer/qbpayments/docs/develop/authentication-and-authorization/oauth-2.0) | Payments access uses its own OAuth scope. | Current app's granted production scopes. |
 | [Intuit Apple Pay FAQ](https://quickbooks.intuit.com/learn-support/en-us/help-article/receive-payments/frequently-asked-questions-apple-pay-quickbooks/L1yOQUp7l_US_en_US) | Apple Pay is documented for eligible hosted e-invoice payments. | This is not evidence that the direct Payments API accepts an on-site Apple Pay token. |
 | [Apple Pay planning](https://developer.apple.com/apple-pay/planning/) | The payment provider must support the wallet-processing flow; Apple recommends immediate presentation of the payment sheet. | Intuit-specific integration and TSS domain/merchant setup. |
-| Local source inspection | Accounting-only OAuth, mandatory invoice review navigation, and invoice online-card payment enabled. | Production direct payments have not been implemented or verified. |
+| Source and staged deployment inspection | Separate Payments OAuth and tokenized direct charging are implemented behind a disabled release flag; existing hosted checkout remains available. | Real charge/accounting verification, production connection scope, migrations and public activation remain pending. |
