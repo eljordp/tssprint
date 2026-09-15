@@ -35,7 +35,7 @@ export default function QuickBooksPayment({ disabled, payload, onBusy, onError }
   }
   return <div className="mb-5 space-y-3 rounded-xl border border-primary/30 bg-primary/5 p-4">
     <h3 className="font-bold">Credit or debit card</h3>
-    <p className="text-sm text-muted-foreground">Review your itemized invoice and sales tax, then pay securely with QuickBooks. Apple Pay appears on eligible Apple devices in Safari.</p>
+    <p className="text-sm text-muted-foreground">Review your itemized invoice and sales tax, then pay securely with QuickBooks. Choose card or Apple Pay when available on the payment page.</p>
     {preview && <p className="text-sm font-semibold">Staff verification: creates a real unpaid invoice. No card is charged by this step.</p>}
     <button type="button" className="btn-primary w-full disabled:opacity-50" disabled={disabled || busy} onClick={start}>{busy ? 'Preparing your invoice…' : 'Review total with tax'}</button>
   </div>

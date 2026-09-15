@@ -6,7 +6,7 @@ const escape = value => String(value || '').replace(/[&<>"']/g, c => ({ '&':'&am
 export function orderEmailPayload(row, kind, env) {
   const c = row.checkout.customer
   const cash = value => `$${Number(value).toFixed(2)}`
-  const lines = row.checkout.items.map(item => `<tr><td style="padding:14px 0;border-bottom:1px solid #e8ecef;font-size:14px;line-height:22px"><strong style="color:#15191d">${escape(item.category || item.name)}</strong><br>${escape(item.option)} · ${escape(item.size)}${item.quantity > 1 ? ` · ${item.quantity} batches` : ''}${item.addOns.length ? `<br>${escape(item.addOns.map(a => a.name).join(', '))}` : ''}</td><td valign="top" align="right" style="padding:14px 0 14px 12px;border-bottom:1px solid #e8ecef;white-space:nowrap;font-size:14px;font-weight:bold">${cash(item.unitPrice * item.quantity)}</td></tr>`).join('')
+  const lines = row.checkout.items.map(item => `<tr><td style="padding:14px 0;border-bottom:1px solid #e8ecef;font-size:14px;line-height:22px"><strong style="color:#15191d">${escape(item.category === 'Stickers' ? item.name : item.category || item.name)}</strong><br>${escape(item.option)} · ${escape(item.size)}${item.quantity > 1 ? ` · ${item.quantity} batches` : ''}${item.addOns.length ? `<br>${escape(item.addOns.map(a => a.name).join(', '))}` : ''}</td><td valign="top" align="right" style="padding:14px 0 14px 12px;border-bottom:1px solid #e8ecef;white-space:nowrap;font-size:14px;font-weight:bold">${cash(item.unitPrice * item.quantity)}</td></tr>`).join('')
   const details = `<p style="margin:0 0 20px;font-size:13px;color:#68747d;overflow-wrap:anywhere">Invoice ${escape(row.invoice_number)}<br>Order ${escape(row.order_id)}</p><table role="presentation" width="100%" cellspacing="0" cellpadding="0">${lines}</table><p style="margin:20px 0;font-size:14px;line-height:24px">Subtotal: ${cash(row.checkout.subtotal)}<br>Discount: −${cash(row.checkout.discount)}<br>Tax: ${cash(row.tax)}</p><p style="margin:0 0 28px;padding:16px;background:#edf8fc;border-radius:8px;font-size:20px;color:#101418"><strong>Total: ${cash(row.total)}</strong></p>`
   const next = '<h2 style="margin:24px 0 8px;font-size:18px;line-height:24px;color:#101418">What happens next</h2><p style="margin:0 0 16px">We review your artwork and send a proof for approval. Production starts after you approve it.</p>'
   const staff = kind === 'staff_email'
@@ -22,12 +22,16 @@ export function orderEmailPayload(row, kind, env) {
       actionLabel: staff ? 'Review order & artwork' : 'Contact us about this order' }),
   }
 }
-export async function processQuickBooksDelivery(checkoutId = null, { db = supabaseFetch, send = fetch, env = process.env, cart = markCartPaid } = {}) {
+export async function processQuickBooksDelivery(checkoutId = null, { db = supabaseFetch, send = fetch, env = process.env, cart = markCartPaid, deadline = Infinity } = {}) {
   const jobs = await db('/rest/v1/rpc/claim_quickbooks_delivery', { method: 'POST', body: JSON.stringify({ p_checkout_id: checkoutId }) })
   for (const job of jobs) {
     const patch = async values => {
       const rows = await db(`/rest/v1/quickbooks_delivery_jobs?id=eq.${job.id}&lease_id=eq.${job.lease_id}&status=eq.processing`, { method: 'PATCH', body: JSON.stringify({ ...values, updated_at: new Date().toISOString() }) })
       if (!rows?.length) throw new Error('Lease lost')
+    }
+    if (Date.now() + 6000 >= deadline) {
+      await patch({ status: 'retry', attempts: Math.max(0, job.attempts - 1), lease_id: null, lease_until: null }).catch(() => {})
+      continue
     }
     try {
       const [row] = await db(`/rest/v1/quickbooks_checkouts?id=eq.${job.checkout_id}`)

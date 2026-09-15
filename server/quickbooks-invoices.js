@@ -20,10 +20,12 @@ export function invoicePayload(checkout, customerId, itemId, reference, taxCode)
   if (!lines.length || lines.length > 100) throw new QuickBooksError('invoice_too_large', 400)
   const customer = checkout.customer
   const shop = { Line1: '23673 Connecticut St', City: 'Hayward', CountrySubDivisionCode: 'CA', PostalCode: '94545', Country: 'USA' }
+  const orderDate = new Intl.DateTimeFormat('en-CA', { timeZone: 'America/Los_Angeles', year: 'numeric', month: '2-digit', day: '2-digit' }).format(new Date())
   return { CustomerRef: { value: customerId }, Line: lines, CurrencyRef: { value: 'USD' }, ApplyTaxAfterDiscount: true,
+    TxnDate: orderDate, DueDate: orderDate,
     BillEmail: { Address: customer.email }, BillEmailCc: { Address: '' }, BillEmailBcc: { Address: '' }, EmailStatus: 'NotSet',
     AllowOnlineCreditCardPayment: true, AllowOnlineACHPayment: false, AllowOnlinePayPalPayment: false, AllowOnlineAffirmPayment: false,
-    PrivateNote: `TSS website reference ${reference}`, CustomerMemo: { value: `Order ${reference}. Payment received, artwork review, proof approval and production are separate steps. Nothing prints until your proof is approved. ${customer.deliveryMethod === 'pickup' ? 'Local pickup: wait for your ready-for-pickup notice.' : 'Shipping to the address shown.'}` },
+    PrivateNote: `TSS website reference ${reference}`, CustomerMemo: { value: `Order ${reference}. Payment is required before we start your order. We review your artwork and send a proof. Nothing prints until you approve it. ${customer.deliveryMethod === 'pickup' ? 'Local pickup: wait for your ready-for-pickup notice.' : 'Shipping to the address shown.'}` },
     ShipFromAddr: shop, ShipAddr: customer.deliveryMethod === 'pickup' ? shop : { Line1: customer.address, City: customer.city, CountrySubDivisionCode: customer.state, PostalCode: customer.zip, Country: 'USA' },
   }
 }

@@ -9,6 +9,7 @@ import { processQuickBooksDelivery } from '../../server/quickbooks-delivery.js'
 import { acceptWebhook, boundedBody, processWebhookEvents } from '../../server/quickbooks-webhook.js'
 import { consumeRateLimit } from '../../server/request-guards.js'
 import { digest } from '../../server/quickbooks-core.js'
+import { claimWorker, runWorker, workerHealth } from '../../server/quickbooks-worker.js'
 import { QB_PRODUCT_NAMES } from '../../server/quickbooks-checkout-core.js'
 
 export const config = { api: { bodyParser: false } }
@@ -19,6 +20,14 @@ export default async function handler(req, res) {
   res.setHeader('Referrer-Policy', 'no-referrer')
   res.setHeader('X-Content-Type-Options', 'nosniff')
   const action = new URL(req.url, 'https://tssprint.com').pathname.split('/').at(-1)
+  if (action === 'worker') {
+    if (req.method !== 'POST') return sendJson(res, 405, { error: 'Method not allowed' })
+    try {
+      const id = await claimWorker(JSON.parse((await boundedBody(req)).toString('utf8')))
+      const result = await runWorker(id)
+      return sendJson(res, 200, result)
+    } catch (error) { return sendJson(res, error instanceof QuickBooksError ? error.status : 503, { error: error instanceof QuickBooksError ? error.code : 'worker_failed' }) }
+  }
   if (['checkout-config', 'checkout', 'checkout-status', 'webhook'].includes(action)) {
     if (req.method !== (action === 'checkout-config' ? 'GET' : 'POST')) return sendJson(res, 405, { error: 'Method not allowed' })
     try {
@@ -86,7 +95,7 @@ export default async function handler(req, res) {
     }
     if (action === 'check') return sendJson(res, 200, await checkConnection())
     if (action === 'readiness') return sendJson(res, 200, await checkoutReadiness())
-    if (action === 'checkouts') return sendJson(res, 200, { checkouts: await listCheckouts() })
+    if (action === 'checkouts') return sendJson(res, 200, { checkouts: await listCheckouts(), worker: await workerHealth() })
     if (action === 'reconcile') { await processWebhookEvents(); const checked = await reconcileCheckouts(); waitUntil(followUp(null)); return sendJson(res, 200, { checked }) }
     if (action === 'invoice-tests') return sendJson(res, 200, { invoices: await listInvoiceTests() })
     if (action === 'test-invoice' || action === 'test-payment') return sendJson(res, 200, await runInvoiceTest({ recordPayment: action === 'test-payment' }))

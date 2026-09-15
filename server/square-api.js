@@ -108,6 +108,7 @@ export async function supabaseFetch(path, options = {}) {
   }
 
   const response = await fetch(`${SUPABASE_URL}${path}`, {
+    signal: AbortSignal.timeout(10000),
     ...options,
     headers: {
       apikey: SUPABASE_SERVICE_ROLE_KEY,
