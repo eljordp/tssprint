@@ -306,7 +306,7 @@ function DesktopPrinterIntro() {
     return () => desktop.removeEventListener('change', update)
   }, [])
 
-  if (!show || pathname === '/services/business-print') return null
+  if (!show || pathname !== '/') return null
   return (
     <Suspense fallback={null}>
       <PrinterIntro />

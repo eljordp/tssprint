@@ -455,7 +455,7 @@ export default function Checkout() {
     `w-full px-4 py-3 bg-background border rounded-xl text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all ${errors[field] ? 'border-destructive' : 'border-border'}`
 
   const checkoutContent = (
-      <section className="py-8 md:py-16">
+      <section className="py-6 md:py-10">
         <div className="section-container max-w-6xl">
           <Link to="/cart" className="inline-flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors mb-6">
             <ArrowLeft size={18} /> Back to Cart
@@ -464,13 +464,13 @@ export default function Checkout() {
           <motion.h1
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            className="text-3xl md:text-5xl font-black mb-8"
+            className="text-3xl md:text-4xl font-black mb-6"
           >
             Checkout
           </motion.h1>
 
           <div className="grid lg:grid-cols-5 gap-8">
-            <div className="lg:col-span-3 space-y-6">
+            <div className="lg:col-span-3 space-y-6 min-w-0 order-2 lg:order-1">
               <div className="bg-card border border-border rounded-2xl p-6">
                 <h2 className="text-xl font-bold mb-6">Contact Information</h2>
                 <div className="grid sm:grid-cols-2 gap-4">
@@ -597,7 +597,7 @@ export default function Checkout() {
                 ) : (
                   <div className="mt-6 rounded-xl border border-primary/20 bg-primary/5 p-4 text-sm">
                     <p className="font-bold">Pickup in Hayward</p>
-                    <p className="mt-1 text-muted-foreground">We will email you when the proof is approved and the order is ready. Do not arrive before receiving the ready-for-pickup message.</p>
+                    <p className="mt-1 text-muted-foreground">After you approve the proof and production is complete, we will email you when the order is ready. Do not arrive before receiving the ready-for-pickup message.</p>
                   </div>
                 )}
               </fieldset>
@@ -628,8 +628,9 @@ export default function Checkout() {
                         value={promoInput}
                         onChange={e => { setPromoInput(e.target.value.toUpperCase()); setPromoError('') }}
                         onKeyDown={e => e.key === 'Enter' && handleApplyPromo()}
+                        aria-label="Promo code"
                         placeholder="Enter promo code"
-                        className="flex-1 px-4 py-3 bg-background border border-border rounded-xl text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all uppercase tracking-wider"
+                        className="min-w-0 flex-1 px-4 py-3 bg-background border border-border rounded-xl text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all uppercase tracking-wider"
                       />
                       <button
                         onClick={handleApplyPromo}
@@ -674,7 +675,7 @@ export default function Checkout() {
                 <SquareCardPayment
                   amount={finalTotal}
                   customer={customerInfo}
-                  disabled={!formValid || !quoteReady}
+                  disabled={!formValid || !quoteReady || processing}
                   processing={processing}
                   onAvailabilityChange={setSquareAvailable}
                   onPaymentToken={captureSquarePayment}
@@ -690,7 +691,7 @@ export default function Checkout() {
                     )}
                     <PayPalButtons
                       style={{ layout: 'vertical', color: 'gold', shape: 'pill', label: 'pay', height: 50 }}
-                      disabled={!formValid || !quoteReady}
+                      disabled={!formValid || !quoteReady || processing}
                       createOrder={createPayPalOrder}
                       onApprove={async (data, actions) => {
                         setProcessing(true)
@@ -739,7 +740,7 @@ export default function Checkout() {
               </div>
             </div>
 
-            <div className="lg:col-span-2 order-first lg:order-last">
+            <div className="lg:col-span-2 min-w-0 order-1 lg:order-2">
               <div className="bg-card border border-border rounded-2xl p-6 lg:sticky lg:top-24">
                 <h2 className="text-xl font-bold mb-6">Order Summary</h2>
                 <div className="space-y-4 mb-6">
@@ -749,7 +750,7 @@ export default function Checkout() {
                     return (
                       <div key={item.id} className="flex justify-between gap-4">
                         <div className="min-w-0">
-                          <p className="font-medium truncate">{item.name}</p>
+                          <p className="font-medium break-words">{item.name}</p>
                           <p className="text-sm text-muted-foreground">{item.option} · {item.size}</p>
                           <p className="text-sm text-muted-foreground">Batches: {item.quantity}</p>
                           {item.addOns && item.addOns.length > 0 && (
@@ -757,7 +758,7 @@ export default function Checkout() {
                           )}
                           {item.artworkIntent === 'send_later' && <p className="text-xs text-primary mt-1">Artwork after checkout</p>}
                           {item.artworkIntent === 'design_help' && <p className="text-xs text-primary mt-1">Design help requested</p>}
-                          {item.artworkIntent === 'uploaded' && item.artwork && <p className="text-xs text-green-400 mt-1">Artwork attached</p>}
+                          {item.artwork && <p className="text-xs text-green-400 mt-1 break-words">Artwork: {item.artwork.fileName}</p>}
                         </div>
                         <span className="font-bold text-primary shrink-0">${itemTotal.toFixed(2)}</span>
                       </div>

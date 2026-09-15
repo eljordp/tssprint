@@ -1,10 +1,10 @@
-import { useCallback, useState } from 'react'
+import { useState } from 'react'
 import { motion } from 'framer-motion'
 import { CheckCircle, Clock, Shield, Package, Zap } from 'lucide-react'
 import ProductOrder from '@/components/ProductOrder'
 import EstimateForm from '@/components/EstimateForm'
 import PortfolioStrip from '@/components/PortfolioStrip'
-import ArtworkMockup from '@/components/ArtworkMockup'
+import type { ArtworkSelection } from '@/components/ProductionArtwork'
 import ServicePageIntro from '@/components/ServicePageIntro'
 import featherFlags from '@/assets/projects/feather-flags.jpg'
 import eventBooth from '@/assets/projects/event-booth-sticker-smith.jpeg'
@@ -12,9 +12,6 @@ import weddingSignage from '@/assets/projects/wedding-display-signage-1.jpeg'
 import weddingFloor1 from '@/assets/projects/wedding-vinyl-floor-1.jpeg'
 import weddingFloor2 from '@/assets/projects/wedding-vinyl-floor-2.jpeg'
 import culturalFloor from '@/assets/projects/cultural-dance-floor-1.jpeg'
-import canopyBlank from '@/assets/mockups/event-canopy-blank.jpg'
-import flagBlank from '@/assets/mockups/event-feather-flag-blank.jpg'
-import backdropBlank from '@/assets/mockups/event-backdrop-blank.jpg'
 
 const features = [
   'Custom Printed Canopy Tents',
@@ -59,16 +56,8 @@ const eventFaqs = [
 ]
 
 export default function EventCanopies() {
-  const [activeMockup, setActiveMockup] = useState('canopy')
   const [estimateSelection, setEstimateSelection] = useState('')
-  const handleCategoryChange = useCallback((categoryName: string) => {
-    const map: Record<string, string> = {
-      'Event Displays': 'canopy',
-      'Backdrops & Displays': 'backdrop',
-      'Table Covers': 'table',
-    }
-    setActiveMockup(map[categoryName] ?? 'canopy')
-  }, [])
+  const [artwork, setArtwork] = useState<ArtworkSelection>({ status: 'idle' })
 
   return (
     <>
@@ -82,7 +71,8 @@ export default function EventCanopies() {
           <div id="shop" className="scroll-mt-24 mb-12">
             <ProductOrder
               categoryNames={['Event Displays', 'Backdrops & Displays', 'Table Covers']}
-              onCategoryChange={handleCategoryChange}
+              artworkFirst
+              onArtworkChange={setArtwork}
               checkoutMode="estimate"
               onEstimateRequest={setEstimateSelection}
             />
@@ -141,52 +131,6 @@ export default function EventCanopies() {
 
         </div>
       </section>
-      <section className="py-12 md:py-20 border-t border-border/50">
-        <div className="section-container">
-          <ArtworkMockup
-            service="Event Display"
-            title="Preview your event setup"
-            subtitle="Upload your brand — see it on a canopy, flag, or backdrop before the event."
-            activeKey={activeMockup}
-            onActiveKeyChange={setActiveMockup}
-            scenes={[
-              {
-                key: 'canopy',
-                label: 'Canopy Tent',
-                base: canopyBlank,
-                slot: { left: 22, top: 16, width: 55, height: 20 },
-              },
-              {
-                key: 'flag',
-                label: 'Feather Flag',
-                base: flagBlank,
-                slot: { left: 30, top: 15, width: 40, height: 70 },
-              },
-              {
-                key: 'backdrop',
-                label: 'Backdrop',
-                base: backdropBlank,
-                slot: { left: 15, top: 15, width: 70, height: 70 },
-              },
-              {
-                key: 'table',
-                label: 'Table Cover',
-                variant: 'table-cover',
-                slot: {
-                  left: 31,
-                  top: 58,
-                  width: 38,
-                  height: 16,
-                  radius: '6px',
-                  clipPath: 'polygon(4% 0, 96% 0, 100% 100%, 0 100%)',
-                  imageFit: 'cover',
-                  artworkPadding: 0,
-                },
-              },
-            ]}
-          />
-        </div>
-      </section>
       <section id="portfolio" className="py-12 md:py-20 border-t border-border/50 scroll-mt-24">
         <div className="section-container">
           <PortfolioStrip
@@ -222,6 +166,7 @@ export default function EventCanopies() {
       <section id="quote" className="py-12 md:py-20 border-t border-border/50 scroll-mt-24">
         <div className="section-container">
           <EstimateForm
+            artworkSelection={artwork}
             service="Event Displays"
             title="Get an Event Display Estimate"
             subtitle="Trade show, pop-up, conference — give us the event date and scope, we'll make sure it arrives on time."

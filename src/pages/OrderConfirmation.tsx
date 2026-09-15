@@ -1,7 +1,6 @@
 import { Link, useLocation } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import { AlertTriangle, CheckCircle, Package, Mail, FileImage } from 'lucide-react'
-import shopImage from '@/assets/pages/confirm-printing.jpg'
 
 export default function OrderConfirmation() {
   const location = useLocation()
@@ -24,35 +23,16 @@ export default function OrderConfirmation() {
   return (
     <section className="py-16 md:py-24">
       <div className="section-container max-w-2xl text-center">
-        {/* Hero image — payment state only; production has not started yet */}
-        <motion.div
-          initial={{ opacity: 0, scale: 0.95 }}
-          animate={{ opacity: 1, scale: 1 }}
-          transition={{ duration: 0.5 }}
-          className="relative mb-8 rounded-3xl overflow-hidden border border-white/10 shadow-2xl aspect-[16/9] max-w-lg mx-auto"
-        >
-          <img src={shopImage} alt="" className="w-full h-full object-cover" />
-          <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
-          <motion.div
-            initial={{ scale: 0 }}
-            animate={{ scale: 1 }}
-            transition={{ type: 'spring', stiffness: 200, damping: 15, delay: 0.3 }}
-            className={`absolute top-4 right-4 w-12 h-12 rounded-full backdrop-blur-sm flex items-center justify-center shadow-lg ${needsManualReview ? 'bg-yellow-500/90' : 'bg-green-500/90'}`}
-          >
-            {needsManualReview ? <AlertTriangle size={24} className="text-white" strokeWidth={2.5} /> : <CheckCircle size={24} className="text-white" strokeWidth={2.5} />}
-          </motion.div>
-          <div className="absolute bottom-4 left-4 right-4">
-            <p className="text-xs text-white/70 font-mono tracking-widest uppercase">{needsManualReview ? 'Payment received · Needs review' : 'Payment received'}</p>
-          </div>
-        </motion.div>
-
+        <div className="mx-auto mb-6 flex h-16 w-16 items-center justify-center rounded-full bg-primary/10 text-primary">
+          {needsManualReview ? <AlertTriangle size={32} /> : <CheckCircle size={32} />}
+        </div>
         <motion.h1
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.2 }}
           className="text-3xl md:text-5xl font-black mb-4"
         >
-          Payment Received
+          Payment received
         </motion.h1>
 
         <motion.p
@@ -107,6 +87,15 @@ export default function OrderConfirmation() {
           </div>
         </motion.div>
 
+        <div className="mb-8 rounded-2xl border border-border bg-card p-5 text-left">
+          <h2 className="font-bold mb-3">What happens next</h2>
+          <ol className="space-y-3 text-sm text-muted-foreground list-decimal pl-5">
+            <li><strong className="text-foreground">Artwork check.</strong> We review your file, or contact you if artwork is still needed.</li>
+            <li><strong className="text-foreground">Your approval.</strong> We send a digital proof for you to review.</li>
+            <li><strong className="text-foreground">Production.</strong> Printing starts after proof approval.</li>
+            <li><strong className="text-foreground">Shipping or pickup.</strong> We send tracking or a ready-for-pickup message when available.</li>
+          </ol>
+        </div>
         <motion.p
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}

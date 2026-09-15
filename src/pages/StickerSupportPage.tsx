@@ -1,7 +1,8 @@
 import { Link, Navigate } from 'react-router-dom'
 import { motion } from 'framer-motion'
-import { ArrowRight, CheckCircle, Clock, MapPin, Shield, Sticker } from 'lucide-react'
-import PageHero from '@/components/PageHero'
+import { ArrowRight, CheckCircle, Clock, MapPin, Shield } from 'lucide-react'
+import ServicePageIntro from '@/components/ServicePageIntro'
+import Order from '@/pages/Order'
 import { stickerSupportPageBySlug, stickerSupportPages, type StickerSupportPageConfig } from '@/lib/stickerSupportPages'
 import { cities } from '@/lib/cities'
 
@@ -10,16 +11,8 @@ function StickerSupportPageInner({ page }: { page: StickerSupportPageConfig }) {
 
   return (
     <>
-      <PageHero
-        eyebrow={page.eyebrow}
-        title={page.heroTitle}
-        subtitle={page.heroSubtitle}
-        image={page.image}
-        imageAlt={page.imageAlt}
-        icon={Sticker}
-        primaryCta={{ label: 'Order Custom Stickers', href: `/stickers?product=${page.slug}${page.slug === 'holographic-stickers' ? '&material=Holographic' : ''}#configure` }}
-        secondaryCta={{ label: 'Get a Quote', href: '/contact' }}
-      />
+      <div className="section-container pt-6 md:pt-8"><ServicePageIntro eyebrow={page.eyebrow} title={page.heroTitle} description="Upload your artwork and choose your specs. Approve a production proof before printing." /></div>
+      <Order key={page.slug} embedded initialShape={page.slug === 'sticker-sheets' ? 'Kiss-Cut' : ['roll-labels', 'custom-labels'].includes(page.slug) ? 'Rectangle' : 'Die-Cut'} initialFormat={page.slug === 'sticker-sheets' ? 'sheet' : ['roll-labels', 'custom-labels'].includes(page.slug) ? 'roll' : 'handheld'} initialMaterial={page.slug === 'holographic-stickers' ? 'Holographic' : 'Matte Vinyl'} />
 
       <section className="py-12 md:py-16 border-b border-border/50">
         <div className="section-container max-w-6xl">
