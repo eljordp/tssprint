@@ -27,6 +27,16 @@ Production advanced during verification to deployment `dpl_5zkJKUPK6ry4CMcUeEtGa
 
 Additional checks: 624 original-page cart combinations accepted by the current server price validator; mobile page has no horizontal overflow at 390px; two boot-route tests and route preload test pass.
 
+## Live release verified
+
+- Built application commit: `b4b787b`.
+- Deployment: `dpl_cVzHL5LMTuyxG8hGr7ALQ37Pknpb`.
+- URL: https://tssprint-oxfb91c7s-jordis-projects-94d2df39.vercel.app
+- Promoted to https://tssprint.com on September 15, 2026, approximately 10:24 AM Pacific.
+- Live browser screenshot matches the historical option columns, circular swatches, and three lower panels.
+- `/stickers` and `/api/quickbooks/checkout-config` return HTTP 200; checkout reports enabled and QuickBooks-only.
+- All 73 non-sticker committed HTML snapshots retained byte-for-byte from 9204428; the build refreshes only their asset references. Build asset checks passed.
+
 ## Superseded earlier attempt
 
 # Main sticker page layout restoration — September 15, 2026
