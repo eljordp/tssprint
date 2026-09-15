@@ -1,4 +1,6 @@
 {
+  "crons": [{ "path": "/api/contact/dispatch", "schedule": "0 14 * * *" }],
+  "functions": { "api/contact/dispatch.js": { "maxDuration": 60 } },
   "cleanUrls": true,
   "trailingSlash": false,
   "redirects": [

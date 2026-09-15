@@ -1,4 +1,3 @@
-import { sendContactEmail } from './email'
 import { supabase } from './supabase'
 import { getAnalyticsIdentity, trackLeadSubmission } from './analytics'
 import type { CartItem } from '@/context/CartContext'
@@ -37,14 +36,6 @@ export type SubscribeRequest = {
 
 const DUPLICATE_SUBMISSION_WINDOW_MS = 10 * 60 * 1000
 const recentSubmissions = new Set<string>()
-
-function splitName(name?: string) {
-  const parts = (name || '').trim().split(/\s+/).filter(Boolean)
-  return {
-    firstName: parts[0] || null,
-    lastName: parts.length > 1 ? parts.slice(1).join(' ') : null,
-  }
-}
 
 function normalizeFingerprintValue(value?: string | null) {
   return (value || '').trim().toLowerCase().replace(/\s+/g, ' ')
@@ -106,21 +97,13 @@ export async function subscribeEmail(data: SubscribeRequest): Promise<ContactSub
   return { success: true }
 }
 
-async function upsertCustomer(data: ContactRequest) {
-  const { firstName, lastName } = splitName(data.name)
-  const { error } = await supabase.rpc('get_or_create_customer', {
-      _email: data.email.trim(),
-      _first_name: firstName,
-      _last_name: lastName,
-      _phone: data.phone?.trim() || null,
-      _source: data.source || 'contact',
-  })
-  if (error) throw error
-}
-
 export async function submitContactRequest(data: ContactRequest): Promise<ContactSubmitResult> {
   const identity = getAnalyticsIdentity()
   const payload = {
+    id: crypto.randomUUID(),
+    delivery_workflow_version: 1,
+    subscribe_requested: !!data.subscribe,
+    subscription_tags: data.tags || [data.service || 'lead'],
     name: data.name.trim(),
     email: data.email.trim().toLowerCase(),
     phone: data.phone?.trim() || null,
@@ -153,35 +136,21 @@ export async function submitContactRequest(data: ContactRequest): Promise<Contac
       console.warn('Contact saved, but lead tracking could not be recorded.')
     }
 
-    const [customer, subscription, notification] = await Promise.allSettled([
-      upsertCustomer(data),
-      data.subscribe ? subscribeEmail({
-        email: payload.email,
-        name: payload.name,
-        phone: payload.phone || undefined,
-        source: payload.source,
-        service: payload.service || undefined,
-        tags: data.tags || [payload.service || 'lead'].filter(Boolean),
-      }) : Promise.resolve(),
-      sendContactEmail({
-        name: payload.name,
-        email: payload.email,
-        phone: payload.phone || undefined,
-        service: payload.service || undefined,
-        message: data.artwork ? `${data.message.trim()}\nArtwork attached: ${data.artwork.fileName}. Available in Admin → Inquiries.` : data.message.trim(),
-      }),
-    ])
-    if (customer.status === 'rejected') console.warn('Contact saved, but customer sync failed.')
-    if (subscription.status === 'rejected') console.warn('Contact saved, but mailing-list subscription failed.')
-    if (notification.status === 'rejected') console.warn('Contact saved, but notification request failed.')
-
-    return {
-      success: true,
-      leadSaved: true,
-      customerSync: customer.status === 'fulfilled' ? 'saved' : 'failed',
-      subscription: !data.subscribe ? 'not_requested' : subscription.status === 'fulfilled' ? 'saved' : 'failed',
-      notification: notification.status === 'fulfilled' ? 'accepted' : 'failed',
+    // The insert trigger durably queued each downstream task in the same transaction.
+    // Dispatch is best-effort: the scheduled worker can recover if this tab closes.
+    try {
+      await fetch('/api/contact/dispatch', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ leadId: payload.id }),
+        signal: AbortSignal.timeout(15000),
+        keepalive: true,
+      })
+    } catch {
+      console.warn('Contact saved. Delivery work remains queued.')
     }
+    return { success: true, leadSaved: true }
+
   } finally {
     recentSubmissions.delete(fingerprint)
   }

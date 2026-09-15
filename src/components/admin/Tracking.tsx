@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase";
+import ContactDelivery from './ContactDelivery';
 const milestones = [
   "view_item",
   "artwork_upload_started",
@@ -43,6 +44,7 @@ export default function Tracking() {
   }, []);
   return (
     <section className="space-y-5">
+      <ContactDelivery />
       <div className="flex flex-wrap justify-between gap-3">
         <div>
           <h2 className="font-bold text-xl">Tracking checks</h2>
