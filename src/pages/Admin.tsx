@@ -1,6 +1,7 @@
 import { signInWithMigration } from '@/lib/signIn'
 import { cartLifecycle, type CartLifecycleRow } from '@/lib/cartLifecycle'
 import QuoteArtworkDownload from '@/components/QuoteArtworkDownload'
+import QuickBooksConnection from '@/components/QuickBooksConnection'
 import { readQuoteArtwork } from '@/lib/quoteArtwork'
 import { useState, useEffect, useRef, useCallback } from 'react'
 import { motion } from 'framer-motion'
@@ -3327,6 +3328,7 @@ const mainTabs = [
   { id: 'crm', label: 'CRM', icon: Users },
   { id: 'subscribers', label: 'Email List', icon: Mail },
   { id: 'square', label: 'Square', icon: CreditCard },
+  { id: 'quickbooks', label: 'QuickBooks', icon: CreditCard },
   { id: 'referrals', label: 'Referrals', icon: Share2 },
 ] as const
 
@@ -3408,6 +3410,7 @@ function Dashboard() {
         {activeTab === 'crm' && <CRMTab />}
         {activeTab === 'subscribers' && <SubscribersTab />}
         {activeTab === 'square' && <SquareTab />}
+        {activeTab === 'quickbooks' && <QuickBooksConnection />}
         {activeTab === 'referrals' && <ReferralsTab />}
       </div>
     </section>

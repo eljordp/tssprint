@@ -12,7 +12,8 @@
     "lint": "eslint .",
     "preview": "vite preview",
     "test:cart": "node --experimental-strip-types --test tests/cart-recovery.test.ts tests/cart-api.test.mjs",
-    "test:checkout": "node --experimental-strip-types --test tests/checkout-enforcement.test.mjs tests/analytics.test.mjs"
+    "test:checkout": "node --experimental-strip-types --test tests/checkout-enforcement.test.mjs tests/analytics.test.mjs",
+    "test:quickbooks": "node --test tests/quickbooks.test.mjs tests/quickbooks-flow.test.mjs tests/quickbooks-routes.test.mjs"
   },
   "dependencies": {
     "@paypal/react-paypal-js": "^9.0.1",
