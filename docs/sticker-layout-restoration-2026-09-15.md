@@ -1,3 +1,28 @@
+# Exact historical sticker page recovery — September 15, 2026
+
+This supersedes the approximate restoration recorded below, which the user rejected.
+
+## Verified source
+
+Vercel's production history before September 14, 2026 (America/Los_Angeles) identifies deployment `dpl_Fh9hgqfMiJgKSFyzwh7UxtEKFVq9`, created July 21, as the last production deployment before yesterday. It remained the prior production version until the September 14 release.
+
+- URL: https://tssprint-oqzilbjjb-jordis-projects-94d2df39.vercel.app/stickers
+- Git commit: `67e6d7e081ed5e83ae8db4d06a9f1b361390060d`
+- Restored `Order`, `PageHero`, `PortfolioStrip`, `StudioMockup`, projects, and cities into `src/pages/original-stickers`.
+- All six recovered files match that commit exactly, normalizing only local import paths in Order. Referenced image files match the original Git object hashes.
+- Scoped original foreground colors to this page; retained current shared navigation, footer, pricing module, checkout, and other routes.
+- Removed the rejected hybrid page/material-guide changes. Embedded product configurators retain their prior production source.
+
+## Verification
+
+- Opened the actual archived deployment in Chrome, then compared the recovered source on localhost at the same viewport and scroll position. Original circular swatches, option columns, separate artwork/preview/summary panels, typography, spacing, and selected styles match.
+- TypeScript/Vite build and scoped ESLint passed.
+- Existing pricing and cart-editing suites: 13 tests passed.
+- Browser: Circle, Gloss, 100 pieces, artwork after checkout results in the original $62 summary and Add to Cart acknowledgement.
+- Original page behavior is restored, including its original upload/preview controls. Shared current server-side checkout and price validation are retained.
+
+## Superseded earlier attempt
+
 # Main sticker page layout restoration — September 15, 2026
 
 User requested the older sticker ordering layout, visible choices instead of dropdowns, and the same sticker design shown separately for the selected matte/gloss finish. Scope is `/stickers`; other routes retain their current presentation. No further messages to other tasks after the user's correction.

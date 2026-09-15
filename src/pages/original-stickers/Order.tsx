@@ -1,32 +1,27 @@
-import ResponsiveImage from '@/components/ResponsiveImage'
 import { useEffect, useState, useRef } from 'react'
-import { Link, useSearchParams, useNavigate } from 'react-router-dom'
+import { Link, useSearchParams } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import { ShoppingCart, Sparkles, FileUp, Check, Clock, MapPin, Shield, Zap, Palette, Droplets, Sticker as StickerIcon, Hand, PanelsTopLeft, ScrollText, ArrowRight, Send } from 'lucide-react'
 import { useCart } from '@/context/CartContext'
 import { supabase } from '@/lib/supabase'
 import { getPricing, loadPricing, getBasePrice, getMaterialMultiplier, getSizeMultiplier } from '@/lib/pricing'
-import { STICKER_QUANTITIES, MIN_STICKER_QUANTITY, MIN_ORDER_SUBTOTAL, isValidStickerQuantity, getStickerPrice, formatPriceAdjustment } from '@/lib/stickerPricing'
-import { createArtworkPreview, readArtworkPreview, saveArtworkPreview, type ArtworkPreview } from '@/lib/artworkPreview'
-import MaterialGuide from '@/components/MaterialGuide'
-import PrintTrust from '@/components/PrintTrust'
-import { trackEvent } from '@/lib/analytics'
-import { cities } from '@/lib/cities'
-import { projects } from '@/lib/projects'
-import ServicePageIntro from '@/components/ServicePageIntro'
-import MobileOrderAction from '@/components/MobileOrderAction'
-import PortfolioStrip from '@/components/PortfolioStrip'
-import stkDieCut from '@/assets/optimized/projects/stickers-die-cut-stack-1000.webp'
-import stkHolo from '@/assets/optimized/projects/stickers-holographic-1000.webp'
-import stkLaptop from '@/assets/optimized/projects/stickers-on-laptop-1000.webp'
+import { cities } from './cities'
+import { projects } from './projects'
+import PageHero from './PageHero'
+import PortfolioStrip from './PortfolioStrip'
+import StudioMockup from './StudioMockup'
+import stickerHeroImg from '@/assets/projects/stickers-die-cut-stack.jpg'
+import stkDieCut from '@/assets/projects/stickers-die-cut-stack.jpg'
+import stkHolo from '@/assets/projects/stickers-holographic.jpg'
+import stkLaptop from '@/assets/projects/stickers-on-laptop.jpg'
 import stkSheet from '@/assets/projects/stickers-sheet.jpg'
-import stkRoll from '@/assets/optimized/projects/stickers-roll-1000.webp'
-import stkMatte from '@/assets/optimized/projects/drive-bottle-labels-1000.webp'
+import stkRoll from '@/assets/projects/stickers-roll.jpg'
+import stkMatte from '@/assets/projects/stickers-matte-detail.jpg'
 
 const stickerSpecs = [
-  { icon: Droplets, label: 'Material', value: 'Chosen for your application' },
-  { icon: Clock, label: 'Turnaround', value: 'Production after proof approval' },
-  { icon: Shield, label: 'Durability', value: 'Ask about stock and exposure' },
+  { icon: Droplets, label: 'Material', value: 'Premium 3M & Avery cast vinyl' },
+  { icon: Clock, label: 'Turnaround', value: '3-5 business days + 24hr proof' },
+  { icon: Shield, label: 'Durability', value: '3-5 years outdoor · waterproof' },
   { icon: MapPin, label: 'Shipping', value: 'Free US shipping · Bay pickup' },
 ]
 
@@ -54,12 +49,12 @@ interface ArtworkAttachment {
 type ArtworkIntent = 'upload' | 'send_later' | 'design_help'
 
 const materialData = [
-  { value: 'Matte Vinyl', label: 'Matte', description: 'Low-shine finish' },
-  { value: 'Glossy Vinyl', label: 'Gloss', description: 'Reflective finish' },
-  { value: 'Clear', label: 'Clear', description: 'Transparent base' },
-  { value: 'Holographic', label: 'Holographic', description: 'Rainbow reflection' },
-  { value: 'Paper', label: 'Paper', description: 'Paper label stock' },
-  { value: 'Embossed/UV', label: 'Embossed/UV', description: 'Specialty finish' },
+  { value: 'Matte Vinyl', label: 'Matte', bg: 'radial-gradient(circle at 35% 35%, #f0ece8, #ccc7c0)' },
+  { value: 'Glossy Vinyl', label: 'Gloss', bg: 'radial-gradient(circle at 35% 35%, #e0e0e4, #b0b0b6)' },
+  { value: 'Clear', label: 'Clear', bg: 'radial-gradient(circle at 35% 35%, #bbbbc0, #88888e)' },
+  { value: 'Holographic', label: 'Holographic', bg: 'linear-gradient(135deg, #e4c8f8, #c4b5fd, #93c5fd)' },
+  { value: 'Paper', label: 'Paper', bg: 'radial-gradient(circle at 35% 35%, #f5e8a0, #d4c060)' },
+  { value: 'Embossed/UV', label: 'Embossed/UV', bg: 'radial-gradient(circle at 35% 35%, #ffffff, #d8d8d8)' },
 ]
 
 // Square-presets — used for Die-Cut, Kiss-Cut, Square (these shapes have equal W and H)
@@ -88,12 +83,12 @@ function formatSizeForShape(size: string, shape: string): string {
   return size
 }
 
-const qtyOptions = STICKER_QUANTITIES
-const MIN_QTY = MIN_STICKER_QUANTITY
+const qtyOptions = [50, 100, 250, 500, 1000, 2500]
+const MIN_QTY = 50
 const stickerFormats = [
-  { value: 'handheld', label: 'Individual stickers', description: 'Separate stickers for handouts and merch.', cartLabel: 'Individual stickers', icon: Hand },
-  { value: 'sheet', label: 'Sticker sheets', description: 'Stickers together on a backing sheet.', cartLabel: 'Stickers on backing sheets', icon: PanelsTopLeft },
-  { value: 'roll', label: 'Roll labels', description: 'Labels for bottles, bags and packaging.', cartLabel: 'Roll labels', icon: ScrollText },
+  { value: 'handheld', label: 'Individual', cartLabel: 'Individual stickers', icon: Hand },
+  { value: 'sheet', label: 'Sheets', cartLabel: 'Sticker sheets', icon: PanelsTopLeft },
+  { value: 'roll', label: 'Rolls', cartLabel: 'Roll labels', icon: ScrollText },
 ] as const
 
 const localStickerTypes = [
@@ -135,6 +130,22 @@ const stickerProofProjects = stickerProofSlugs
 
 type StickerFormat = (typeof stickerFormats)[number]['value']
 
+function canPreviewArtwork(file: File) {
+  return file.type.startsWith('image/') || file.name.toLowerCase().endsWith('.svg')
+}
+
+function ShapeIcon({ shape }: { shape: string }) {
+  return (
+    <svg className="w-5 h-5 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+      {shape === 'Square' && <rect x="5" y="5" width="14" height="14" rx="1" />}
+      {shape === 'Circle' && <circle cx="12" cy="12" r="7" />}
+      {shape === 'Rectangle' && <rect x="3" y="7" width="18" height="10" rx="1" />}
+      {shape === 'Die-Cut' && <path d="M12 3L21 12L12 21L3 12Z" />}
+      {shape === 'Kiss-Cut' && <path d="M12 3L21 12L12 21L3 12Z" strokeDasharray="3 2" />}
+    </svg>
+  )
+}
+
 // Render a single sticker (as placeholder or real artwork)
 function Sticker({ shape, artworkUrl, size = 96, dashed = false }: { shape: string; artworkUrl: string; size?: number; dashed?: boolean }) {
   const isCircle = shape === 'Circle'
@@ -149,11 +160,11 @@ function Sticker({ shape, artworkUrl, size = 96, dashed = false }: { shape: stri
         width: w,
         height: h,
         borderRadius: radius,
-        background: artworkUrl ? '#f3f3f3' : 'linear-gradient(135deg, hsl(199 89% 64% / 0.18), hsl(199 89% 40% / 0.08))',
+        background: artworkUrl ? undefined : 'linear-gradient(135deg, hsl(199 89% 64% / 0.18), hsl(199 89% 40% / 0.08))',
       }}
     >
       {artworkUrl ? (
-        <ResponsiveImage src={artworkUrl} alt="Artwork" className="w-full h-full object-contain" />
+        <img src={artworkUrl} alt="Artwork" className="w-full h-full object-cover" />
       ) : (
         <span className="text-[10px] text-white/50 font-semibold leading-tight text-center px-1">Your<br/>Design</span>
       )}
@@ -194,7 +205,7 @@ function StickerMockup({ shape, artworkUrl, variant }: { shape: string; artworkU
       </div>
       {/* Paper strip with stickers */}
       <div className="flex items-center gap-1 bg-gradient-to-r from-white/90 via-white to-white/70 px-2 py-2 shadow-[0_8px_24px_rgba(0,0,0,0.35)]">
-        {Array.from({ length: 3 }).map((_, i) => (
+        {Array.from({ length: 5 }).map((_, i) => (
           <Sticker key={i} shape={shape} artworkUrl={artworkUrl} size={48} />
         ))}
       </div>
@@ -204,25 +215,18 @@ function StickerMockup({ shape, artworkUrl, variant }: { shape: string; artworkU
   )
 }
 
-export default function Order({ embedded = false, initialShape = 'Die-Cut', initialMaterial = 'Matte Vinyl', initialFormat = 'handheld' }: { embedded?: boolean; initialShape?: string; initialMaterial?: string; initialFormat?: StickerFormat }) {
-  const { addItem, replaceItem, items } = useCart()
-  const navigate = useNavigate()
-  const submittedRef = useRef(false)
+export default function Order() {
+  const { addItem } = useCart()
   const [searchParams] = useSearchParams()
-  const [shape, setShape] = useState(initialShape)
-  const [material, setMaterial] = useState(initialMaterial)
+  const [shape, setShape] = useState('Die-Cut')
+  const [material, setMaterial] = useState('Matte Vinyl')
   const [quantity, setQuantity] = useState(50)
   const [customQty, setCustomQty] = useState('')
-  const [size, setSize] = useState(getSizesForShape(initialShape)[0])
-  const [mockupView, setMockupView] = useState<StickerFormat>(initialFormat)
+  const [size, setSize] = useState('2" x 2"')
+  const [mockupView, setMockupView] = useState<StickerFormat>('handheld')
   const [artworkFile, setArtworkFile] = useState<File | null>(null)
-  const [preview, setPreview] = useState<ArtworkPreview | null>(null)
-  const artworkUrl = preview?.url || ''
-  const [previewLoading, setPreviewLoading] = useState(false)
-  const [previewError, setPreviewError] = useState('')
+  const [artworkUrl, setArtworkUrl] = useState('')
   const [artworkUpload, setArtworkUpload] = useState<ArtworkAttachment | null>(null)
-  const artworkGeneration = useRef(0)
-  useEffect(() => () => { artworkGeneration.current += 1 }, [])
   const [artworkStatus, setArtworkStatus] = useState<'idle' | 'uploading' | 'uploaded' | 'error'>('idle')
   const [artworkError, setArtworkError] = useState('')
   const [artworkIntent, setArtworkIntent] = useState<ArtworkIntent | null>(null)
@@ -233,10 +237,7 @@ export default function Order({ embedded = false, initialShape = 'Die-Cut', init
   const fileRef = useRef<HTMLInputElement>(null)
 
   const [pricingConfig, setPricingConfig] = useState(() => getPricing())
-  useEffect(() => { trackEvent('view_item', { product: 'custom-stickers' }) }, [])
   const queryString = searchParams.toString()
-  const editingItem = items.find(item => item.id === searchParams.get('edit'))
-  const returnToCart = Boolean(editingItem && searchParams.get('returnTo') === 'cart')
 
   useEffect(() => {
     let active = true
@@ -261,8 +262,8 @@ export default function Order({ embedded = false, initialShape = 'Die-Cut', init
 
     const shapeParam = params.get('shape')
     const nextShape =
-      nextFormat === 'sheet' ? 'Kiss-Cut'
-        : nextFormat === 'roll' ? 'Rectangle'
+      product.includes('sheet') ? 'Kiss-Cut'
+        : product.includes('roll') || product.includes('label') ? 'Rectangle'
           : product.includes('die-cut') || product.includes('sample') ? 'Die-Cut'
             : shapeData.find(s => s.value.toLowerCase() === shapeParam?.toLowerCase())?.value
     if (nextShape) {
@@ -275,10 +276,10 @@ export default function Order({ embedded = false, initialShape = 'Die-Cut', init
     const materialParam = params.get('material')
     const nextMaterial = materialData.find(m => m.value.toLowerCase() === materialParam?.toLowerCase())?.value
     if (nextMaterial) setMaterial(nextMaterial)
-    if (product.includes('sample')) { navigate('/contact?service=Sticker%20samples', { replace: true }); return }
+    if (product.includes('sample')) setMaterial('Holographic')
 
     const qtyParam = Number(params.get('qty'))
-    if (isValidStickerQuantity(qtyParam)) {
+    if (Number.isFinite(qtyParam) && qtyParam >= MIN_QTY) {
       if (qtyOptions.includes(qtyParam)) {
         setQuantity(qtyParam)
         setCustomQty('')
@@ -286,37 +287,23 @@ export default function Order({ embedded = false, initialShape = 'Die-Cut', init
         setCustomQty(String(qtyParam))
       }
     }
-  }, [queryString, navigate])
+  }, [queryString])
 
-  useEffect(() => {
-    if (!editingItem?.configuration) return
-    const config = editingItem.configuration
-    setShape(config.shape); setMaterial(config.material); setSize(config.size)
-    setCustomQty(String(config.pieces)); setMockupView(config.format)
-    setRushAddon(Boolean(config.rush)); setDesignAddon(Boolean(config.design))
-    setArtworkIntent(editingItem.artworkIntent === 'uploaded' ? 'upload' : editingItem.artworkIntent || null)
-    setArtworkUpload(editingItem.artwork || null)
-    setPreview(editingItem.artwork ? readArtworkPreview(editingItem.artwork.path) : null)
-    setArtworkStatus(editingItem.artwork ? 'uploaded' : 'idle')
-  }, [editingItem])
-
-  const requestedQty = customQty ? Number(customQty) : quantity
-  const quantityValid = isValidStickerQuantity(requestedQty)
-  const effectiveQty = quantityValid ? requestedQty : MIN_QTY
+  const effectiveQty = customQty ? (parseInt(customQty) || 50) : quantity
+  const basePrice = getBasePrice(effectiveQty, pricingConfig)
   const matMult = getMaterialMultiplier(material, pricingConfig)
   const sizeMult = getSizeMultiplier(size, pricingConfig)
-  const priceBreakdown = getStickerPrice(effectiveQty, pricingConfig, sizeMult, matMult)
-  const stickerSubtotal = priceBreakdown.subtotal
+  const stickerSubtotal = +(basePrice * matMult * sizeMult * effectiveQty).toFixed(2)
   const addonsTotal = (rushAddon ? ADDON_RUSH.price : 0) + (designAddon ? ADDON_DESIGN.price : 0)
   const totalPrice = +(stickerSubtotal + addonsTotal).toFixed(2)
-  const perUnit = stickerSubtotal / effectiveQty
+  const perUnit = +(basePrice * matMult * sizeMult).toFixed(3)
 
   const refPerUnit = getBasePrice(50, pricingConfig) * matMult * sizeMult
   const getDiscount = (qty: number) => {
     const pu = getBasePrice(qty, pricingConfig) * matMult * sizeMult
     return Math.round((1 - pu / refPerUnit) * 100)
   }
-  const getQtyTotal = (qty: number) => getStickerPrice(qty, pricingConfig, sizeMult, matMult).subtotal.toFixed(2)
+  const getQtyTotal = (qty: number) => +(getBasePrice(qty, pricingConfig) * matMult * sizeMult * qty).toFixed(0)
 
   const materialLabel = materialData.find(m => m.value === material)?.label || material
   const shapeLabel = shapeData.find(s => s.value === shape)?.name || shape
@@ -327,14 +314,11 @@ export default function Order({ embedded = false, initialShape = 'Die-Cut', init
         : `${shapeLabel} ${materialLabel} Stickers`
 
   const uploadArtwork = async (file: File) => {
-    const generation = ++artworkGeneration.current
     setArtworkStatus('uploading')
     setArtworkError('')
     setArtworkUpload(null)
-    trackEvent('artwork_upload_started')
 
     try {
-      if (!file.size || file.size > 50 * 1024 * 1024) throw new Error('Choose a non-empty artwork file under 50 MB.')
       const response = await fetch('/api/uploads/create-artwork-upload', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -346,7 +330,6 @@ export default function Order({ embedded = false, initialShape = 'Die-Cut', init
       })
       const data = await response.json().catch(() => ({}))
       if (!response.ok) throw new Error(data.error || 'Could not prepare artwork upload.')
-      if (generation !== artworkGeneration.current) return
 
       const { error } = await supabase.storage
         .from(data.bucket)
@@ -354,7 +337,6 @@ export default function Order({ embedded = false, initialShape = 'Die-Cut', init
           contentType: file.type || data.contentType || 'application/octet-stream',
         })
       if (error) throw error
-      if (generation !== artworkGeneration.current) return
 
       setArtworkUpload({
         bucket: data.bucket,
@@ -365,11 +347,8 @@ export default function Order({ embedded = false, initialShape = 'Die-Cut', init
         uploadedAt: new Date().toISOString(),
       })
       setArtworkStatus('uploaded')
-      trackEvent('artwork_upload_succeeded')
     } catch (error) {
-      if (generation !== artworkGeneration.current) return
       setArtworkStatus('error')
-      trackEvent('artwork_upload_failed')
       setArtworkError(error instanceof Error ? error.message : 'Artwork upload failed.')
     }
   }
@@ -379,22 +358,18 @@ export default function Order({ embedded = false, initialShape = 'Die-Cut', init
     setArtworkChoiceError('')
     setDesignAddon(false)
     setArtworkFile(file)
-    setPreview(null)
-    setPreviewError('')
+    setArtworkUrl(canPreviewArtwork(file) ? URL.createObjectURL(file) : '')
     void uploadArtwork(file)
   }
 
   const chooseArtworkIntent = (intent: ArtworkIntent) => {
-    trackEvent('artwork_option_selected', { option: intent })
     setArtworkIntent(intent)
     setArtworkChoiceError('')
     setDesignAddon(intent === 'design_help')
 
     if (intent !== 'upload') {
-      artworkGeneration.current += 1
       setArtworkFile(null)
-      setPreview(null)
-      setPreviewError('')
+      setArtworkUrl('')
       setArtworkUpload(null)
       setArtworkStatus('idle')
       setArtworkError('')
@@ -407,34 +382,18 @@ export default function Order({ embedded = false, initialShape = 'Die-Cut', init
   }
 
   useEffect(() => {
-    if (!artworkFile) { setPreviewLoading(false); return }
-    const controller = new AbortController()
-    setPreviewLoading(true)
-    setPreviewError('')
-    void createArtworkPreview(artworkFile, controller.signal).then(result => {
-      if (!controller.signal.aborted) setPreview(result)
-    }).catch(error => {
-      if (!controller.signal.aborted) setPreviewError(error instanceof Error ? error.message : 'Preview unavailable.')
-    }).finally(() => {
-      if (!controller.signal.aborted) setPreviewLoading(false)
-    })
-    return () => controller.abort()
-  }, [artworkFile])
+    return () => {
+      if (artworkUrl) URL.revokeObjectURL(artworkUrl)
+    }
+  }, [artworkUrl])
 
-  useEffect(() => {
-    if (artworkUpload && preview) saveArtworkPreview(artworkUpload.path, preview)
-  }, [artworkUpload, preview])
-
-  const handleAddToCart = (checkout = false) => {
-    if (!quantityValid || submittedRef.current) return
+  const handleAddToCart = () => {
+    if (effectiveQty < MIN_QTY) return
     if (!artworkIntent) {
-      document.getElementById('artwork-options')?.scrollIntoView({ behavior: 'smooth', block: 'center' })
-      document.getElementById('artwork-options')?.focus()
-      trackEvent('artwork_choice_required')
-      setArtworkChoiceError('Choose how you will provide artwork to continue.')
+      setArtworkChoiceError('Choose how you will provide artwork before adding this order.')
       return
     }
-    if (artworkIntent === 'upload' && !artworkFile && !artworkUpload) {
+    if (artworkIntent === 'upload' && !artworkFile) {
       setArtworkChoiceError('Select an artwork file, or choose to send it after checkout.')
       fileRef.current?.click()
       return
@@ -443,12 +402,9 @@ export default function Order({ embedded = false, initialShape = 'Die-Cut', init
     const addOns: { name: string; price: number }[] = []
     if (rushAddon) addOns.push({ name: ADDON_RUSH.label, price: ADDON_RUSH.price })
     if (designAddon) addOns.push({ name: ADDON_DESIGN.label, price: ADDON_DESIGN.price })
-    const item = {
-      id: editingItem?.id || `sticker-${crypto.randomUUID()}`,
-      pieceCount: effectiveQty,
-      configuration: { shape, material, size, pieces: effectiveQty, format: mockupView, rush: rushAddon, design: designAddon },
+    addItem({
+      id: `sticker-${Date.now()}`,
       name: cartProductName,
-      category: 'Stickers',
       size,
       option: `${effectiveQty} pcs · ${formatLabel}`,
       price: stickerSubtotal,
@@ -456,95 +412,208 @@ export default function Order({ embedded = false, initialShape = 'Die-Cut', init
       material,
       shape,
       dimensions: size,
-      artworkIntent: artworkIntent === 'upload' ? 'uploaded' as const : artworkIntent,
+      artworkIntent: artworkIntent === 'upload' ? 'uploaded' : artworkIntent,
       addOns: addOns.length > 0 ? addOns : undefined,
       artwork: artworkUpload || undefined,
-    }
-    submittedRef.current = true
-    if (editingItem) replaceItem(editingItem.id, item)
-    else addItem(item)
-    if (checkout) { navigate(`/stickers?edit=${encodeURIComponent(item.id)}#configure`, { replace: true }); navigate(returnToCart ? `/cart#item-${encodeURIComponent(item.id)}` : '/checkout'); return }
+    })
     setAdded(true)
-    window.setTimeout(() => { submittedRef.current = false }, 1000)
     setTimeout(() => setAdded(false), 2000)
   }
 
-  const selectFormat = (format: StickerFormat) => {
-    if (format === mockupView) return
-    const nextShape = format === 'sheet' ? 'Kiss-Cut' : format === 'roll' ? 'Rectangle' : 'Die-Cut'
-    setMockupView(format)
-    setShape(nextShape)
-    const validSizes = getSizesForShape(nextShape)
-    if (!validSizes.includes(size)) setSize(validSizes[0])
-    trackEvent('configuration_change', { field: 'format', value: format })
-  }
-  const formatQuote = {
-    artwork: artworkUpload || undefined,
-    message: mockupView === 'sheet'
-      ? `I'd like a quote for multi-design sticker sheets.\nSelected material: ${material}\nIndividual sticker size considered: ${size}\nSheet size: please advise\nNumber of sheets: \nDesigns per sheet: \n`
-      : `I'd like a quote for roll labels.\nLabels: ${effectiveQty}\nLabel size: ${size}\nMaterial: ${material}\nCore size / unwind direction / labeling machine: \n`,
-  }
+  return (
+    <>
+      <PageHero
+        eyebrow="Custom Stickers"
+        title="Bay Area custom stickers, printed in Hayward."
+        subtitle="Die-cut, kiss-cut, holographic, matte, clear, sticker sheets, and roll labels. Free digital proof in 24 hours, 3–5 day turnaround, and local Bay Area pickup."
+        image={stickerHeroImg}
+        imageAlt="Stack of custom die-cut stickers"
+        icon={StickerIcon}
+        primaryCta={{ label: 'Configure Stickers', href: '#configure' }}
+        secondaryCta={{ label: 'See Sticker Work', href: '#portfolio' }}
+      />
 
-  const configurator = (
-      <section id="configure" className="pt-4 pb-24 md:pb-12 scroll-mt-24">
+      <section id="configure" className="py-8 md:py-12 scroll-mt-24">
         <div className="section-container">
-          <fieldset className="max-w-6xl mx-auto mb-6">
-            <legend className="text-sm font-bold mb-3">Choose your sticker format</legend>
-            <div className="grid grid-cols-3 gap-2 sm:gap-3">
-              {stickerFormats.map(format => {
-                const FormatIcon = format.icon
-                return <button key={format.value} type="button" aria-pressed={mockupView === format.value}
-                  onClick={() => selectFormat(format.value)}
-                  className={`rounded-xl border p-3 text-left transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary ${mockupView === format.value ? 'border-primary bg-primary/10' : 'border-border bg-card hover:border-primary/50'}`}>
-                  <span className="relative flex flex-col sm:flex-row items-start sm:items-center gap-2 font-bold text-xs sm:text-sm"><FormatIcon size={18} aria-hidden="true" />{format.label}{mockupView === format.value && <Check size={16} className="absolute right-0 top-0 sm:static sm:ml-auto text-primary" aria-hidden="true" />}</span>
-                  <span className="sr-only">{format.description}</span>
-                </button>
-              })}
-            </div>
-            {mockupView !== 'handheld' && <div className="mt-3 rounded-xl border border-border p-4 text-sm" aria-live="polite">
-              <p className="font-semibold">{mockupView === 'sheet' ? 'One design on backing sheets · priced per sticker' : 'Priced per label, not per roll'}</p>
-              <p className="text-muted-foreground mt-1">{mockupView === 'sheet' ? 'The options below count individual stickers. For multiple designs or a specific number of whole sheets, request a sheet quote.' : 'For machine application, we need your core size and unwind direction before confirming compatibility.'}</p>
-              <Link to={`/contact?service=${mockupView === 'sheet' ? 'Sticker%20sheets' : 'Roll%20labels'}`} state={{ stickerQuote: formatQuote }} aria-disabled={artworkStatus === 'uploading'} onClick={event => { if (artworkStatus === 'uploading') event.preventDefault() }} className="inline-flex items-center gap-2 mt-2 text-primary font-bold underline underline-offset-4">
-                {mockupView === 'sheet' ? 'Get a multi-design sheet quote' : 'Request machine-compatible roll labels'}<ArrowRight size={16} aria-hidden="true" />
-              </Link>
-              {artworkStatus === 'uploading' && <p className="text-xs mt-2">Wait for your artwork to finish uploading if you want to include it in the quote.</p>}
-            </div>}
-          </fieldset>
-          <div className="max-w-6xl mx-auto grid grid-cols-1 md:grid-cols-2 items-start gap-6 lg:gap-8">
-            <div className="min-w-0 space-y-3 md:sticky md:top-24">
-            {/* Mockup preview */}
-            <div className="bg-card border border-border rounded-2xl p-4 flex flex-col items-center">
-              <button type="button" onClick={() => chooseArtworkIntent('upload')} className="btn-primary w-full justify-center mb-3"><FileUp size={16} />{artworkFile || artworkUpload ? 'Change artwork' : 'Upload & preview'}</button>
-              {/* Preview area */}
-              <div className="flex-1 flex items-center justify-center w-full min-w-0 overflow-hidden min-h-[160px] md:min-h-[240px] py-4">
-                {artworkUrl ? <ResponsiveImage src={artworkUrl} alt={preview?.pages ? "PDF artwork — first page" : "Your artwork preview"} className="max-h-[320px] max-w-full object-contain rounded bg-white" /> : <StickerMockup shape={shape} artworkUrl={artworkUrl} variant={mockupView === 'handheld' ? 'single' : mockupView} /> }
+          {/* 4-column configurator — first thing after the hero */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.1 }}
+            className="max-w-6xl mx-auto grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 lg:gap-8 mb-10"
+          >
+            {/* Shape */}
+            <div>
+              <h3 className="text-sm font-black uppercase tracking-wider mb-3">Shape</h3>
+              <div className="space-y-2">
+                {shapeData.map(s => (
+                  <button
+                    key={s.value}
+                    onClick={() => {
+                      setShape(s.value)
+                      // If current size isn't valid for the new shape, snap to that shape's first preset
+                      const validSizes = getSizesForShape(s.value)
+                      if (!validSizes.includes(size)) setSize(validSizes[0])
+                    }}
+                    className={`w-full flex items-center gap-3 px-4 py-3.5 rounded-xl text-sm font-medium border transition-all text-left ${
+                      shape === s.value
+                        ? 'border-primary bg-primary/10 text-primary'
+                        : 'border-border hover:border-primary/30'
+                    }`}
+                  >
+                    <ShapeIcon shape={s.value} />
+                    <span>{s.name}</span>
+                  </button>
+                ))}
               </div>
-
-              <p role="status" className="text-xs text-muted-foreground mt-2 text-center">
-                {previewLoading ? 'Preparing artwork preview…' : previewError ? previewError : artworkUrl ? (preview?.pages ? `PDF preview · page 1 of ${preview.pages}` : 'Preview of your design') : artworkUpload ? 'Artwork saved. Reselect the file to preview it on this device.' : 'Upload a PDF or image to preview your artwork'}
-              </p>
             </div>
 
+            {/* Material */}
+            <div>
+              <h3 className="text-sm font-black uppercase tracking-wider mb-3">Material</h3>
+              <div className="grid grid-cols-2 gap-3">
+                {materialData.map(m => (
+                  <button
+                    key={m.value}
+                    onClick={() => setMaterial(m.value)}
+                    className={`flex flex-col items-center gap-2 p-4 rounded-xl border transition-all ${
+                      material === m.value
+                        ? 'border-primary bg-primary/10'
+                        : 'border-border hover:border-primary/30'
+                    }`}
+                  >
+                    <div
+                      className="w-12 h-12 rounded-full shadow-inner"
+                      style={{ background: m.bg, boxShadow: 'inset 0 -3px 6px rgba(0,0,0,0.12), inset 0 2px 4px rgba(255,255,255,0.15)' }}
+                    />
+                    <span className={`text-xs font-medium ${material === m.value ? 'text-primary' : 'text-muted-foreground'}`}>
+                      {m.label}
+                    </span>
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Size */}
+            <div>
+              <h3 className="text-sm font-black uppercase tracking-wider mb-3">
+                {shape === 'Circle' ? 'Diameter' : shape === 'Rectangle' ? 'Size, inch (W × H)' : 'Size, inch (W × H)'}
+              </h3>
+              <div className="space-y-2">
+                {getSizesForShape(shape).map(s => (
+                  <button
+                    key={s}
+                    onClick={() => setSize(s)}
+                    className={`w-full px-4 py-3.5 rounded-xl text-sm font-medium border transition-all text-left ${
+                      size === s
+                        ? 'border-primary bg-primary text-white'
+                        : 'border-border hover:border-primary/30'
+                    }`}
+                  >
+                    {formatSizeForShape(s, shape)}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Quantity */}
+            <div>
+              <h3 className="text-sm font-black uppercase tracking-wider mb-3">Quantity</h3>
+              <div className="space-y-2">
+                {qtyOptions.map(q => {
+                  const total = getQtyTotal(q)
+                  const disc = getDiscount(q)
+                  const isActive = !customQty && quantity === q
+                  return (
+                    <button
+                      key={q}
+                      onClick={() => { setQuantity(q); setCustomQty('') }}
+                      className={`w-full flex items-center justify-between px-4 py-3.5 rounded-xl text-sm font-medium border transition-all ${
+                        isActive
+                          ? 'border-primary bg-primary text-white'
+                          : 'border-border hover:border-primary/30'
+                      }`}
+                    >
+                      <span>{q} pcs</span>
+                      <span className="flex items-center gap-2">
+                        <span className="font-bold">${total}</span>
+                        {disc > 0 && (
+                          <span className={`text-xs font-semibold ${isActive ? 'text-white/70' : 'text-green-400'}`}>
+                            -{disc}%
+                          </span>
+                        )}
+                      </span>
+                    </button>
+                  )
+                })}
+                {/* Custom quantity */}
+                <div className={`rounded-xl border transition-all ${customQty ? (effectiveQty < MIN_QTY ? 'border-yellow-500/40 bg-yellow-500/5' : 'border-primary bg-primary/10') : 'border-border'}`}>
+                  <p className="text-xs text-muted-foreground text-center pt-3 pb-1.5">Custom quantity · min {MIN_QTY}</p>
+                  <div className="flex items-center gap-2 px-3 pb-3">
+                    <input
+                      type="number"
+                      min={MIN_QTY}
+                      placeholder={`Enter qty (${MIN_QTY}+)`}
+                      value={customQty}
+                      onChange={e => setCustomQty(e.target.value)}
+                      className="flex-1 bg-muted rounded-lg px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/20"
+                    />
+                    <span className="text-sm font-bold">
+                      ${customQty ? getQtyTotal(parseInt(customQty) || MIN_QTY) : getQtyTotal(quantity)}
+                    </span>
+                  </div>
+                  {customQty && effectiveQty < MIN_QTY && (
+                    <p className="text-[11px] text-yellow-500 px-3 pb-3 -mt-1">
+                      Minimum {MIN_QTY} pieces per order.
+                    </p>
+                  )}
+                </div>
+              </div>
+            </div>
+          </motion.div>
+
+          {/* Bottom 3-column section */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.2 }}
+            className="max-w-6xl mx-auto grid grid-cols-1 md:grid-cols-3 gap-6"
+          >
             {/* Artwork card */}
-            <fieldset className="min-w-0 px-1 flex flex-col items-center justify-center text-center">
+            <fieldset className="bg-card border border-border rounded-2xl p-8 flex flex-col items-center justify-center text-center">
               <legend className="sr-only">Choose how you will provide artwork</legend>
-              <div className="grid grid-cols-2 gap-2 w-full [&>p]:col-span-2">
+              <h3 className="font-bold text-lg mb-1">How will you provide artwork?</h3>
+              <p className="text-sm text-muted-foreground mb-6">Choose one. Every order gets a proof before printing.</p>
+              <div className="space-y-3 w-full max-w-xs">
+                <button
+                  type="button"
+                  onClick={() => chooseArtworkIntent('upload')}
+                  className={`w-full flex items-center justify-center gap-2.5 px-5 py-4 rounded-xl border text-sm font-medium transition-all ${
+                    artworkIntent === 'upload'
+                      ? 'border-primary bg-primary/10 text-primary'
+                      : 'bg-muted border-border hover:border-primary/30'
+                  }`}
+                  aria-pressed={artworkIntent === 'upload'}
+                >
+                  <FileUp size={16} className="text-primary" />
+                  <span>{artworkFile ? 'Replace uploaded artwork' : 'Upload my artwork now'}</span>
+                </button>
                 <button
                   type="button"
                   onClick={() => chooseArtworkIntent('send_later')}
-                  className={`w-full flex items-center justify-center gap-2.5 px-3 py-3 rounded-xl border text-sm font-medium transition-all ${
+                  className={`w-full flex items-center justify-center gap-2.5 px-5 py-4 rounded-xl border text-sm font-medium transition-all ${
                     artworkIntent === 'send_later'
                       ? 'border-primary bg-primary/10 text-primary'
                       : 'bg-muted border-border hover:border-primary/30'
                   }`}
                   aria-pressed={artworkIntent === 'send_later'}
                 >
-                  <Send size={16} className="text-primary" /> Send artwork later
+                  <Send size={16} className="text-primary" /> Send artwork after checkout
                 </button>
                 <button
                   type="button"
                   onClick={() => chooseArtworkIntent('design_help')}
-                  className={`w-full flex items-center justify-center gap-2.5 px-3 py-3 rounded-xl border text-sm font-medium transition-all ${
+                  className={`w-full flex items-center justify-center gap-2.5 px-5 py-4 rounded-xl border text-sm font-medium transition-all ${
                     artworkIntent === 'design_help'
                       ? 'border-primary bg-primary/10 text-primary'
                       : 'bg-muted border-border hover:border-primary/30'
@@ -552,18 +621,18 @@ export default function Order({ embedded = false, initialShape = 'Die-Cut', init
                   aria-pressed={artworkIntent === 'design_help'}
                 >
                   <Sparkles size={16} className="text-primary" />
-                  <span>Design help · +${ADDON_DESIGN.price}</span>
+                  <span>I need design help · +${ADDON_DESIGN.price}</span>
                 </button>
                 <input
                   ref={fileRef}
                   type="file"
-                  accept=".ai,.eps,.gif,.heic,.jpeg,.jpg,.pdf,.png,.psd,.svg,.tif,.tiff,.webp"
+                  accept="image/*,.pdf,.ai,.eps,.svg"
                   className="hidden"
                   onChange={e => { const f = e.target.files?.[0]; if (f) handleFile(f) }}
                 />
                 {artworkFile && (
-                  <p className="text-xs text-muted-foreground font-medium mt-2 break-words">
-                    Selected: {artworkFile.name}
+                  <p className="text-xs text-primary font-medium mt-2">
+                    &#10003; {artworkFile.name}
                   </p>
                 )}
                 {artworkStatus === 'uploading' && (
@@ -572,17 +641,22 @@ export default function Order({ embedded = false, initialShape = 'Die-Cut', init
                   </p>
                 )}
                 {artworkStatus === 'uploaded' && (
-                  <p role="status" className="text-xs text-green-400 mt-1 break-words">
-                    ✓ {artworkUpload?.fileName} saved and ready to add to cart.
+                  <p className="text-xs text-green-400 mt-1">
+                    Artwork saved with this cart item.
                   </p>
                 )}
                 {artworkStatus === 'error' && (
-                  <p role="alert" className="text-xs text-destructive mt-1">
-                    {artworkError} <button type="button" className="underline font-semibold" onClick={() => artworkFile && void uploadArtwork(artworkFile)}>Retry upload</button>
+                  <p className="text-xs text-destructive mt-1">
+                    {artworkError}
+                  </p>
+                )}
+                {artworkFile && !artworkUrl && (
+                  <p className="text-xs text-muted-foreground mt-1">
+                    File received for proof. Upload PNG, JPG, or SVG for live preview.
                   </p>
                 )}
                 {artworkIntent === 'send_later' && (
-                  <p className="text-xs font-medium text-primary">Email your artwork to thestickersmith@gmail.com with your order number after checkout.</p>
+                  <p className="text-xs font-medium text-primary">We will email you where to send the final file.</p>
                 )}
                 {artworkIntent === 'design_help' && (
                   <p className="text-xs font-medium text-primary">Design help is included in the total below.</p>
@@ -593,99 +667,86 @@ export default function Order({ embedded = false, initialShape = 'Die-Cut', init
               </div>
             </fieldset>
 
-<p className="text-xs text-muted-foreground">Artwork preview only. Your emailed proof confirms the cut, layout and finish.</p>
-            </div><div className="min-w-0 space-y-5"><div className="grid grid-cols-2 gap-3">
-<label className="text-sm font-bold">Shape<select aria-label="Sticker shape" className="mt-2 w-full rounded-xl border border-border bg-card p-3" value={shape} onChange={e => { setShape(e.target.value); const sizes = getSizesForShape(e.target.value); if (!sizes.includes(size)) setSize(sizes[0]) }}>{shapeData.map(s => <option key={s.value} value={s.value}>{s.name}</option>)}</select></label>
-<label className="text-sm font-bold">Size<select aria-label="Sticker size" className="mt-2 w-full rounded-xl border border-border bg-card p-3" value={size} onChange={e => setSize(e.target.value)}>{getSizesForShape(shape).map(s => <option key={s} value={s}>{formatSizeForShape(s, shape)}</option>)}</select></label>
-
-</div><MaterialGuide value={material} onSelect={next => { setMaterial(next); trackEvent('configuration_change', { field: 'material', value: next }) }} />            {/* Quantity */}
-            <div>
-              <h2 className="text-sm font-black uppercase tracking-wider mb-3">Quantity</h2>
-              {mockupView !== 'handheld' && <p className="text-sm text-muted-foreground mb-3">{mockupView === 'sheet' ? 'Count individual stickers, not backing sheets. Size is for each sticker.' : 'Count individual labels, not rolls. Size is for each label.'}</p>}
-              <p className="text-xs text-muted-foreground mb-3">Prices include your size and material. Savings vs. {MIN_QTY} pcs.</p>
-              <div className="grid grid-cols-2 gap-2">
-                {qtyOptions.map(q => {
-                  const total = getQtyTotal(q)
-                  const disc = getDiscount(q)
-                  const isActive = !customQty && quantity === q
+            {/* Mockup preview */}
+            <div className="bg-card border border-border rounded-2xl p-6 flex flex-col items-center">
+              {/* View toggle */}
+              <div className="flex gap-1 bg-muted/60 p-1 rounded-full mb-6">
+                {stickerFormats.map(format => {
+                  const FormatIcon = format.icon
                   return (
                     <button
-                      key={q}
-                      onClick={() => { setQuantity(q); setCustomQty('') }}
-                      className={`w-full flex flex-col items-start justify-between px-3 py-3 rounded-xl text-sm font-medium border transition-all ${
-                        isActive
-                          ? 'border-primary bg-primary text-primary-foreground'
-                          : 'border-border hover:border-primary/30'
+                      key={format.value}
+                      onClick={() => setMockupView(format.value)}
+                      className={`flex items-center gap-1.5 px-4 py-2 rounded-full text-xs font-medium transition-all ${
+                        mockupView === format.value
+                          ? 'bg-primary text-white shadow-sm'
+                          : 'text-muted-foreground hover:text-foreground'
                       }`}
                     >
-                      <span>{q} pcs</span>
-                      <span className="flex items-center gap-2">
-                        <span className="font-bold">${total}</span>
-                        {disc > 0 && (
-                          <span className={`text-xs font-semibold ${isActive ? 'text-primary-foreground/80' : 'text-green-400'}`}>
-                            Save {disc}%/ea
-                          </span>
-                        )}
-                      </span>
+                      <FormatIcon size={13} /> {format.label}
                     </button>
                   )
                 })}
-                {/* Custom quantity */}
-                <div className={`col-span-2 rounded-xl border transition-all ${customQty ? (!quantityValid ? 'border-yellow-500/40 bg-yellow-500/5' : 'border-primary bg-primary/10') : 'border-border'}`}>
-                  <p className="text-xs text-muted-foreground text-center pt-3 pb-1.5">Custom quantity · min {MIN_QTY}</p>
-                  <div className="flex items-center gap-2 px-3 pb-3">
-                    <input
-                      type="number"
-                      min={MIN_QTY}
-                      step={1}
-                      aria-label="Custom sticker quantity"
-                      aria-invalid={!quantityValid}
-                      aria-describedby={!quantityValid ? 'quantity-error' : undefined}
-                      placeholder={`Enter qty (${MIN_QTY}+)`}
-                      value={customQty}
-                      onChange={e => setCustomQty(e.target.value)}
-                      className="flex-1 bg-muted rounded-lg px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/20"
-                    />
-                    <span className="text-sm font-bold">
-                      {quantityValid ? `$${getQtyTotal(effectiveQty)}` : '—'}
-                    </span>
-                  </div>
-                  {!quantityValid && (
-                    <p id="quantity-error" className="text-[11px] text-yellow-500 px-3 pb-3 -mt-1">
-                      Enter a whole number of {MIN_QTY} pieces or more.
-                    </p>
-                  )}
-                </div>
               </div>
+
+              {/* Preview area */}
+              <div className="flex-1 flex items-center justify-center w-full min-h-[240px] py-4">
+                {mockupView === 'handheld' && (
+                  <StickerMockup
+                    shape={shape}
+                    artworkUrl={artworkUrl}
+                    variant="single"
+                  />
+                )}
+                {mockupView === 'sheet' && (
+                  <StickerMockup
+                    shape={shape}
+                    artworkUrl={artworkUrl}
+                    variant="sheet"
+                  />
+                )}
+                {mockupView === 'roll' && (
+                  <StickerMockup
+                    shape={shape}
+                    artworkUrl={artworkUrl}
+                    variant="roll"
+                  />
+                )}
+              </div>
+
+              <p className="text-xs text-muted-foreground mt-2">
+                {artworkUrl ? 'Preview of your design' : 'Upload artwork to see your design applied'}
+              </p>
             </div>
+
             {/* Order Summary */}
             <div className="bg-card border border-border rounded-2xl p-6 flex flex-col">
-              <h2 className="text-xs font-black uppercase tracking-[0.2em] text-center text-muted-foreground mb-4">
+              <h3 className="text-xs font-black uppercase tracking-[0.2em] text-center text-muted-foreground mb-4">
                 Order Summary
-              </h2>
+              </h3>
               <div className="text-center mb-4">
-                <p className="text-xl font-black">{quantityValid ? `${effectiveQty} ${mockupView === 'roll' ? 'labels' : 'stickers'}` : 'Choose a valid quantity'}</p>
+                <p className="text-xl font-black">{effectiveQty} stickers</p>
                 <p className="text-sm text-muted-foreground">{shapeLabel} &middot; {formatSizeForShape(size, shape)}</p>
                 <p className="text-sm text-muted-foreground">{materialLabel}</p>
                 <p className="text-sm text-primary">{formatLabel}</p>
               </div>
 
               {/* Price breakdown */}
-              {quantityValid && <div className="border-t border-border/60 pt-4 space-y-1.5 text-xs">
+              <div className="border-t border-border/60 pt-4 space-y-1.5 text-xs">
                 <div className="flex justify-between text-muted-foreground">
-                  <span>{effectiveQty} {mockupView === 'roll' ? 'labels' : 'stickers'} · base price</span>
-                  <span className="tabular-nums">${priceBreakdown.baseTotal.toFixed(2)}</span>
+                  <span>{effectiveQty} × ${basePrice.toFixed(2)} base</span>
+                  <span className="tabular-nums">${(basePrice * effectiveQty).toFixed(2)}</span>
                 </div>
                 {sizeMult !== 1 && (
                   <div className="flex justify-between text-muted-foreground">
-                    <span>{formatSizeForShape(size, shape)} size adjustment</span>
-                    <span className="tabular-nums">{formatPriceAdjustment(priceBreakdown.sizeAdjustment)}</span>
+                    <span>{formatSizeForShape(size, shape)} size (×{sizeMult.toFixed(1)})</span>
+                    <span className="tabular-nums">+${(basePrice * effectiveQty * (sizeMult - 1)).toFixed(2)}</span>
                   </div>
                 )}
                 {matMult !== 1 && (
                   <div className="flex justify-between text-muted-foreground">
-                    <span>{materialLabel} {matMult < 1 ? 'savings' : 'upgrade'}</span>
-                    <span className="tabular-nums">{formatPriceAdjustment(priceBreakdown.materialAdjustment)}</span>
+                    <span>{materialLabel} (×{matMult.toFixed(1)})</span>
+                    <span className="tabular-nums">+${(basePrice * effectiveQty * sizeMult * (matMult - 1)).toFixed(2)}</span>
                   </div>
                 )}
                 <div className="flex justify-between pt-1 border-t border-border/40 mt-1">
@@ -704,7 +765,7 @@ export default function Order({ embedded = false, initialShape = 'Die-Cut', init
                     <span className="tabular-nums">+${ADDON_DESIGN.price}</span>
                   </div>
                 )}
-              </div>}
+              </div>
 
               {/* Rush toggle inline */}
               <button
@@ -723,18 +784,17 @@ export default function Order({ embedded = false, initialShape = 'Die-Cut', init
               </button>
 
               <div className="border-t border-border pt-4 mt-4 text-center">
-                <p className="text-xs font-bold text-primary uppercase tracking-wider mb-1">Total before cart discounts</p>
-                <p className="text-4xl font-black">{quantityValid ? `$${totalPrice.toFixed(2)}` : '—'}</p>
-                {quantityValid && <p className="text-xs text-primary mt-1.5">Stickers &asymp; ${perUnit.toFixed(3)}/ea · excludes add-ons</p>}
-                <p className="text-xs text-muted-foreground mt-2">${MIN_ORDER_SUBTOTAL} cart minimum before discounts.</p>
+                <p className="text-xs font-bold text-primary uppercase tracking-wider mb-1">Total</p>
+                <p className="text-4xl font-black">${totalPrice.toFixed(2)}</p>
+                <p className="text-xs text-primary mt-1.5">&asymp; ${perUnit.toFixed(3)}/ea</p>
               </div>
               <button
-                onClick={() => handleAddToCart(true)}
-                disabled={!quantityValid || (Boolean(artworkFile) && artworkStatus !== 'uploaded')}
+                onClick={handleAddToCart}
+                disabled={effectiveQty < MIN_QTY || (Boolean(artworkFile) && artworkStatus !== 'uploaded')}
                 className={`btn-primary w-full mt-5 ${added ? 'bg-green-600' : ''} disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:!transform-none`}
               >
-                {!quantityValid ? (
-                  <>Enter a whole quantity of {MIN_QTY}+</>
+                {effectiveQty < MIN_QTY ? (
+                  <>Minimum {MIN_QTY} to add</>
                 ) : artworkFile && artworkStatus === 'uploading' ? (
                   <>Saving artwork...</>
                 ) : artworkFile && artworkStatus === 'error' ? (
@@ -742,11 +802,9 @@ export default function Order({ embedded = false, initialShape = 'Die-Cut', init
                 ) : added ? (
                   <><Check size={18} /> Added to Cart!</>
                 ) : (
-                  <><ShoppingCart size={18} /> {returnToCart ? 'Save & Return to Cart' : editingItem ? 'Save & Continue to Checkout' : 'Continue to Checkout'}</>
+                  <><ShoppingCart size={18} /> Add to Cart</>
                 )}
               </button>
-              <button type="button" className="mt-3 text-sm text-primary font-bold" disabled={!quantityValid} onClick={() => handleAddToCart(false)}>{added ? 'Saved to cart' : editingItem ? 'Save changes & keep shopping' : 'Add to cart & keep shopping'}</button>
-              <PrintTrust />
               {effectiveQty > 2500 && (
                 <a
                   href={`/contact?service=Bulk+Sticker+Order&qty=${effectiveQty}&size=${encodeURIComponent(size)}&material=${encodeURIComponent(material)}`}
@@ -764,9 +822,8 @@ export default function Order({ embedded = false, initialShape = 'Die-Cut', init
                 Digital proof within 24 hours. Nothing prints until you approve.
               </p>
             </div>
-</div>
-          </div>
-          <MobileOrderAction regionId="configure" price={quantityValid ? `$${totalPrice.toFixed(2)}` : '—'} detail={`${effectiveQty || 0} ${mockupView === 'roll' ? 'labels' : 'stickers'}`} label={added ? 'Saved!' : editingItem ? 'Save changes' : 'Continue to Checkout'} disabled={!quantityValid || (Boolean(artworkFile) && artworkStatus !== 'uploaded')} onClick={() => handleAddToCart(true)} />
+          </motion.div>
+
           {/* Specs grid — trust signal, small, under the cart not blocking it */}
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -778,18 +835,12 @@ export default function Order({ embedded = false, initialShape = 'Die-Cut', init
               <div key={s.label} className="bg-card/60 border border-border rounded-xl p-4">
                 <s.icon className="w-5 h-5 text-primary mb-2" />
                 <p className="text-[10px] text-muted-foreground uppercase tracking-wider mb-0.5">{s.label}</p>
-                <p className="text-xs font-semibold leading-snug">{s.label === 'Material' ? materialLabel : s.label === 'Durability' && material === 'Paper' ? 'Dry indoor use; not waterproof' : s.value}</p>
+                <p className="text-xs font-semibold leading-snug">{s.value}</p>
               </div>
             ))}
           </motion.div>
         </div>
       </section>
-  )
-  if (embedded) return configurator
-  return (
-    <>
-      <div className="section-container pt-6 md:pt-8"><ServicePageIntro eyebrow="Custom Stickers" title="Upload. Preview. Make it yours." description="Choose your finish, size and quantity. Every order gets a proof before printing." /></div>
-      {configurator}
 
       <section className="py-12 md:py-16 border-t border-border/50">
         <div className="section-container">
@@ -803,11 +854,14 @@ export default function Order({ embedded = false, initialShape = 'Die-Cut', init
                 Bay Area sticker printing
               </p>
               <h2 className="text-3xl md:text-4xl font-black mb-4">
-                Printed in Hayward. Made for your brand.
+                Custom stickers for Bay Area brands, artists, shops, and events.
               </h2>
               <div className="space-y-4 text-muted-foreground leading-relaxed">
                 <p>
-                  From merch drops to packaging labels, choose local pickup in Hayward or free US shipping. We check your artwork, cut lines and layout before production.
+                  The Sticker Smith prints custom stickers in Hayward for customers across the East Bay and the wider Bay Area. If you need a small run for a launch, waterproof vinyl for packaging, or a fast reorder before an event, you can approve your proof online and pick up locally at the shop.
+                </p>
+                <p>
+                  Every order gets a real digital proof before production. We check cut lines, bleed, sizing, material choice, and whether your artwork will hold up as a sticker before anything hits the printer.
                 </p>
               </div>
               <div className="mt-6 flex flex-wrap gap-2">
@@ -838,7 +892,7 @@ export default function Order({ embedded = false, initialShape = 'Die-Cut', init
                   <StickerIcon className="w-5 h-5 text-primary mb-3" />
                   <h3 className="font-bold text-sm group-hover:text-primary transition-colors">{type.label}</h3>
                   <p className="mt-1 text-xs text-muted-foreground leading-relaxed">
-                    View format details and ordering options.
+                    Proofed, printed, and finished for local pickup or shipping.
                   </p>
                   <span className="mt-3 inline-flex items-center gap-1 text-[10px] font-bold uppercase tracking-widest text-primary">
                     Explore options <ArrowRight size={12} />
@@ -863,11 +917,11 @@ export default function Order({ embedded = false, initialShape = 'Die-Cut', init
             {stickerProofProjects.map((project) => (
               <Link
                 key={project.slug}
-                to={`/projects?project=${encodeURIComponent(project.slug)}`}
+                to="/projects"
                 className="group bg-background border border-border rounded-xl overflow-hidden hover:border-primary/40 transition-all"
               >
                 <div className="aspect-[4/3] overflow-hidden bg-black">
-                  <ResponsiveImage src={project.image} alt={project.title} loading="lazy" className="h-full w-full object-cover group-hover:scale-105 transition-transform duration-500" />
+                  <img src={project.image} alt={project.title} loading="lazy" className="h-full w-full object-cover group-hover:scale-105 transition-transform duration-500" />
                 </div>
                 <div className="p-4">
                   <p className="text-[10px] font-bold uppercase tracking-widest text-primary/90 mb-1">{project.category}</p>
@@ -879,6 +933,10 @@ export default function Order({ embedded = false, initialShape = 'Die-Cut', init
           </div>
           <div className="mt-6 flex flex-wrap items-center gap-3">
             <Link to="/projects" className="btn-secondary text-sm">See More Sticker Projects</Link>
+            <Link to="/die-cut-stickers" className="text-sm font-bold text-primary hover:underline">Die-cut stickers</Link>
+            <Link to="/sticker-sheets" className="text-sm font-bold text-primary hover:underline">Sticker sheets</Link>
+            <Link to="/roll-labels" className="text-sm font-bold text-primary hover:underline">Roll labels</Link>
+            <Link to="/holographic-stickers" className="text-sm font-bold text-primary hover:underline">Holographic stickers</Link>
           </div>
         </div>
       </section>
@@ -891,12 +949,29 @@ export default function Order({ embedded = false, initialShape = 'Die-Cut', init
           </div>
           <div className="grid gap-4">
             {stickerFaqs.map((faq) => (
-              <details key={faq.q} className="bg-card/70 border border-border rounded-xl p-5">
-                <summary className="font-bold cursor-pointer">{faq.q}</summary>
-                <p className="text-sm md:text-base text-muted-foreground leading-relaxed mt-3">{faq.a}</p>
-              </details>
+              <div key={faq.q} className="bg-card/70 border border-border rounded-xl p-5">
+                <h3 className="font-bold text-base md:text-lg mb-2">{faq.q}</h3>
+                <p className="text-sm md:text-base text-muted-foreground leading-relaxed">{faq.a}</p>
+              </div>
             ))}
           </div>
+        </div>
+      </section>
+
+      {/* In-context mockup */}
+      <section className="py-12 md:py-20 border-t border-border/50">
+        <div className="section-container">
+          <StudioMockup
+            service="Sticker"
+            title="See your sticker, finished."
+            subtitle="Upload your design — preview it as a die-cut, kiss-cut square, or circle sticker."
+            scenes={[
+              { key: 'die-cut', label: 'Die-Cut', shape: 'sticker-die-cut' },
+              { key: 'circle', label: 'Circle', shape: 'sticker-circle' },
+              { key: 'square', label: 'Square', shape: 'sticker-square' },
+              { key: 'rect', label: 'Rectangle', shape: 'sticker-rect' },
+            ]}
+          />
         </div>
       </section>
 
@@ -905,14 +980,14 @@ export default function Order({ embedded = false, initialShape = 'Die-Cut', init
         <div className="section-container">
           <PortfolioStrip
             title="Sticker Work"
-            subtitle="Finished stickers, print production and labeled format examples."
+            subtitle="Die-cut, holographic, sheets, rolls — we've printed them all."
             projects={[
               { src: stkDieCut, alt: 'Die-cut sticker stack', caption: 'Die-cut vinyl' },
               { src: stkHolo, alt: 'Holographic stickers', caption: 'Holographic' },
-              { src: stkLaptop, alt: 'EPIC RANE artwork in the print shop', caption: 'Behind the scenes' },
-              { src: stkSheet, alt: 'Illustration of a kiss-cut sticker sheet', caption: 'Sticker sheets · format illustration' },
-              { src: stkRoll, alt: 'Sticker artwork on roll-fed print equipment', caption: 'Roll-fed print production' },
-              { src: stkMatte, alt: 'Sticker Smith labels on bottles', caption: 'Bottle labels' },
+              { src: stkLaptop, alt: 'Stickers on laptop', caption: 'In the wild' },
+              { src: stkSheet, alt: 'Sticker sheet', caption: 'Kiss-cut sheets' },
+              { src: stkRoll, alt: 'Sticker roll', caption: 'Rolls for retail' },
+              { src: stkMatte, alt: 'Matte sticker detail', caption: 'Matte detail' },
             ]}
           />
         </div>

@@ -1,5 +1,5 @@
 import ResponsiveImage from '@/components/ResponsiveImage'
-import { useId, useState } from 'react'
+import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { Check } from 'lucide-react'
 import { trackEvent } from '@/lib/analytics'
@@ -21,35 +21,23 @@ const materialGuide = [
   { value: 'Embossed/UV', label: 'Raised / UV', cue: 'Raised detail · selective shine', appearance: 'A dimensional or spot-finish effect on selected areas.', use: 'Special details, logos and premium packaging.', care: 'Ask us to confirm the available process, stock and artwork requirements before ordering.', image: raisedPhoto, alt: 'A photographed sticker with raised glossy details catching light on the printed design', photoNote: 'Raised spot UV shown; shine sits on selected details.', position: '70% center', source: 'Car Stickers', sourceUrl: 'https://www.carstickers.com/products/stickers/custom-stickers/setup/embossed-stickers/' },
 ]
 
-// A display crop preserves the photographed finish; it does not simulate material effects.
-function SelectedVinylPhoto({ matte }: { matte: boolean }) {
-  const clipId = useId()
-  const edge = '607,0 607,100 598,125 680,210 700,275 613,357 551,415 520,460 520,722'
-  return <svg role="img" aria-label={`The same sticker design in ${matte ? 'matte' : 'gloss'} vinyl`} viewBox={matte ? '480 0 720 690' : '0 0 720 690'} className="w-full h-44 rounded-lg">
-    <defs><linearGradient id={`${clipId}-background`} x1="0" x2="1200" gradientUnits="userSpaceOnUse"><stop stopColor="#01a3da" /><stop offset="1" stopColor="#00aee1" /></linearGradient><clipPath id={clipId}><polygon points={matte ? `${edge} 1200,722 1200,0` : `0,0 ${edge} 0,722`} /></clipPath></defs>
-    <rect width="1200" height="722" fill={`url(#${clipId}-background)`} />
-    <image href={comparisonPhoto} width="1200" height="722" clipPath={`url(#${clipId})`} />
-  </svg>
-}
-
-export default function MaterialGuide({ value, onSelect, layout = 'compact' }: { value: string; onSelect: (value: string) => void; layout?: 'compact' | 'classic' }) {
+export default function MaterialGuide({ value, onSelect }: { value: string; onSelect: (value: string) => void }) {
   const [open, setOpen] = useState(false)
   const selected = materialGuide.find(item => item.value === value) || materialGuide[0]
-  const classic = layout === 'classic'
   const isVinyl = value === 'Matte Vinyl' || value === 'Glossy Vinyl'
   return (
     <fieldset className="min-w-0 text-sm">
-      <legend className={classic ? "text-sm font-black uppercase tracking-wider mb-3" : "font-bold mb-2"}>Material</legend>
-      <div className={classic ? "grid grid-cols-2 gap-2" : "grid grid-cols-3 gap-2"}>
-        {materialGuide.map(item => <button key={item.value} type="button" aria-label={`Use ${item.label}`} aria-pressed={value === item.value} onClick={() => onSelect(item.value)} className={`min-h-11 rounded-lg border px-2 ${classic ? 'py-3' : 'py-2'} text-sm font-semibold flex items-center justify-center gap-1 focus-visible:outline-2 focus-visible:outline-primary focus-visible:outline-offset-2 ${value === item.value ? 'border-primary bg-primary/10 text-primary' : 'border-border hover:border-primary/50'}`}>
+      <legend className="font-bold mb-2">Material</legend>
+      <div className="grid grid-cols-3 gap-2">
+        {materialGuide.map(item => <button key={item.value} type="button" aria-label={`Use ${item.label}`} aria-pressed={value === item.value} onClick={() => onSelect(item.value)} className={`min-h-11 rounded-lg border px-2 py-2 text-sm font-semibold flex items-center justify-center gap-1 focus-visible:outline-2 focus-visible:outline-primary focus-visible:outline-offset-2 ${value === item.value ? 'border-primary bg-primary/10 text-primary' : 'border-border hover:border-primary/50'}`}>
           {item.label}{value === item.value && <Check size={14} aria-hidden="true" className="shrink-0" />}
         </button>)}
       </div>
       <p className="text-xs text-muted-foreground mt-2">{selected.cue}</p>
       <figure className="mt-3">
-        {classic && isVinyl ? <SelectedVinylPhoto matte={value === 'Matte Vinyl'} /> : <ResponsiveImage src={isVinyl ? comparisonPhoto : selected.image} alt={isVinyl ? 'The same sticker: glossy on the left, matte on the right' : selected.alt} width={isVinyl ? 1200 : 560} height={isVinyl ? 722 : 420} loading="lazy" className="w-full h-40 sm:h-44 object-contain rounded-lg bg-black/20" />}
+        <ResponsiveImage src={isVinyl ? comparisonPhoto : selected.image} alt={isVinyl ? 'The same sticker: glossy on the left, matte on the right' : selected.alt} width={isVinyl ? 1200 : 560} height={isVinyl ? 722 : 420} loading="lazy" className="w-full h-40 sm:h-44 object-contain rounded-lg bg-black/20" />
         <figcaption className="text-[11px] text-muted-foreground mt-1 flex flex-wrap justify-between gap-1">
-          <span>{isVinyl ? (classic ? `${value === 'Matte Vinyl' ? 'Matte' : 'Gloss'} vinyl · photographed sample` : 'Same design · gloss vs. matte') : selected.photoNote}</span>
+          <span>{isVinyl ? 'Same design · gloss vs. matte' : selected.photoNote}</span>
           <a href={isVinyl ? 'https://www.jukeboxprint.com/blog/glossy-vs-matte-stickers' : selected.sourceUrl} target="_blank" rel="noopener noreferrer" className="underline underline-offset-2">Photo: {isVinyl ? 'Jukebox' : selected.source}</a>
         </figcaption>
       </figure>

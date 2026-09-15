@@ -11,7 +11,7 @@ import { getStructuredData, SITE_URL } from '@/lib/structuredData'
 import { stickerSupportPageBySlug } from '@/lib/stickerSupportPages'
 
 const Home = lazy(() => import('@/pages/Home'))
-const Order = lazy(() => import('@/pages/Order'))
+const Order = lazy(() => import('@/pages/original-stickers'))
 const Services = lazy(() => import('@/pages/Services'))
 const VehicleGraphics = lazy(() => import('@/pages/VehicleGraphics'))
 const BusinessSignage = lazy(() => import('@/pages/BusinessSignage'))
