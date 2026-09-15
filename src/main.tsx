@@ -1,6 +1,6 @@
 import { MotionConfig } from 'framer-motion'
 import { StrictMode } from 'react'
-import { createRoot } from 'react-dom/client'
+import { createRoot, hydrateRoot } from 'react-dom/client'
 import { Toaster } from 'sonner'
 import './index.css'
 import App from './App'
@@ -8,8 +8,8 @@ import { prepareInitialRoute } from './lib/bootRoutes'
 
 async function start() {
   await prepareInitialRoute(window.location.pathname)
-  createRoot(document.getElementById('root')!).render(
-  <StrictMode>
+  const root = document.getElementById('root')!
+  const app = <StrictMode>
     <MotionConfig reducedMotion="user"><App /></MotionConfig>
     <Toaster
       position="top-right"
@@ -21,8 +21,23 @@ async function start() {
         },
       }}
     />
-  </StrictMode>,
-)
+  </StrictMode>
+  const buildWindow = window as unknown as { __prerender?: boolean; __initialHtml?: string }
+  if (buildWindow.__prerender && ['/', '/stickers', '/services/business-signage'].includes(window.location.pathname)) {
+    // Generate React's hydration markers, not a snapshot of an already mounted DOM.
+    const { renderToString } = await import('react-dom/server.browser')
+    buildWindow.__initialHtml = renderToString(app)
+  }
+  let canHydrate = root.dataset.reactSsr === 'true'
+  try {
+    // Saved configurations and personalized query options differ from the public HTML.
+    const cart = JSON.parse(localStorage.getItem('tss-cart') || '[]')
+    const query = [...new URLSearchParams(window.location.search).keys()]
+    canHydrate &&= Array.isArray(cart) && cart.length === 0 && !localStorage.getItem('tss-pricing')
+      && query.every(key => key.startsWith('utm_') || ['analytics_debug', 'gclid', 'fbclid'].includes(key))
+  } catch { canHydrate = false }
+  if (canHydrate) hydrateRoot(root, app)
+  else createRoot(root).render(app)
 }
 
 void start().catch(() => {

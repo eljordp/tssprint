@@ -168,6 +168,13 @@ async function main() {
         })
       })
 
+      await page.evaluate(() => {
+        if (window.__initialHtml) {
+          const root = document.getElementById('root')
+          root.innerHTML = window.__initialHtml
+          root.dataset.reactSsr = 'true'
+        }
+      })
       const html = await page.content()
       rendered.set(route, html)
       console.log(`[prerender] rendered ${route} (${html.length} bytes)`)
