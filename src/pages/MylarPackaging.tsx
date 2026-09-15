@@ -268,6 +268,7 @@ export default function MylarPackaging() {
     addItem({
       id: createMylarCartItemId(item.size),
       name: `Custom ${item.size}`,
+      category: 'Mylar Packaging',
       size: item.size,
       option: `${quantity} pcs · ${finish} · ${pouchColor} · ${selectedAddOns.has('Holographic Upgrade') ? 'Holo' : 'Standard'}`,
       price: cartBasePrice,

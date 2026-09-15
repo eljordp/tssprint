@@ -41,12 +41,30 @@ export default function Checkout() {
   const [paymentError, setPaymentError] = useState('')
   const [processing, setProcessing] = useState(false)
   const [squareAvailable, setSquareAvailable] = useState(false)
+  const [quoteState, setQuoteState] = useState<{ key: string; error: string; valid: boolean }>({ key: '', error: '', valid: false })
   const [promoInput, setPromoInput] = useState('')
   const [promoError, setPromoError] = useState('')
   const [promoSuccess, setPromoSuccess] = useState(false)
   const checkoutStartedTracked = useRef(false)
 
   const finalTotal = Math.max(0, +(total - promoDiscount).toFixed(2))
+
+  const quoteKey = JSON.stringify({ items, customerInfo, promoCode, promoDiscount, total: finalTotal.toFixed(2) })
+  const quoteReady = quoteState.key === quoteKey && quoteState.valid
+  useEffect(() => {
+    if (!formValid || items.length === 0) return
+    const controller = new AbortController()
+    const timer = window.setTimeout(async () => {
+      try {
+        const response = await fetch('/api/paypal/quote', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: quoteKey, signal: controller.signal })
+        const data = await response.json()
+        if (!controller.signal.aborted) setQuoteState({ key: quoteKey, valid: response.ok, error: response.ok ? '' : (data.error || 'Could not validate your order.') })
+      } catch {
+        if (!controller.signal.aborted) setQuoteState({ key: quoteKey, valid: false, error: 'Could not validate your order. Please try again shortly.' })
+      }
+    }, 400)
+    return () => { window.clearTimeout(timer); controller.abort() }
+  }, [quoteKey, formValid, items.length])
 
   useEffect(() => {
     if (checkoutStartedTracked.current || items.length === 0 || total < MIN_ORDER_SUBTOTAL) return
@@ -182,6 +200,7 @@ export default function Checkout() {
   }
 
   const createPayPalOrder = async () => {
+    if (!quoteReady) throw new Error(quoteState.error || 'Please wait for order validation.')
     const response = await fetch('/api/paypal/create-order', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -215,6 +234,7 @@ export default function Checkout() {
   }
 
   const captureSquarePayment = async (sourceId: string, attemptId: string) => {
+    if (!quoteReady) throw new Error(quoteState.error || 'Please wait for order validation.')
     setProcessing(true)
     setPaymentError('')
     try {
@@ -632,6 +652,9 @@ export default function Checkout() {
                   </p>
                 )}
 
+                {formValid && !quoteReady && (
+                  <p className="text-sm mb-4" role="status">{quoteState.key === quoteKey && quoteState.error ? quoteState.error : 'Checking current prices and promo eligibility…'}</p>
+                )}
                 {paymentError && (
                   <div className="text-sm text-destructive mb-4 bg-destructive/10 rounded-xl p-4" role="alert">
                     {paymentError}
@@ -641,7 +664,7 @@ export default function Checkout() {
                 <SquareCardPayment
                   amount={finalTotal}
                   customer={customerInfo}
-                  disabled={!formValid}
+                  disabled={!formValid || !quoteReady}
                   processing={processing}
                   onAvailabilityChange={setSquareAvailable}
                   onPaymentToken={captureSquarePayment}
@@ -649,7 +672,7 @@ export default function Checkout() {
                 />
 
                 {PAYPAL_CLIENT_ID ? (
-                  <div className={`${squareAvailable ? 'mt-5 border-t border-border pt-5' : ''} ${!formValid || processing ? 'opacity-40 pointer-events-none' : ''}`}>
+                  <div className={`${squareAvailable ? 'mt-5 border-t border-border pt-5' : ''} ${!formValid || !quoteReady || processing ? 'opacity-40 pointer-events-none' : ''}`}>
                     {squareAvailable && (
                       <div className="mb-4 flex items-center gap-3 text-xs font-bold uppercase tracking-widest text-muted-foreground">
                         <span className="h-px flex-1 bg-border" /> or use PayPal <span className="h-px flex-1 bg-border" />
@@ -657,7 +680,7 @@ export default function Checkout() {
                     )}
                     <PayPalButtons
                       style={{ layout: 'vertical', color: 'gold', shape: 'pill', label: 'pay', height: 50 }}
-                      disabled={!formValid}
+                      disabled={!formValid || !quoteReady}
                       createOrder={createPayPalOrder}
                       onApprove={async (data, actions) => {
                         setProcessing(true)

@@ -1,10 +1,11 @@
 import { createContext, useContext, useState, useEffect, useCallback, type ReactNode } from 'react'
 import { validatePromoCode, applyPromoCode, type PromoResult, AUTO_DISCOUNT_CODE, AUTO_APPLIED_KEY } from '@/lib/promoCodes'
-import { getAnalyticsIdentity } from '@/lib/analytics'
+import { getAnalyticsIdentity, trackAddToCart } from '@/lib/analytics'
 
 interface CartItem {
   id: string
   name: string
+  category?: string
   size: string
   option: string
   price: number
@@ -139,6 +140,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
 
   const addItem = (item: CartItem): 'added' | 'pending' => {
     doAddItem(item)
+    trackAddToCart({ item, value: (item.price + (item.addOns?.reduce((sum, a) => sum + a.price, 0) || 0)) * item.quantity, category: item.category, source: window.location.pathname })
     return 'added'
   }
 

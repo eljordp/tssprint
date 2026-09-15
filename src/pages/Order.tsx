@@ -408,6 +408,7 @@ export default function Order() {
     addItem({
       id: `sticker-${Date.now()}`,
       name: cartProductName,
+      category: 'Stickers',
       size,
       option: `${effectiveQty} pcs · ${formatLabel}`,
       price: stickerSubtotal,

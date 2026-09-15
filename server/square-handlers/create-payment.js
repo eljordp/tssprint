@@ -1,4 +1,4 @@
-import { normalizeCheckout } from '../paypal-api.js'
+import { normalizeCheckout, checkoutFingerprint } from '../paypal-api.js'
 import {
   getSquareConnection,
   readBody,
@@ -28,7 +28,7 @@ export default async function handler(req, res) {
       return sendJson(res, 400, { error: 'The card payment session is invalid. Please refresh and try again.' })
     }
 
-    const checkout = normalizeCheckout(body)
+    const checkout = await normalizeCheckout(body)
     if (!Number.isFinite(checkout.total) || checkout.total <= 0) {
       return sendJson(res, 400, { error: 'The checkout total must be greater than zero.' })
     }
@@ -64,7 +64,7 @@ export default async function handler(req, res) {
         autocomplete: true,
         buyer_email_address: checkout.customer.email,
         shipping_address: shippingAddress,
-        reference_id: `web-${attemptId}`,
+        reference_id: checkoutFingerprint(checkout).slice(0, 40),
         note: checkout.description,
       }),
     })
@@ -77,6 +77,9 @@ export default async function handler(req, res) {
         status: payment?.status || null,
       })
     }
+
+    if (payment.reference_id !== checkoutFingerprint(checkout).slice(0, 40)) throw new Error('This payment attempt belongs to a different cart. Please contact us before retrying.')
+    if (payment?.amount_money?.currency !== 'USD' || Number(payment?.amount_money?.amount) !== Math.round(checkout.total * 100)) throw new Error('Captured payment amount did not match the approved total.')
 
     let orderSaved = false
     let orderSaveIssue = ''

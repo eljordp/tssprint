@@ -1,3 +1,5 @@
+import { createHash } from 'node:crypto'
+import { priceItem, loadServerPricing, approvedDiscount, checkoutError } from './checkout-pricing.js'
 function envValue(name) {
   const raw = process.env[name]
   if (!raw) return ''
@@ -13,11 +15,6 @@ const SUPABASE_URL = envValue('SUPABASE_URL') || envValue('VITE_SUPABASE_URL')
 const SUPABASE_SERVICE_ROLE_KEY = envValue('SUPABASE_SERVICE_ROLE_KEY') || envValue('SUPABASE_SECRET_KEY') || envValue('SUPABASE_SERVICE_KEY')
 
 const CURRENCY = 'USD'
-const DEFAULT_PROMOS = {
-  AUTO10: { type: 'percent', value: 10, minOrder: 35 },
-  WELCOME15: { type: 'percent', value: 15, minOrder: 50 },
-  FIRST10: { type: 'fixed', value: 10, minOrder: 50 },
-}
 
 export function sendJson(res, status, payload) {
   res.statusCode = status
@@ -107,6 +104,7 @@ function normalizeItem(item) {
   return {
     id: sanitizeText(item?.id),
     name,
+    category: item.category,
     option,
     size,
     material: truncate(item?.material, 80) || undefined,
@@ -137,24 +135,6 @@ function normalizeArtwork(artwork) {
   }
 }
 
-function promoDiscountFor(code, subtotal, requestedDiscount) {
-  if (!code) return 0
-  const normalized = sanitizeText(code).toUpperCase()
-  const promo = DEFAULT_PROMOS[normalized]
-
-  if (promo) {
-    if (subtotal < promo.minOrder) return 0
-    return promo.type === 'percent'
-      ? toMoney(subtotal * (promo.value / 100))
-      : Math.min(promo.value, subtotal)
-  }
-
-  // Legacy/referral promo codes currently live in the client app. Keep them working,
-  // but cap them so the browser cannot send a ridiculous discount to PayPal.
-  const requested = Math.max(0, toMoney(requestedDiscount))
-  const maxDiscount = toMoney(subtotal * 0.3)
-  return Math.min(requested, maxDiscount)
-}
 
 function normalizeCustomer(customerInfo = {}) {
   const deliveryMethod = customerInfo.deliveryMethod === 'pickup' ? 'pickup' : 'shipping'
@@ -167,7 +147,7 @@ function normalizeCustomer(customerInfo = {}) {
   const state = truncate(customerInfo.state, 20).toUpperCase()
   const zip = truncate(customerInfo.zip, 20)
 
-  if (!firstName || !lastName || !email) {
+  if (!firstName || !lastName || !/^[^\s@%*]+@[^\s@%*]+\.[^\s@%*]+$/.test(email)) {
     throw new Error('Customer name and email are required before payment.')
   }
   if (deliveryMethod === 'shipping' && (!address || !city || !state || !zip)) {
@@ -201,17 +181,21 @@ function normalizeAttribution(attribution) {
   }
 }
 
-export function normalizeCheckout(body) {
-  const items = Array.isArray(body?.items) ? body.items.map(normalizeItem) : []
+export async function normalizeCheckout(body, dependencies = {}) {
+  if (!Array.isArray(body?.items) || body.items.length > 100) throw checkoutError('Invalid cart.')
+  const config = await (dependencies.loadPricing || loadServerPricing)()
+  const items = body.items.map(item => normalizeItem(priceItem(item, config)))
   if (items.length === 0) throw new Error('Cart is empty.')
 
   const customer = normalizeCustomer(body?.customerInfo)
   const subtotal = toMoney(items.reduce((sum, item) => sum + item.lineTotal, 0))
-  const discount = promoDiscountFor(body?.promoCode, subtotal, body?.promoDiscount)
+  if (subtotal < 35) throw checkoutError('The minimum order is $35 before discounts.')
+  const discount = await approvedDiscount(body?.promoCode, subtotal, customer.email, dependencies.hasPaidOrder)
+  if (body?.promoDiscount != null && (!Number.isFinite(Number(body.promoDiscount)) || Math.round(Number(body.promoDiscount) * 100) !== Math.round(discount * 100))) throw checkoutError('Promo discount changed. Please remove and reapply the code.')
   const total = toMoney(Math.max(0, subtotal - discount))
   const clientTotal = body?.total == null ? total : toMoney(body.total)
 
-  if (Math.abs(clientTotal - total) > 0.01) {
+  if (!Number.isFinite(clientTotal) || Math.round(clientTotal * 100) !== Math.round(total * 100)) {
     throw new Error('Checkout total changed. Please refresh your cart and try again.')
   }
 
@@ -292,6 +276,7 @@ export function buildPayPalOrderPayload(checkout) {
   }
 
   const purchaseUnit = {
+    custom_id: checkoutFingerprint(checkout),
     description: checkout.description,
     amount,
     items: checkout.items.map((item) => ({
@@ -416,4 +401,18 @@ export async function saveCapturedOrder(orderID, checkout, paypalOrder) {
   }
 
   return { saved: true }
+}
+
+// Bind capture to the exact approved cart and customer used to create the order.
+export function checkoutFingerprint(checkout) {
+  const { items, customer, total, promoCode } = checkout
+  return createHash('sha256').update(JSON.stringify({ items, customer, total, promoCode })).digest('hex')
+}
+
+export function assertPayPalCheckout(order, checkout) {
+  const units = order?.purchase_units
+  const unit = units?.[0]
+  if (units?.length !== 1 || unit?.custom_id !== checkoutFingerprint(checkout) || unit?.amount?.currency_code !== 'USD' || Number(unit?.amount?.value) !== checkout.total) {
+    throw checkoutError('The approved payment does not match this cart. Restart checkout before paying.')
+  }
 }

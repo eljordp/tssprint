@@ -1,5 +1,7 @@
+import { hasPaidOrder } from '../../server/checkout-pricing.js'
 import {
   getCompletedCapture,
+  assertPayPalCheckout,
   normalizeCheckout,
   paypalFetch,
   readBody,
@@ -17,8 +19,10 @@ export default async function handler(req, res) {
     const orderID = String(body?.orderID || '').trim()
     if (!orderID) return sendJson(res, 400, { error: 'Missing PayPal order ID.' })
 
-    const checkout = normalizeCheckout(body)
-    const capture = await paypalFetch(`/v2/checkout/orders/${encodeURIComponent(orderID)}/capture`, {
+    const approved = await paypalFetch(`/v2/checkout/orders/${encodeURIComponent(orderID)}`)
+    const checkout = await normalizeCheckout(body, { hasPaidOrder: email => hasPaidOrder(email, orderID) })
+    assertPayPalCheckout(approved, checkout)
+    const capture = getCompletedCapture(approved) ? approved : await paypalFetch(`/v2/checkout/orders/${encodeURIComponent(orderID)}/capture`, {
       method: 'POST',
       headers: { 'PayPal-Request-Id': `capture-${orderID}` },
       body: '{}',
@@ -32,6 +36,8 @@ export default async function handler(req, res) {
       })
     }
 
+    const paid = getCompletedCapture(capture)
+    if (paid?.amount?.currency_code !== 'USD' || Number(paid?.amount?.value) !== checkout.total) throw new Error('Captured payment amount did not match the approved total.')
     const saved = await saveCapturedOrder(capture.id || orderID, checkout, capture)
 
     sendJson(res, 200, {
