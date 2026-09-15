@@ -328,8 +328,10 @@ export default function Order({ embedded = false, initialShape = 'Die-Cut', init
     setArtworkStatus('uploading')
     setArtworkError('')
     setArtworkUpload(null)
+    trackEvent('artwork_upload_started')
 
     try {
+      if (!file.size || file.size > 50 * 1024 * 1024) throw new Error('Choose a non-empty artwork file under 50 MB.')
       const response = await fetch('/api/uploads/create-artwork-upload', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -572,13 +574,13 @@ export default function Order({ embedded = false, initialShape = 'Die-Cut', init
                 <input
                   ref={fileRef}
                   type="file"
-                  accept="image/*,.pdf,.ai,.eps,.svg"
+                  accept=".ai,.eps,.gif,.heic,.jpeg,.jpg,.pdf,.png,.psd,.svg,.tif,.tiff,.webp"
                   className="hidden"
                   onChange={e => { const f = e.target.files?.[0]; if (f) handleFile(f) }}
                 />
                 {artworkFile && (
-                  <p className="text-xs text-primary font-medium mt-2">
-                    &#10003; {artworkFile.name}
+                  <p className="text-xs text-muted-foreground font-medium mt-2 break-words">
+                    Selected: {artworkFile.name}
                   </p>
                 )}
                 {artworkStatus === 'uploading' && (
@@ -587,18 +589,18 @@ export default function Order({ embedded = false, initialShape = 'Die-Cut', init
                   </p>
                 )}
                 {artworkStatus === 'uploaded' && (
-                  <p className="text-xs text-green-400 mt-1">
-                    Artwork saved and ready to add to cart.
+                  <p role="status" className="text-xs text-green-400 mt-1 break-words">
+                    ✓ {artworkUpload?.fileName} saved and ready to add to cart.
                   </p>
                 )}
                 {artworkStatus === 'error' && (
-                  <p className="text-xs text-destructive mt-1">
-                    {artworkError}
+                  <p role="alert" className="text-xs text-destructive mt-1">
+                    {artworkError} <button type="button" className="underline font-semibold" onClick={() => artworkFile && void uploadArtwork(artworkFile)}>Retry upload</button>
                   </p>
                 )}
-                {artworkFile && !artworkUrl && (
+                {artworkFile && !artworkUrl && artworkStatus === 'uploaded' && (
                   <p className="text-xs text-muted-foreground mt-1">
-                    File received for proof. Upload PNG, JPG, or SVG for live preview.
+                    Production file saved. Live previews are available for PNG, JPG, or SVG.
                   </p>
                 )}
                 {artworkIntent === 'send_later' && (
