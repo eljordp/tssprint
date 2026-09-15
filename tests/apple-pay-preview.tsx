@@ -4,6 +4,9 @@ import { MemoryRouter, Routes, Route } from 'react-router-dom'
 import QuickBooksPayment from '../src/components/QuickBooksPayment'
 import '../src/index.css'
 
+// Use Apple's actual web component so its shadow-DOM click behavior is tested.
+await customElements.whenDefined('apple-pay-button')
+
 // Local UI fixture only: deliberately no external payments, emails or orders.
 const invoice = { id: 'fixture', status:'awaiting_payment', invoiceNumber:'TEST', orderId:null, subtotal:100,discount:0,tax:5.5,total:105.5,items:[],email:'test@example.com',customerName:'Test',deliveryMethod:'pickup',invoiceLink:null,issue:null,lastChecked:null,paymentMode:'wallet',chargeStatus:null }
 sessionStorage.removeItem('tss_active_payment')
@@ -36,7 +39,6 @@ class LocalSession {
   completeMerchantValidation(){} completePayment(){document.getElementById('test-wallet')?.remove()} abort(){document.getElementById('test-wallet')?.remove()}
 }
 Object.assign(window,{ApplePaySession:LocalSession,tssPaypalApple:{Applepay:()=>({config:async()=>({isEligible:true,countryCode:'US',merchantCapabilities:['supports3DS'],supportedNetworks:['visa']}),validateMerchant:async()=>({merchantSession:{}}),confirmOrder:async()=>({})})}})
-customElements.define('apple-pay-button',class extends HTMLElement{connectedCallback(){this.textContent='Pay with Apple Pay';this.style.cssText='display:block;background:black;color:white;border-radius:8px;padding:12px;text-align:center;cursor:pointer'}})
 function Preview() {
   const [busy,setBusy]=useState(false),[error,setError]=useState(''),[revision,setRevision]=useState(0)
   return <main className="mx-auto max-w-lg p-6 space-y-6"><p>LOCAL TEST · no real charges</p><h1 className="text-3xl font-bold">Checkout</h1>{error && <p role="alert">{error}</p>}<button onClick={()=>setRevision(n=>n+1)}>Change cart details (test)</button><QuickBooksPayment checkoutKey={`test-${revision}`} categories={['Business Cards']} disabled={busy} payload={()=>({testRunId,items:[],customerInfo:{email:'test@example.com'}})} onBusy={setBusy} onError={setError}/></main>
