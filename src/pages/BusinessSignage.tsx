@@ -10,7 +10,6 @@ import atlasPizza from '@/assets/projects/atlas-pizza-signage.jpeg'
 import elevated925 from '@/assets/projects/elevated925-storefront.jpg'
 import plu2o from '@/assets/projects/plu2o-dispensary.jpg'
 import barbershop from '@/assets/projects/curated-barbershop.jpeg'
-import safewayInstall from '@/assets/projects/safeway-install.jpeg'
 import weddingSignage from '@/assets/projects/wedding-display-signage-1.jpeg'
 
 const features = [
@@ -25,15 +24,15 @@ const features = [
 const specs = [
   { icon: Shield, label: 'Materials', value: 'Vinyl, acrylic, aluminum, PVC, coroplast' },
   { icon: Clock, label: 'Turnaround', value: '3-7 business days depending on type' },
-  { icon: Wrench, label: 'Installation', value: 'Professional install available (Bay Area)' },
-  { icon: Zap, label: 'Durability', value: '3-10 years depending on material' },
+  { icon: Wrench, label: 'Installation', value: 'Optional · quoted separately' },
+  { icon: Zap, label: 'Durability', value: 'Matched to the surface and exposure' },
 ]
 
 const process = [
   { step: '1', title: 'Measure & Plan', desc: 'Share your space dimensions, photos, and branding. We\'ll recommend the best signage solution.' },
   { step: '2', title: 'Design & Proof', desc: 'We create a digital mockup showing how your sign will look in your actual space.' },
   { step: '3', title: 'Production', desc: 'Cut, printed, and finished with premium materials. Quality inspected before delivery.' },
-  { step: '4', title: 'Install or Ship', desc: 'Bay Area: we install it for you. Nationwide: shipped flat or rolled, ready to mount.' },
+  { step: '4', title: 'Install or Ship', desc: 'Choose a print-only job or request local installation. Your estimate confirms what is included.' },
 ]
 
 const signageFaqs = [
@@ -62,7 +61,7 @@ export default function BusinessSignage() {
           <ServicePageIntro
             eyebrow="Business Signage"
             title="Business Signs in Hayward"
-            description="Order storefront graphics, A-frame signs, retractable banners, and wall graphics with local install support when needed."
+            description="Compare storefront graphics, A-frame signs, retractable banners, and wall graphics with local install support when needed."
           />
           <div id="shop" className="scroll-mt-24 mb-12">
             <ProductOrder
@@ -137,7 +136,6 @@ export default function BusinessSignage() {
               { src: elevated925, alt: 'Elevated 925 storefront', caption: 'Elevated 925' },
               { src: plu2o, alt: 'Plu2o dispensary signage', caption: 'Plu2o Dispensary' },
               { src: barbershop, alt: 'Curated barbershop', caption: 'Curated Barbershop' },
-              { src: safewayInstall, alt: 'Safeway install', caption: 'Safeway install' },
               { src: weddingSignage, alt: 'Wedding display signage', caption: 'Wedding event signage' },
             ]}
           />
@@ -170,9 +168,9 @@ export default function BusinessSignage() {
             fields={[
               {
                 name: 'signageType',
-                label: 'Signage type',
+                label: estimateSelection ? 'Signage type (only if changing it)' : 'Signage type',
                 type: 'select',
-                required: true,
+                required: !estimateSelection,
                 options: ['Storefront / Exterior', 'Wall Graphics / Mural', 'Window Graphics', 'A-Frame / Sidewalk Sign', 'Retractable Banner', 'Multiple / Not sure'],
               },
               { name: 'size', label: 'Approximate size (sq ft or dimensions)', type: 'text', placeholder: "e.g. 8'x4'  or  ~30 sq ft" },

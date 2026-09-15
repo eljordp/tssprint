@@ -196,7 +196,7 @@ function StickerMockup({ shape, artworkUrl, variant }: { shape: string; artworkU
       </div>
       {/* Paper strip with stickers */}
       <div className="flex items-center gap-1 bg-gradient-to-r from-white/90 via-white to-white/70 px-2 py-2 shadow-[0_8px_24px_rgba(0,0,0,0.35)]">
-        {Array.from({ length: 5 }).map((_, i) => (
+        {Array.from({ length: 3 }).map((_, i) => (
           <Sticker key={i} shape={shape} artworkUrl={artworkUrl} size={48} />
         ))}
       </div>
@@ -452,8 +452,8 @@ export default function Order({ embedded = false, initialShape = 'Die-Cut', init
   const configurator = (
       <section id="configure" className="pt-4 pb-24 md:pb-12 scroll-mt-24">
         <div className="section-container">
-          <div className="max-w-6xl mx-auto grid md:grid-cols-2 items-start gap-6 lg:gap-8">
-            <div className="space-y-3 md:sticky md:top-24">
+          <div className="max-w-6xl mx-auto grid grid-cols-1 md:grid-cols-2 items-start gap-6 lg:gap-8">
+            <div className="min-w-0 space-y-3 md:sticky md:top-24">
             {/* Mockup preview */}
             <div className="bg-card border border-border rounded-2xl p-4 flex flex-col items-center">
               <button type="button" onClick={() => chooseArtworkIntent('upload')} className="btn-primary w-full justify-center mb-3"><FileUp size={16} />{artworkFile ? 'Change artwork' : 'Upload & preview'}</button>
@@ -478,7 +478,7 @@ export default function Order({ embedded = false, initialShape = 'Die-Cut', init
               </div>
 
               {/* Preview area */}
-              <div className="flex-1 flex items-center justify-center w-full min-h-[160px] md:min-h-[240px] py-4">
+              <div className="flex-1 flex items-center justify-center w-full min-w-0 overflow-hidden min-h-[160px] md:min-h-[240px] py-4">
                 {mockupView === 'handheld' && (
                   <StickerMockup
                     shape={shape}
@@ -508,7 +508,7 @@ export default function Order({ embedded = false, initialShape = 'Die-Cut', init
             </div>
 
             {/* Artwork card */}
-            <fieldset className="bg-card border border-border rounded-2xl p-4 flex flex-col items-center justify-center text-center">
+            <fieldset className="min-w-0 bg-card border border-border rounded-2xl p-4 flex flex-col items-center justify-center text-center">
               <legend className="sr-only">Choose how you will provide artwork</legend>
               <h3 className="font-bold text-lg mb-1">How will you provide artwork?</h3>
               <p className="text-sm text-muted-foreground mb-3">Choose one. Every order gets a proof before printing.</p>
@@ -596,13 +596,15 @@ export default function Order({ embedded = false, initialShape = 'Die-Cut', init
             </fieldset>
 
 <p className="text-xs text-muted-foreground">Placement preview only. We send a production proof for your approval before printing.</p>
-            </div><div className="space-y-5"><div className="grid grid-cols-2 gap-3">
+            </div><div className="min-w-0 space-y-5"><div className="grid grid-cols-2 gap-3">
 <label className="text-sm font-bold">Shape<select aria-label="Sticker shape" className="mt-2 w-full rounded-xl border border-border bg-card p-3" value={shape} onChange={e => { setShape(e.target.value); const sizes = getSizesForShape(e.target.value); if (!sizes.includes(size)) setSize(sizes[0]) }}>{shapeData.map(s => <option key={s.value} value={s.value}>{s.name}</option>)}</select></label>
 <label className="text-sm font-bold">Size<select aria-label="Sticker size" className="mt-2 w-full rounded-xl border border-border bg-card p-3" value={size} onChange={e => setSize(e.target.value)}>{getSizesForShape(shape).map(s => <option key={s} value={s}>{formatSizeForShape(s, shape)}</option>)}</select></label>
 <label className="col-span-2 text-sm font-bold">Material<select aria-label="Sticker material" className="mt-2 w-full rounded-xl border border-border bg-card p-3" value={material} onChange={e => { setMaterial(e.target.value); trackEvent('configuration_change', { field: 'material', value: e.target.value }) }}>{materialData.map(m => <option key={m.value} value={m.value}>{m.label} — {m.description}</option>)}</select></label>
 </div><MaterialGuide value={material} onSelect={next => { setMaterial(next); trackEvent('configuration_change', { field: 'material', value: next }) }} />            {/* Quantity */}
             <div>
               <h3 className="text-sm font-black uppercase tracking-wider mb-3">Quantity</h3>
+              {mockupView === 'sheet' && <p className="text-sm text-muted-foreground mb-3">Quantity is the total number of stickers, arranged on backing sheets. Your proof confirms the sheet layout. For a set number of multi-design sheets, <Link to="/contact?service=Sticker%20sheets" className="text-primary underline">request a sheet quote</Link>.</p>}
+              {mockupView === 'roll' && <p className="text-sm text-muted-foreground mb-3">Quantity is the total number of labels. Using a labeling machine? <Link to="/contact?service=Roll%20labels" className="text-primary underline">Send its core size and unwind requirements</Link> so we can confirm compatibility.</p>}
               <p className="text-xs text-muted-foreground mb-3">Prices include your selected size and material. Bulk savings are per sticker compared with {MIN_QTY} pieces; add-ons and cart discounts are shown separately.</p>
               <div className="grid grid-cols-2 gap-2">
                 {qtyOptions.map(q => {

@@ -4,6 +4,9 @@ import { ShoppingCart, Check, Plus, Sparkles, ArrowRight } from 'lucide-react'
 import { useCart } from '@/context/CartContext'
 import { getPricing, loadPricing, type ProductCategory, type ProductTier } from '@/lib/pricing'
 
+import ProductExample from '@/components/ProductExample'
+import ProductExampleMedia from '@/components/ProductExampleMedia'
+import { getProductExample } from '@/lib/productExamples'
 import ProductionArtwork, { type ArtworkSelection } from '@/components/ProductionArtwork'
 
 interface Props {
@@ -139,16 +142,17 @@ export default function ProductOrder({ categoryNames, onCategoryChange, checkout
     })
   }
 
+  const quantityInvalid = !Number.isInteger(effectiveQty) || effectiveQty < 1 || effectiveQty > 100000
   const artworkBlocked = artworkFirst && (artwork.status === 'uploading' || artwork.status === 'error')
   const handleAddToCart = () => {
-    if (artworkBlocked) return
+    if (artworkBlocked || quantityInvalid) return
     const addOns = category.addOns
       .filter(a => selectedAddOns.has(a.name))
       .map(a => ({ name: a.name, price: +(a.value * (isPerUnit ? effectiveQty : 1)).toFixed(2) }))
 
     addItem({
       id: createCartItemId(category.name, item.size),
-      name: item.size,
+      name: `${category.name} — ${item.size}`,
       category: category.name,
       artworkIntent: 'send_later',
       pieceCount: effectiveQty,
@@ -164,7 +168,7 @@ export default function ProductOrder({ categoryNames, onCategoryChange, checkout
   }
 
   const handleEstimateRequest = () => {
-    if (artworkBlocked) return
+    if (artworkBlocked || quantityInvalid) return
     const summary = [
       `${category.name}: ${item.size}`,
       effectiveQty > 1 ? `Quantity: ${effectiveQty}` : null,
@@ -201,35 +205,34 @@ export default function ProductOrder({ categoryNames, onCategoryChange, checkout
       className={artworkFirst ? "max-w-6xl mx-auto pb-20 md:pb-0" : "max-w-5xl mx-auto"}
     >
       <h2 className={artworkFirst ? "sr-only" : "text-2xl md:text-3xl font-black mb-2 text-center"}>
-        {checkoutMode === 'estimate' ? 'Build a Price Guide' : 'Shop Products'}
+        {checkoutMode === 'estimate' ? 'Choose your signage or display' : 'Shop Products'}
       </h2>
       {checkoutMode === 'estimate' && (
         <p className="mx-auto mb-6 max-w-2xl text-center text-sm text-muted-foreground">
-          Choose what looks closest. Final pricing depends on artwork, dimensions, location, hardware, and timing.
+          Choose a product to see examples and a starting price. We confirm dimensions, artwork, installation and hardware in your exact estimate.
         </p>
       )}
 
-      {/* Category tabs */}
-      {categories.length > 1 && (
-        <div className="flex flex-wrap gap-2 justify-center mb-5">
-          {categories.map((cat, i) => (
-            <button
-              key={cat.name}
-              onClick={() => resetSelections(i)}
-              className={`px-5 py-2.5 rounded-full text-sm font-semibold transition-all ${
-                activeCategory === i
-                  ? 'bg-primary text-white'
-                  : 'bg-card border border-border text-muted-foreground hover:text-foreground hover:border-primary/30'
-              }`}
-            >
-              {cat.name}
-            </button>
-          ))}
-        </div>
-      )}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-6" aria-label="Choose a product category">
+        {categories.map((cat, i) => {
+          const example = getProductExample(cat.name)
+          return <button type="button" key={cat.name} onClick={() => resetSelections(i)} aria-pressed={activeCategory === i}
+            className={`text-left rounded-xl border overflow-hidden transition-colors focus-visible:outline-2 focus-visible:outline-primary ${activeCategory === i ? 'border-primary bg-primary/10' : 'border-border bg-card hover:border-primary/50'}`}>
+            {example && <ProductExampleMedia example={example} />}
+            <span className="block p-3 text-sm font-bold">{cat.name === 'Event Displays' ? 'Canopy Tents' : cat.name}</span>
+          </button>
+        })}
+      </div>
 
       <div className="grid md:grid-cols-2 gap-6 md:gap-8 items-start">
-        {artworkFirst && <div className="md:sticky md:top-24"><ProductionArtwork key={category.name} size={item.size} purpose={checkoutMode === 'estimate' ? 'quote' : 'order'} onChange={value => { setArtwork(value); onArtworkChange?.(value) }} /></div>}
+        {artworkFirst && <div className="md:sticky md:top-24 space-y-4">
+          <ProductExample category={category.name} />
+          <details className="rounded-2xl border border-border bg-card p-4" key={category.name}>
+            <summary className="cursor-pointer text-sm font-bold">{artwork.artwork ? 'Artwork attached · view or change' : 'Have artwork? Add it here (optional)'}</summary>
+            <div className="mt-4"><ProductionArtwork size={item.size} purpose={checkoutMode === 'estimate' ? 'quote' : 'order'} onChange={value => { setArtwork(value); onArtworkChange?.(value) }} /></div>
+          </details>
+          <p className="text-sm text-muted-foreground">We review your artwork and email a proof before printing. You can send the file later.</p>
+        </div>}
         <div className={artworkFirst ? 'space-y-4' : 'contents'}>
         {/* Product selection */}
         <div className="space-y-6">
@@ -316,6 +319,9 @@ export default function ProductOrder({ categoryNames, onCategoryChange, checkout
                 <input
                   type="number"
                   min={1}
+                  max={100000}
+                  step={1}
+                  aria-label="Product quantity" aria-invalid={quantityInvalid}
                   className="w-full rounded-lg border border-border bg-muted px-4 py-2.5 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary mb-3"
                   value={customQty}
                   onChange={e => setCustomQty(Number(e.target.value) || 0)}
@@ -339,7 +345,7 @@ export default function ProductOrder({ categoryNames, onCategoryChange, checkout
               </div>
             ) : item.quantities.length === 1 && item.quantities[0].qty === 1 ? (
               <div className="px-4 py-3 rounded-xl text-sm font-medium border border-primary bg-primary/10 text-primary text-center">
-                Per project pricing
+                One project · scope confirmed in your estimate
               </div>
             ) : (
               <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
@@ -363,14 +369,15 @@ export default function ProductOrder({ categoryNames, onCategoryChange, checkout
             )}
           </div>
 
+          {quantityInvalid && <p role="alert" className="text-sm text-red-400">Enter a whole quantity from 1 to 100,000.</p>}
           {/* Add-Ons */}
           {category.addOns.length > 0 && (
             <details open={artworkFirst ? undefined : true} className="rounded-2xl border border-border bg-card p-4">
               <summary className="flex items-center gap-2 cursor-pointer">
                 <Sparkles size={16} className="text-primary" />
-                <span className="text-sm font-bold uppercase tracking-wider">Premium Add-Ons{selectedAddOns.size > 0 ? ` (${selectedAddOns.size})` : ""}</span><Plus size={14} className="ml-auto" />
+                <span className="text-sm font-bold uppercase tracking-wider">Options & finishes{selectedAddOns.size > 0 ? ` (${selectedAddOns.size})` : ""}</span><Plus size={14} className="ml-auto" />
               </summary>
-              <p className="text-xs text-muted-foreground my-4">Enhance your order with premium upgrades.</p>
+              <p className="text-xs text-muted-foreground my-4">Optional upgrades are added to the price below.</p>
               <div className="grid grid-cols-2 gap-2">
                 {category.addOns.map(addon => (
                   <button
@@ -402,7 +409,7 @@ export default function ProductOrder({ categoryNames, onCategoryChange, checkout
             <div className="space-y-2 text-sm mb-6">
               <div className="flex justify-between">
                 <span className="text-muted-foreground">Product</span>
-                <span className="text-right max-w-[60%]">{item.size}</span>
+                <span className="text-right max-w-[60%]">{category.name} · {item.size}</span>
               </div>
               {effectiveQty > 1 && (
                 <div className="flex justify-between">
@@ -430,16 +437,17 @@ export default function ProductOrder({ categoryNames, onCategoryChange, checkout
                 </>
               )}
               <div className="border-t border-border pt-2 flex justify-between font-bold text-lg">
-                <span>{checkoutMode === 'estimate' ? 'Price Guide' : 'Est. Total'}</span>
+                <span>{checkoutMode === 'estimate' ? 'Price Guide' : 'Subtotal'}</span>
                 <span className="text-primary">${totalPrice.toFixed(2)}</span>
               </div>
             </div>
+            {checkoutMode === 'cart' && <p className="mb-4 text-xs text-muted-foreground">Cart discounts and any applicable tax appear at checkout.</p>}
             {checkoutMode === 'estimate' ? (
               <>
                 <button
                   type="button"
                   onClick={handleEstimateRequest}
-                  disabled={artworkBlocked || (bulk && customQty <= 0)}
+                  disabled={artworkBlocked || quantityInvalid}
                   className="btn-primary w-full justify-center disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   Get Exact Estimate <ArrowRight size={18} />
@@ -449,7 +457,7 @@ export default function ProductOrder({ categoryNames, onCategoryChange, checkout
             ) : (
               <button
                 onClick={handleAddToCart}
-                disabled={artworkBlocked || (bulk && customQty <= 0)}
+                disabled={artworkBlocked || quantityInvalid}
                 className={`btn-primary w-full disabled:opacity-50 disabled:cursor-not-allowed ${added ? 'bg-green-600' : ''}`}
               >
                 {added ? (
@@ -464,8 +472,8 @@ export default function ProductOrder({ categoryNames, onCategoryChange, checkout
         </div>
       </div>
       {artworkFirst && orderVisible && <div className="md:hidden fixed bottom-0 left-0 right-0 z-40 bg-card border-t border-border px-4 pt-3 pb-[max(12px,env(safe-area-inset-bottom))] flex items-center gap-4">
-        <div className="shrink-0"><p className="font-bold text-lg">${totalPrice.toFixed(2)}</p><p className="text-xs text-muted-foreground">{effectiveQty} pcs · ${(totalPrice / effectiveQty).toFixed(2)}/ea</p></div>
-        <button type="button" onClick={checkoutMode === "estimate" ? handleEstimateRequest : handleAddToCart} disabled={artworkBlocked || (bulk && customQty <= 0)} className="btn-primary flex-1 justify-center disabled:opacity-50">{artwork.status === 'uploading' ? 'Uploading…' : checkoutMode === 'estimate' ? 'Get Estimate' : added ? 'Added!' : 'Add to Cart'}</button>
+        <div className="shrink-0"><p className="font-bold text-lg">${totalPrice.toFixed(2)}</p><p className="text-xs text-muted-foreground">{checkoutMode === 'estimate' ? 'Starting price' : quantityInvalid ? 'Enter a whole quantity' : `${effectiveQty} pcs · $${(totalPrice / effectiveQty).toFixed(2)}/ea`}</p></div>
+        <button type="button" onClick={checkoutMode === "estimate" ? handleEstimateRequest : handleAddToCart} disabled={artworkBlocked || quantityInvalid} className="btn-primary flex-1 justify-center disabled:opacity-50">{artwork.status === 'uploading' ? 'Uploading…' : checkoutMode === 'estimate' ? 'Get Estimate' : added ? 'Added!' : 'Add to Cart'}</button>
       </div>}
     </motion.div>
   )

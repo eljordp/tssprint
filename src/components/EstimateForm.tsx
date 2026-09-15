@@ -16,11 +16,15 @@ type Props = {
   title?: string
   subtitle?: string
   fields: EstimateField[]
+  submitLabel?: string
+  successMessage?: string
   initialProject?: string
 }
 
 export default function EstimateForm({
   service,
+  submitLabel = 'Request Estimate',
+  successMessage,
   eyebrow = 'Custom Quote',
   title,
   subtitle = "Every project is different. Send the scope and we'll reply by email with availability, questions, and an exact estimate.",
@@ -52,7 +56,7 @@ export default function EstimateForm({
         return val ? `${f.label}: ${val}` : null
       })
       .filter(Boolean) as string[]
-    if (initialProject) lines.unshift(`Selected price guide:\n${initialProject}`)
+    if (initialProject) lines.unshift(`Selected product:\n${initialProject}`)
     if (notes.trim()) lines.push(`\nNotes:\n${notes.trim()}`)
     const message = lines.length ? lines.join('\n') : 'No additional details provided.'
 
@@ -87,7 +91,7 @@ export default function EstimateForm({
         </div>
         <h3 className="text-2xl font-black mb-2">Request received.</h3>
         <p className="text-muted-foreground">
-          Your request is saved. We’ll reply to <span className="text-foreground font-semibold">{email}</span> with availability and next steps for your {service.toLowerCase()} estimate.
+          Your request is saved. We’ll reply to <span className="text-foreground font-semibold">{email}</span> with next steps. {successMessage}
         </p>
       </motion.div>
     )
@@ -108,12 +112,12 @@ export default function EstimateForm({
         <p className="text-muted-foreground max-w-xl mx-auto">{subtitle}</p>
       </div>
 
-      <form onSubmit={handleSubmit} noValidate className="space-y-4">
+      <form onSubmit={handleSubmit} className="space-y-4">
         {artworkSelection?.artwork && <p className="text-sm text-green-400 break-words">Artwork attached: {artworkSelection.artwork.fileName}</p>}
         {artworkBlocked && <p role="alert" className="text-sm text-primary">Finish the artwork upload or choose send later before submitting.</p>}
         {initialProject && (
           <div className="rounded-xl border border-primary/25 bg-primary/10 px-4 py-3 text-sm" aria-live="polite">
-            <p className="mb-1 text-xs font-bold uppercase tracking-wider text-primary">Your selected starting point</p>
+            <p className="mb-1 text-xs font-bold uppercase tracking-wider text-primary">Your selected product</p>
             <p className="whitespace-pre-line text-foreground">{initialProject}</p>
           </div>
         )}
@@ -213,7 +217,7 @@ export default function EstimateForm({
             'Sending…'
           ) : (
             <>
-              Request Estimate <Send size={16} />
+              {submitLabel} <Send size={16} />
             </>
           )}
         </button>

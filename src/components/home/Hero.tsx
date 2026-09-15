@@ -55,7 +55,8 @@ export default function Hero() {
                   <video
                     src={HERO_VIDEO}
                     poster={HERO_POSTER}
-                    autoPlay
+                    controls
+                  autoPlay
                     muted
                     loop
                     playsInline

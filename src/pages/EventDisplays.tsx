@@ -26,15 +26,15 @@ const features = [
 const specs = [
   { icon: Shield, label: 'Material', value: 'Heavy-duty polyester, steel & aluminum frames' },
   { icon: Clock, label: 'Turnaround', value: '5-10 business days' },
-  { icon: Package, label: 'Shipping', value: 'Ships with carry bag & hardware' },
-  { icon: Zap, label: 'Durability', value: 'UV & water resistant, reusable' },
+  { icon: Package, label: 'Shipping', value: 'Hardware listed in your estimate' },
+  { icon: Zap, label: 'Durability', value: 'Confirm indoor or outdoor use' },
 ]
 
 const process = [
-  { step: '1', title: 'Choose Your Setup', desc: 'Pick your canopy size, table cover dimensions, or banner specs. Bundle them into an event kit for savings.' },
+  { step: '1', title: 'Choose Your Setup', desc: 'Pick your canopy size, table cover dimensions, or banner specs. Tell us which pieces you need together.' },
   { step: '2', title: 'Upload Artwork', desc: 'Send us your logo, graphics, and brand colors. We\'ll create a full mockup of your event setup.' },
   { step: '3', title: 'Approve & Produce', desc: 'Review your digital proof. Once approved, we print using dye-sublimation for vibrant, fade-resistant graphics.' },
-  { step: '4', title: 'Set Up & Shine', desc: 'Everything ships with frames, hardware, and carry bags. Easy setup — one person, under 5 minutes.' },
+  { step: '4', title: 'Set Up & Shine', desc: 'Check the included hardware in your estimate. Follow the product setup instructions and confirm any venue requirements.' },
 ]
 
 const eventFaqs = [
@@ -67,7 +67,7 @@ export default function EventCanopies() {
           <ServicePageIntro
             eyebrow="Event Displays"
             title="Custom Canopies, Banners & Booth Displays"
-            description="Order tents, table covers, flags, retractable banners, and event kits built around your event date."
+            description="Compare tents, table covers, flags, retractable banners, and event kits built around your event date."
           />
           <div id="shop" className="scroll-mt-24 mb-12">
             <ProductOrder
@@ -171,14 +171,14 @@ export default function EventCanopies() {
             artworkSelection={artwork}
             service="Event Displays"
             title="Get an Event Display Estimate"
-            subtitle="Trade show, pop-up, conference — give us the event date and scope, we'll make sure it arrives on time."
+            subtitle="Trade show, pop-up, conference — give us the event date and scope, we'll confirm availability and timing."
             initialProject={estimateSelection}
             fields={[
               {
                 name: 'displayType',
                 label: 'What do you need?',
                 type: 'select',
-                required: true,
+                required: !estimateSelection,
                 options: ['Canopy Tent', 'Backdrop / Step & Repeat', 'Retractable Banner', 'Table Cover', 'Feather Flag', 'Full Booth Setup', 'Not sure yet'],
               },
               { name: 'eventDate', label: 'Event date', type: 'text', required: true, placeholder: 'MM/DD/YYYY' },
