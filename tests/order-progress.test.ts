@@ -5,7 +5,8 @@ import { orderProgress, orderSupportLink } from '../src/lib/orderProgress.ts'
 test('processing does not claim proof approval or production', () => {
   const progress = orderProgress('processing')
   assert.equal(progress.label, 'Order received')
-  assert.match(progress.detail, /does not confirm proof approval/)
+  assert.match(progress.detail, /contact you by email/)
+  assert.doesNotMatch(progress.label, /approved|printing/i)
 })
 test('unknown status is not promoted to received, approved or complete', () => {
   for (const status of ['', 'paid', 'approved', 'unexpected']) {

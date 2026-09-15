@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { motion } from 'framer-motion'
 import { Users, Gift, Share2, Copy, Check, DollarSign, ArrowRight, TrendingUp } from 'lucide-react'
 import { registerReferrer, findReferrerByEmail, getReferralShareUrl, type Referrer } from '@/lib/referralRewards'
-import referralHero from '@/assets/pages/referral-hero.jpg'
+import referralHero from '@/assets/optimized/projects/stickers-holographic-1000.webp'
 
 export default function Referral() {
   const [name, setName] = useState('')
@@ -83,7 +83,7 @@ export default function Referral() {
             className="relative order-first md:order-last"
           >
             <div className="relative rounded-3xl overflow-hidden shadow-2xl border border-white/10 aspect-square max-w-md mx-auto">
-              <img src={referralHero} alt="Share your referral code" className="w-full h-full object-cover" />
+              <img src={referralHero} alt="Holographic sticker print run" className="w-full h-full object-cover" />
               <div className="absolute inset-0 bg-gradient-to-tr from-primary/10 via-transparent to-transparent" />
             </div>
             <div className="absolute -inset-6 -z-10 bg-primary/10 rounded-full blur-3xl" />

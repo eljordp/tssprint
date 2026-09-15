@@ -1,8 +1,8 @@
 import { motion } from 'framer-motion'
 import { Link } from 'react-router-dom'
 import { ArrowRight, Car, Building2, Tent, Printer, Package, Star, Clock, FileCheck, MapPin, Shield, Zap, CheckCircle, Heart } from 'lucide-react'
-import aboutCraft from '@/assets/pages/about-craft.jpg'
-import aboutShop from '@/assets/pages/about-shop-real.jpg'
+import aboutCraft from '@/assets/optimized/projects/stickers-on-laptop-1000.webp'
+import aboutShop from '@/assets/optimized/projects/sticker-smith-storefront.webp'
 import svcVehicle from '@/assets/optimized/services/vehicle-graphics-800.webp'
 import svcSignage from '@/assets/optimized/projects/atlas-pizza-signage-800.webp'
 import svcEvent from '@/assets/optimized/services/event-displays-800.webp'
@@ -59,7 +59,7 @@ export default function About() {
           <div className="grid md:grid-cols-[1fr_1.1fr] gap-10 md:gap-14 items-center max-w-6xl mx-auto">
             <motion.div {...fadeUp} className="relative order-1 md:order-1">
               <div className="relative rounded-3xl overflow-hidden shadow-2xl border border-white/10 aspect-[4/5]">
-                <img src={aboutCraft} alt="Hands working at a large-format printer" className="w-full h-full object-cover" />
+                <img src={aboutCraft} alt="EPIC RANE sticker artwork in the Sticker Smith print shop" className="w-full h-full object-cover" />
                 <div className="absolute inset-0 bg-gradient-to-tr from-primary/10 via-transparent to-transparent" />
               </div>
               <div className="absolute -inset-4 -z-10 bg-primary/10 rounded-full blur-3xl" />

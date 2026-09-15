@@ -4,7 +4,7 @@ import { motion } from 'framer-motion'
 import { ArrowRight, Clock, MapPin, Shield } from 'lucide-react'
 import FirstOrderChip from '@/components/FirstOrderChip'
 
-import heroPrinter from '@/assets/hero-printer.jpg'
+import heroPrinter from '@/assets/optimized/projects/stickers-roll-1000.webp'
 
 const HERO_VIDEO = '/videos/flight-risk-holographic.mp4'
 const HERO_POSTER = '/videos/flight-risk-holographic.jpg'

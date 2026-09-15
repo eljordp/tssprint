@@ -6,7 +6,7 @@ import { contactSchema, type ContactFormErrors } from '@/lib/validation'
 import { submitContactRequest } from '@/lib/contactSubmit'
 import { toast } from 'sonner'
 
-import contactPrinter from '@/assets/pages/contact-printer.jpg'
+import contactPrinter from '@/assets/optimized/projects/sticker-smith-storefront.webp'
 
 export default function Contact() {
   const [searchParams] = useSearchParams()

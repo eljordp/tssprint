@@ -14,6 +14,8 @@ Purpose: replace generic storefront imagery with useful shop work, and fill miss
 
 Images were resized and encoded as WebP for delivery; no new AI generation or aesthetic retouching was used. Keep all original artwork and brand details. Food artwork and event mockup can be opened through project details at full frame.
 
+The generic printer/hands images on About, Contact and the home hero fallback are replaced with existing actual print-production and shop-front photographs. Empty cart and referral imagery now use real stickers. The original shop-front photo remains in `src/assets/pages/about-shop-real.jpg`; its optimized derivative is `sticker-smith-storefront.webp`.
+
 Existing real Atlas Pizza signage and Elevated 925 packaging replace generic service-card imagery on Home, Services and About. Four generic category graphics are replaced with real sticker, bottle-label and printing images. The remaining sticker-sheet illustration is visibly labeled; it is not counted as finished shop work. Existing Flight Risk holographic imagery remains the only finish-specific example verified in this pass. Stock/finish claims cannot be inferred from an unlabeled photo.
 
 ## Coverage

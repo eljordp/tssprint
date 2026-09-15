@@ -2,7 +2,7 @@
 export function orderProgress(status: string) {
   switch (status) {
     case 'processing':
-      return { label: 'Order received', detail: 'Check your email for artwork questions or your proof. This status does not confirm proof approval or that printing has started.' }
+      return { label: 'Order received', detail: 'We’ll contact you by email about artwork and the next steps for your order. Reply to the shop’s email with any questions.' }
     case 'shipped':
       return { label: 'Shipped', detail: 'Check your shipping email for the carrier and tracking link. Contact the shop if it has not arrived.' }
     case 'completed':

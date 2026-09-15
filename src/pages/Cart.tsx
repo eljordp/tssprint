@@ -5,7 +5,7 @@ import { Trash2, Plus, Minus, AlertCircle, Mail, Check, Loader2, ArrowRight, Spa
 import { useCart } from '@/context/CartContext'
 import { trackCartEvent } from '@/lib/analytics'
 import RestoreCartWidget from '@/components/cart/RestoreCartWidget'
-import emptyCartImage from '@/assets/pages/cart-empty-stickers.jpg'
+import emptyCartImage from '@/assets/optimized/projects/drive-magdre-die-cut-stacks.webp'
 import { MIN_ORDER_SUBTOTAL as MIN_ORDER } from '@/lib/stickerPricing'
 
 export default function Cart() {
@@ -49,7 +49,7 @@ export default function Cart() {
             animate={{ opacity: 1, y: 0 }}
             className="relative mb-8 rounded-3xl overflow-hidden border border-white/10 shadow-2xl aspect-square max-w-sm mx-auto"
           >
-            <img src={emptyCartImage} alt="Custom stickers" className="w-full h-full object-cover" />
+            <img src={emptyCartImage} alt="Finished MagDre die-cut sticker stacks" className="w-full h-full object-cover" />
             <div className="absolute inset-0 bg-gradient-to-t from-background/80 via-transparent to-transparent" />
           </motion.div>
           <h1 className="text-3xl md:text-4xl font-black mb-3">Nothing in here yet.</h1>
