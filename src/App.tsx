@@ -12,7 +12,7 @@ import { getStructuredData, SITE_URL } from '@/lib/structuredData'
 import { stickerSupportPageBySlug } from '@/lib/stickerSupportPages'
 
 const Home = bootRoute('Home', () => import('@/pages/Home'))
-const Order = bootRoute('Order', () => import('@/pages/Order'))
+const Order = bootRoute('Order', () => import('@/pages/original-stickers'))
 const Services = bootRoute('Services', () => import('@/pages/Services'))
 const VehicleGraphics = bootRoute('VehicleGraphics', () => import('@/pages/VehicleGraphics'))
 const BusinessSignage = bootRoute('BusinessSignage', () => import('@/pages/BusinessSignage'))
