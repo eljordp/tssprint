@@ -181,3 +181,14 @@ Local verification: PDF (two-page raster and single-page vector/text), PNG, JPG,
 Automated checks: 21 preview-cache/pricing/cart-edit/quote tests pass, including cache bounds/isolation/failure behavior and unsupported/empty/oversize file messages; scoped ESLint and TypeScript/build pass. Build renders 33 public routes. New PDF package has no npm audit finding; pre-existing dependency findings remain separate maintenance work.
 
 Latest live release changed during this work: QuickBooks readiness commit ba67ea1 at approximately 22:55 PDT. Preserve it in the combined release. No payment, quote submission, customer email, or 602-entry Drive review performed for this correction. Production verification and final release ID will be appended after staging.
+
+
+### Preview correction deployed — September 14, 23:08 PDT
+
+Live application commit **194b238**, deployment **dpl_FMpzs4EpV4fKzBvH26fF2zV8f3Vr** (`https://tssprint-b8yl8xr79-jordis-projects-94d2df39.vercel.app`), promoted and confirmed READY on tssprint.com at approximately 23:07 PDT. Includes the other task’s ba67ea1 QuickBooks readiness changes. Combined checks: 23 focused tests pass; scoped lint and 33-route prerender pass.
+
+Real staged production-storage test: two-page PDF previews and uploads successfully; Clear material changes 50-piece price to $66.50; add-to-cart retains one correctly configured line and PDF attachment; cart edit and full reload restore the preview. PDF→PNG replacement saves to the same line and reopens with the PNG thumbnail. Switching to the sheet-quote handoff also retains the PNG preview in the shared uploader. Test cart item removed through normal cart UI; no order, payment or quote submitted. Two pending test artwork objects were created on the stage. Local CMYK PDF and removal-during-preview checks also passed.
+
+Public tssprint.com check: fresh vector/text PDF both rendered (page 1 of 1) and showed the successful private upload status. No live cart or order created for this final check; one additional pending test artwork object. QA query markers used for the public check. The files are synthetic, marked TEST ONLY / DO NOT PRINT.
+
+Next priorities: (1) actual email-my-cart and password-reset recipient/link completion, including expired links and cross-browser cart restoration; (2) multi-item cart/checkout editing and mobile accessibility/performance, with payment work left to the existing task; (3) remaining exact material/paper/pouch specifications and genuine matched photos from known shortlisted sources/shop facts; (4) reconcile the controlled journeys with admin/GA4 before interpreting abandonment; (5) full authorized paid purchase, receipt, admin and purchase-event reconciliation once Intuit is ready. Keep the 602-entry Drive review deferred. Cal’s feedback remains evidence against adding complexity; no automatic score increase for this release.
