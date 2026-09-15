@@ -118,6 +118,7 @@ function MobileProjectProof() {
           <div className="rounded-xl border border-border bg-background/60 p-3">Digital proof before production</div>
           <div className="rounded-xl border border-border bg-background/60 p-3">Shipping or Hayward pickup</div>
         </div>
+        <a href="https://share.google/N0wDi6Y8eFK5EaR5v" target="_blank" rel="noreferrer" className="inline-block mt-4 text-sm font-bold text-primary">Read Google reviews ↗</a>
       </div>
     </section>
   )

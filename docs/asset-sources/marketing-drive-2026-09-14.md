@@ -16,7 +16,7 @@ Images were resized and encoded as WebP for delivery; no new AI generation or ae
 
 The generic printer/hands images on About, Contact and the home hero fallback are replaced with existing actual print-production and shop-front photographs. Empty cart and referral imagery now use real stickers. The original shop-front photo remains in `src/assets/pages/about-shop-real.jpg`; its optimized derivative is `sticker-smith-storefront.webp`.
 
-Existing real Atlas Pizza signage and Elevated 925 packaging replace generic service-card imagery on Home, Services and About. Four generic category graphics are replaced with real sticker, bottle-label and printing images. The remaining sticker-sheet illustration is visibly labeled; it is not counted as finished shop work. Existing Flight Risk holographic imagery remains the only finish-specific example verified in this pass. Stock/finish claims cannot be inferred from an unlabeled photo.
+Existing real Atlas Pizza signage and Elevated 925 promotional packaging artwork replace generic service-card imagery on Home, Services and About. Four generic category graphics are replaced with real sticker, bottle-label and printing images. The remaining sticker-sheet illustration is visibly labeled; it is not counted as finished shop work. Existing Flight Risk holographic imagery remains the only finish-specific example verified in this pass. Stock/finish claims cannot be inferred from an unlabeled photo.
 
 ## Coverage
 
@@ -38,3 +38,5 @@ Eight shortcuts were unavailable: `hazcards.pdf`, `babiyoda.pdf`, `rayavalostabl
 Remaining material-evidence gaps: matched matte/gloss/clear/paper/raised-finish photographs with confirmed stock details, a finished custom-backdrop example, and an actual multi-design sticker-sheet photo. Do not turn an AI illustration or generic portfolio photo into a verified manufacturing claim.
 
 Follow-up: [material photographs](material-photographs-2026-09-14.md) adds credited real reference photos to the finish guide after the owner rejected generated samples. These references improve comparison but do not establish the shop’s exact stock.
+
+Correction, September 14 evening audit: Elevated 925 is a promotional composite, not a finished-packaging photograph. Candy Shock and Atomic Shock are design mockups. Updated captions distinguish these from physical work.

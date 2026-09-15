@@ -17,10 +17,10 @@ const features = [
 ]
 
 const specs = [
-  { icon: Shield, label: 'Paper Stock', value: '14pt & 16pt premium cardstock' },
+  { icon: Shield, label: 'Paper Stock', value: 'Ask us about the stock for your product' },
   { icon: Clock, label: 'Turnaround', value: '3-5 business days standard' },
   { icon: Layers, label: 'Finishes', value: 'Matte, gloss, soft-touch, spot UV' },
-  { icon: Zap, label: 'Printing', value: 'Full color, double-sided, bleed' },
+  { icon: Zap, label: 'Printing', value: 'Full color · layout checked in proof' },
 ]
 
 const process = [
@@ -100,7 +100,7 @@ export default function BusinessPrint() {
           <EstimateForm
             service="Business Print"
             title="Bulk or Custom Print Quote"
-            subtitle="Ordering 2,500+ cards, custom shapes, specialty finishes? Tell us the job and we'll send a sharper price."
+            subtitle="Ordering 2,500+ cards, custom shapes, specialty finishes? Tell us the job and we'll confirm the specification and price."
             fields={[
               {
                 name: 'printType',
@@ -120,7 +120,7 @@ export default function BusinessPrint() {
                 name: 'turnaround',
                 label: 'Turnaround',
                 type: 'select',
-                options: ['Standard (5–7 days)', 'Rush (2–3 days)', 'Flexible'],
+                options: ['Standard (3–5 business days after approval)', 'Rush — confirm availability', 'Flexible'],
               },
             ]}
           />

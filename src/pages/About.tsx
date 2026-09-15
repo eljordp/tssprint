@@ -3,9 +3,9 @@ import { Link } from 'react-router-dom'
 import { ArrowRight, Car, Building2, Tent, Printer, Package, Star, Clock, FileCheck, MapPin, Shield, Zap, CheckCircle, Heart } from 'lucide-react'
 import aboutCraft from '@/assets/optimized/projects/stickers-on-laptop-1000.webp'
 import aboutShop from '@/assets/optimized/projects/sticker-smith-storefront.webp'
-import svcVehicle from '@/assets/optimized/services/vehicle-graphics-800.webp'
+import svcVehicle from '@/assets/projects/bhogal-construction.jpeg'
 import svcSignage from '@/assets/optimized/projects/atlas-pizza-signage-800.webp'
-import svcEvent from '@/assets/optimized/services/event-displays-800.webp'
+import svcEvent from '@/assets/projects/event-booth-sticker-smith.jpeg'
 import svcPrint from '@/assets/optimized/projects/bp-cleopatra-discount-cards-800.webp'
 import svcMylar from '@/assets/optimized/projects/ig-elevated925-mystery-snack-pack-800.webp'
 
@@ -13,20 +13,20 @@ const services = [
   { icon: Car, title: 'Vehicle Graphics', description: 'Full and partial wraps, fleet branding, door and spot graphics.', image: svcVehicle, href: '/services/vehicle-graphics#quote' },
   { icon: Building2, title: 'Business Signage', description: 'Storefront signs, wall graphics, A-frames, retractable banners.', image: svcSignage, href: '/services/business-signage#shop' },
   { icon: Tent, title: 'Event Displays', description: 'Custom tents, feather flags, table covers, retractable banners.', image: svcEvent, href: '/services/event-displays#shop' },
-  { icon: Printer, title: 'Business Print', description: 'Business cards, flyers, brochures, and marketing collateral.', image: svcPrint, href: '/services/business-print#shop' },
+  { icon: Printer, title: 'Business Print', description: 'Business cards, flyers, brochures, and promotional print.', image: svcPrint, href: '/services/business-print#shop' },
   { icon: Package, title: 'Custom Packaging', description: 'Branded mylar bags, labels, stickers, and product packaging.', image: svcMylar, href: '/mylar#configure' },
 ]
 
 const stats = [
-  { value: '500+', label: 'Projects Completed', icon: CheckCircle },
+  { value: 'Custom', label: 'Print & Installation', icon: CheckCircle },
   { value: 'Local', label: 'Hayward Print Shop', icon: Star },
   { value: '24hr', label: 'Digital Proofs', icon: Clock },
   { value: 'Bay Area', label: 'Local Business', icon: MapPin },
 ]
 
 const values = [
-  { icon: Shield, title: 'Premium Materials', description: '3M and Avery cast vinyl on stickers and wraps. 16pt cardstock on cards. We don\'t cut corners on substrate.' },
-  { icon: Zap, title: '3–5 Day Standard, 24hr Proof', description: 'Most jobs ship in 3–5 business days. Every order gets a free digital proof in 24 hours so you approve the file before we print.' },
+  { icon: Shield, title: 'Premium Materials', description: 'Choose a finish that fits the job. Tell us about water, sun, handling or a specific stock requirement so we can confirm the right material.' },
+  { icon: Zap, title: 'Proof Before Production', description: 'Standard sticker production is typically 3–5 business days after proof approval. Other products and delivery times are confirmed for your order.' },
   { icon: FileCheck, title: 'Trusted by Real Brands', description: 'Safeway, Albertsons, WHCI, and dozens of Bay Area businesses run their print and fleet branding through us. The list keeps growing.' },
   { icon: Heart, title: 'Bay Area, Hands-On', description: 'Local pickup, face-to-face consultations, real accountability. We install most jobs ourselves. You\'re not getting passed off to a call center.' },
 ]
@@ -68,7 +68,7 @@ export default function About() {
               <h2 className="text-3xl md:text-5xl font-black mb-8">Our Story</h2>
               <div className="space-y-6 text-muted-foreground text-lg leading-relaxed">
                 <p>
-                  The Sticker Smith started with a simple idea: Bay Area businesses and creators deserve better print. Not the overpriced, slow-turnaround, take-it-or-leave-it experience you get from big box shops. Real print work, done right, from people who actually care about the finished product.
+                  The Sticker Smith started with a simple idea: Bay Area businesses and creators deserve better print. From the first file to the finished piece, we help customers choose a format, review the design and prepare for production.
                 </p>
                 <p>
                   We built our reputation one job at a time — wrapping vans for local fleets, printing stickers for independent brands, producing signage for storefronts across the East Bay. Every project taught us something new, and every client pushed us to get better.

@@ -40,7 +40,7 @@ export default function CaseStudyDetail() {
       {/* Stats */}
       <section className="py-10 md:py-12 border-b border-border/50">
         <div className="section-container">
-          <div className="max-w-5xl mx-auto grid grid-cols-2 md:grid-cols-4 gap-4">
+          <div className="max-w-5xl mx-auto grid grid-cols-2 md:grid-cols-2 gap-4">
             {study.stats.map((s, i) => (
               <motion.div
                 key={s.label}
@@ -63,7 +63,7 @@ export default function CaseStudyDetail() {
         <div className="section-container max-w-4xl">
           <motion.div initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}>
             <p className="text-primary font-bold text-xs uppercase tracking-widest mb-3">The Brief</p>
-            <h2 className="text-2xl md:text-4xl font-black mb-5">What the client needed</h2>
+            <h2 className="text-2xl md:text-4xl font-black mb-5">The project</h2>
             <p className="text-lg text-muted-foreground leading-relaxed">{study.brief}</p>
           </motion.div>
         </div>
@@ -74,7 +74,7 @@ export default function CaseStudyDetail() {
         <div className="section-container max-w-4xl">
           <motion.div initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}>
             <p className="text-primary font-bold text-xs uppercase tracking-widest mb-3">The Approach</p>
-            <h2 className="text-2xl md:text-4xl font-black mb-8">How we solved it</h2>
+            <h2 className="text-2xl md:text-4xl font-black mb-8">Details to notice</h2>
             <div className="space-y-5">
               {study.approach.map((item, i) => (
                 <motion.div
@@ -106,7 +106,7 @@ export default function CaseStudyDetail() {
             className="mb-10 max-w-3xl"
           >
             <p className="text-primary font-bold text-xs uppercase tracking-widest mb-3">The Process</p>
-            <h2 className="text-2xl md:text-4xl font-black mb-5">Inside the shop</h2>
+            <h2 className="text-2xl md:text-4xl font-black mb-5">Planning a similar project</h2>
             <p className="text-lg text-muted-foreground leading-relaxed">{study.process}</p>
           </motion.div>
 
@@ -120,7 +120,7 @@ export default function CaseStudyDetail() {
                 transition={{ delay: i * 0.1 }}
                 className="relative rounded-2xl overflow-hidden border border-border aspect-[4/3]"
               >
-                <img src={img} alt="" className="w-full h-full object-cover" />
+                <img src={img} alt={`${study.client} project detail ${i + 1}`} loading="lazy" className="w-full h-full object-cover" />
               </motion.div>
             ))}
           </div>
@@ -132,7 +132,7 @@ export default function CaseStudyDetail() {
         <div className="section-container max-w-4xl">
           <motion.div initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}>
             <p className="text-primary font-bold text-xs uppercase tracking-widest mb-3">The Result</p>
-            <h2 className="text-2xl md:text-4xl font-black mb-5">Outcome</h2>
+            <h2 className="text-2xl md:text-4xl font-black mb-5">The finished work</h2>
             <p className="text-lg text-muted-foreground leading-relaxed mb-8">{study.result}</p>
             {study.testimonial && (
               <div className="relative bg-card border border-border rounded-3xl p-6 md:p-10">
@@ -163,7 +163,7 @@ export default function CaseStudyDetail() {
           <EstimateForm
             service={study.cta.service}
             title="Request a Similar Quote"
-            subtitle={`Give us the basics and we'll send a tailored ${study.cta.service.toLowerCase()} estimate within 24 hours.`}
+            subtitle={`Give us the basics and we'll send a tailored ${study.cta.service.toLowerCase()} estimate by email.`}
             fields={[
               { name: 'scope', label: 'What are you looking to get done?', type: 'textarea', required: true, placeholder: 'e.g. 3-truck fleet wrap for construction company, or storefront signage for new retail space' },
               { name: 'timeline', label: 'Timeline', type: 'select', options: ['ASAP / Within 2 weeks', '2–4 weeks', '1–2 months', 'Flexible'] },

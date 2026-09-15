@@ -3,9 +3,10 @@ import { motion } from 'framer-motion'
 import { Link } from 'react-router-dom'
 import { ArrowRight } from 'lucide-react'
 
+import stickerPhoto from '@/assets/optimized/projects/drive-magdre-die-cut-stacks.webp'
 import PageHero from '@/components/PageHero'
-import vehicleGraphics from '@/assets/optimized/services/vehicle-graphics-800.webp'
-import eventDisplays from '@/assets/optimized/services/event-displays-800.webp'
+import vehicleGraphics from '@/assets/projects/bhogal-construction.jpeg'
+import eventDisplays from '@/assets/projects/event-booth-sticker-smith.jpeg'
 import businessPrint from '@/assets/optimized/projects/bp-cleopatra-discount-cards-800.webp'
 import businessSignage from '@/assets/optimized/projects/atlas-pizza-signage-800.webp'
 import mylarPackaging from '@/assets/optimized/projects/ig-elevated925-mystery-snack-pack-800.webp'
@@ -14,9 +15,10 @@ const SHOP_VIDEO = '/videos/epic-rane-print.mp4'
 const SHOP_POSTER = '/videos/epic-rane-print.jpg'
 
 const services = [
+  { image: stickerPhoto, title: 'Custom Stickers & Labels', description: 'Individual stickers, sheets and roll labels. Choose size, finish and quantity online.', href: '/stickers' },
   { image: vehicleGraphics, title: 'Bay Area Vehicle Graphics', description: 'Full wraps, partial wraps, fleet branding, and door/spot graphics.', href: '/services/vehicle-graphics#quote' },
   { image: eventDisplays, title: 'Custom Canopy Tents & Banners', description: 'Printed tents, feather flags, table covers, retractable banners, and booth displays.', href: '/services/event-displays#shop' },
-  { image: businessPrint, title: 'Business Print Materials', description: 'Business cards, flyers, brochures, postcards, and marketing collateral.', href: '/services/business-print#shop' },
+  { image: businessPrint, title: 'Business Print Materials', description: 'Business cards, flyers, brochures, postcards, and promotional print.', href: '/services/business-print#shop' },
   { image: businessSignage, title: 'Hayward Business Signs & Signage', description: 'Storefront signs, wall graphics, A-frames, banners, and window graphics.', href: '/services/business-signage#shop' },
   { image: mylarPackaging, title: 'Custom Mylar Packaging', description: 'Custom branded mylar bags, product labels, and retail packaging.', href: '/mylar#configure' },
 ]
@@ -50,49 +52,6 @@ export default function Services() {
         secondaryCta={{ label: 'See Our Work', href: '/projects' }}
       />
 
-      {/* Print process b-roll */}
-      <section className="py-6 md:py-10 border-b border-border/40">
-        <div className="section-container max-w-5xl">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            className="grid md:grid-cols-[1.4fr_1fr] gap-6 items-center"
-          >
-            <div className="relative aspect-video rounded-2xl overflow-hidden border border-border bg-black shadow-xl">
-              {playShopVideo ? (
-                <video
-                  src={SHOP_VIDEO}
-                  poster={SHOP_POSTER}
-                  autoPlay
-                  muted
-                  loop
-                  playsInline
-                  preload="metadata"
-                  aria-label="Large-format printer running custom stickers"
-                  className="absolute inset-0 w-full h-full object-cover"
-                />
-              ) : (
-                <img
-                  src={SHOP_POSTER}
-                  alt="Large-format printer running custom stickers"
-                  className="absolute inset-0 w-full h-full object-cover"
-                  loading="lazy"
-                  decoding="async"
-                />
-              )}
-            </div>
-            <div>
-              <p className="text-primary font-bold text-xs uppercase tracking-widest mb-2">In The Shop</p>
-              <h2 className="text-2xl md:text-3xl font-black leading-tight mb-3">Printed in-house. No middleman.</h2>
-              <p className="text-muted-foreground text-sm md:text-base leading-relaxed">
-                Every order runs through our own large-format printer and cutter — we own the process from proof to peel. That's how we hold deadlines, match colors, and ship clean every time.
-              </p>
-            </div>
-          </motion.div>
-        </div>
-      </section>
-
       <section className="py-8 md:py-16">
         <div className="section-container">
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6 max-w-6xl mx-auto">
@@ -114,6 +73,51 @@ export default function Services() {
           </div>
         </div>
       </section>
+      {/* Print process b-roll */}
+      <section className="py-6 md:py-10 border-b border-border/40">
+        <div className="section-container max-w-5xl">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            className="grid md:grid-cols-[1.4fr_1fr] gap-6 items-center"
+          >
+            <div className="relative aspect-video rounded-2xl overflow-hidden border border-border bg-black shadow-xl">
+              {playShopVideo ? (
+                <video
+                  src={SHOP_VIDEO}
+                  poster={SHOP_POSTER}
+                  controls
+                  autoPlay
+                  muted
+                  loop
+                  playsInline
+                  preload="metadata"
+                  aria-label="Large-format printer running custom stickers"
+                  className="absolute inset-0 w-full h-full object-cover"
+                />
+              ) : (
+                <img
+                  src={SHOP_POSTER}
+                  alt="Large-format printer running custom stickers"
+                  className="absolute inset-0 w-full h-full object-cover"
+                  loading="lazy"
+                  decoding="async"
+                />
+              )}
+            </div>
+            <div>
+              <p className="text-primary font-bold text-xs uppercase tracking-widest mb-2">In The Shop</p>
+              <h2 className="text-2xl md:text-3xl font-black leading-tight mb-3">A look inside the shop.</h2>
+              <p className="text-muted-foreground text-sm md:text-base leading-relaxed">
+                Watch a sticker print run in our Hayward shop. From artwork review to the finished job, we coordinate your order and send a proof before production.
+              </p>
+            </div>
+          </motion.div>
+        </div>
+      </section>
+
+
     </>
   )
 }

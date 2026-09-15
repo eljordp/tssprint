@@ -21,15 +21,15 @@ const features = [
 ]
 
 const specs = [
-  { icon: Shield, label: 'Material', value: 'Premium 3M & Avery cast vinyl' },
+  { icon: Shield, label: 'Material', value: 'Vinyl selected for the vehicle and coverage' },
   { icon: Clock, label: 'Turnaround', value: '5-10 business days (design + print + install)' },
-  { icon: Wrench, label: 'Installation', value: 'Professional install included (Bay Area)' },
-  { icon: Zap, label: 'Durability', value: '5-7 year outdoor rating with laminate' },
+  { icon: Wrench, label: 'Installation', value: 'Installation scope included in your estimate' },
+  { icon: Zap, label: 'Durability', value: 'Depends on film, finish and care' },
 ]
 
 const process = [
   { step: '1', title: 'Consultation', desc: 'Tell us about your vehicle, branding goals, and budget. We\'ll recommend the right solution.' },
-  { step: '2', title: 'Design & Proof', desc: 'Our team creates a digital mockup on your exact vehicle model. Revisions until you love it.' },
+  { step: '2', title: 'Design & Proof', desc: 'Our team creates a digital mockup on your exact vehicle model. Review the layout and request changes before approval.' },
   { step: '3', title: 'Production', desc: 'Printed on premium vinyl with protective laminate. Quality checked before install.' },
   { step: '4', title: 'Installation', desc: 'Professional installation at our Bay Area shop. Most wraps completed in 1-2 days.' },
 ]
@@ -73,15 +73,19 @@ export default function VehicleGraphics() {
           <ServicePageIntro
             eyebrow="Vehicle Graphics"
             title="Vehicle Graphics in Hayward & the Bay Area"
-            description="Get pricing for wraps, lettering, decals, and fleet branding without reading a long sales page first."
+            description="Compare vehicle lettering, partial coverage and full wraps. Send your vehicle details for a tailored estimate."
           />
           <div className="max-w-6xl mx-auto grid md:grid-cols-2 gap-6 items-start">
-          <div className="md:sticky md:top-24"><ProductionArtwork size="Vehicle artwork · final placement confirmed in your proof" purpose="quote" onChange={setArtwork} /></div>
+          <div className="md:sticky md:top-24 space-y-4">
+            <figure className="rounded-2xl border border-border bg-card overflow-hidden"><img src={bhogalTruck} alt="Bhogal Construction wrapped box truck" width={900} height={675} className="w-full aspect-[4/3] object-cover" /><figcaption className="p-4"><h2 className="font-bold text-lg">Choose how much of the vehicle to cover</h2><p className="text-sm text-muted-foreground mt-2">Door graphics keep most of the original paint visible. Partial wraps cover selected panels. Full wraps cover the vehicle body. Your estimate confirms the surfaces and installation included.</p></figcaption></figure>
+            <div className="grid grid-cols-2 gap-3"><figure><img src={safewayInstall} alt="Applying Safeway door lettering" className="w-full aspect-[4/3] object-cover rounded-xl" /><figcaption className="text-sm mt-2">Door lettering · install detail</figcaption></figure><figure><img src={albertsonsVan} alt="Albertsons branded vehicle" className="w-full aspect-[4/3] object-cover rounded-xl" /><figcaption className="text-sm mt-2">Fleet graphics · Albertsons</figcaption></figure></div>
+            <details className="rounded-xl border border-border p-4"><summary className="font-bold text-sm cursor-pointer">Add artwork (optional)</summary><div className="mt-4"><ProductionArtwork size="Vehicle artwork · placement confirmed in your proof" purpose="quote" onChange={setArtwork} /></div></details>
+          </div>
           <EstimateForm
             artworkSelection={artwork}
             service="Vehicle Graphics"
             title="Get a Vehicle Graphics Estimate"
-            subtitle="Send the vehicle and wrap type. We will price the real job, not make you read a sales page first."
+            subtitle="Tell us the vehicle, the coverage you want and your deadline. We will reply by email with pricing and next steps."
             fields={[
               { name: 'vehicle', label: 'Vehicle (year, make, model)', type: 'text', required: true, placeholder: '2023 Ford Transit 250' },
               {

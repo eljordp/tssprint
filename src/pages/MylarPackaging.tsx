@@ -2,7 +2,7 @@ import oliveLandArtwork from '@/assets/optimized/projects/drive-olive-land-pita-
 import MobileOrderAction from '@/components/MobileOrderAction'
 import { useState, useCallback, useRef, useEffect } from 'react'
 import { motion } from 'framer-motion'
-import { X, Package, Sparkles, Box, ShoppingCart, Check } from 'lucide-react'
+import { X, ShoppingCart, Check } from 'lucide-react'
 import { useCart } from '@/context/CartContext'
 import { supabase } from '@/lib/supabase'
 import { getPricing, loadPricing, type ProductCategory, type AddOn } from '@/lib/pricing'
@@ -14,8 +14,6 @@ import mylarCandyshockBlue from '@/assets/projects/mylar-candyshock-blue.jpg'
 import mylarAtomicshock from '@/assets/projects/mylar-atomicshock.jpg'
 import mylarTripleA from '@/assets/projects/mylar-tripleA-design.jpg'
 import mylarElevatedSnack from '@/assets/projects/ig-elevated925-mystery-snack-pack.jpg'
-
-type MockupType = 'pouch' | 'foil' | 'jar'
 
 interface ArtworkAttachment {
   bucket: string
@@ -144,7 +142,7 @@ export default function MylarPackaging() {
   const [selectedItem, setSelectedItem] = useState(0)
   const [quantity, setQuantity] = useState(250)
   const [selectedAddOns, setSelectedAddOns] = useState<Set<string>>(new Set())
-  const [finish, setFinish] = useState<'matte' | 'gloss' | 'foil'>('matte')
+  const [finish, setFinish] = useState<'matte' | 'gloss'>('matte')
   const [pouchColor, setPouchColor] = useState<'white' | 'black'>('white')
   const [uploadedFile, setUploadedFile] = useState<File | null>(null)
   const [previewUrl, setPreviewUrl] = useState<string | null>(null)
@@ -154,7 +152,6 @@ export default function MylarPackaging() {
   const [artworkStatus, setArtworkStatus] = useState<'idle' | 'uploading' | 'uploaded' | 'error'>('idle')
   const [artworkError, setArtworkError] = useState('')
   const [isDragging, setIsDragging] = useState(false)
-  const [activeMockup, setActiveMockup] = useState<MockupType>('pouch')
   const [added, setAdded] = useState(false)
 
   const items = category?.items ?? []
@@ -179,6 +176,9 @@ export default function MylarPackaging() {
 
   const scale = item ? (mockupScales[item.size] ?? 0.75) : 0.75
   const isJar = item?.size.toLowerCase().includes('jar')
+  const activeMockup = isJar ? 'jar' : selectedAddOns.has('Holographic Upgrade') ? 'foil' : 'pouch'
+  const quantityInvalid = !Number.isSafeInteger(quantity) || quantity < 1 || quantity > 100000
+  const displaySize = (size: string) => size.includes('(') ? `${size.slice(size.indexOf('(') + 1, -1)} pouch` : size
 
   const uploadArtwork = useCallback(async (file: File) => {
     const generation = ++artworkGeneration.current
@@ -268,7 +268,7 @@ export default function MylarPackaging() {
   }
 
   const handleAddToCart = () => {
-    if (!item || !qtyTier || !Number.isInteger(quantity) || quantity < 1) return
+    if (!item || !qtyTier || quantityInvalid) return
     if (uploadedFile && artworkStatus !== 'uploaded') return
     const cartAddOns = addOns
       .filter(a => selectedAddOns.has(a.name))
@@ -276,11 +276,11 @@ export default function MylarPackaging() {
     const cartBasePrice = +(unitPrice * quantity).toFixed(2)
     addItem({
       id: createMylarCartItemId(item.size),
-      name: `Custom ${item.size}`,
+      name: `Custom ${displaySize(item.size)}`,
       category: 'Mylar Packaging',
       pieceCount: quantity,
       size: item.size,
-      option: `${quantity} pcs · ${finish} · ${pouchColor} · ${selectedAddOns.has('Holographic Upgrade') ? 'Holo' : 'Standard'}`,
+      option: isJar ? `${quantity} jars with custom labels` : `${quantity} pcs · ${selectedAddOns.has('Foil Finish') ? 'foil' : finish} · ${pouchColor} · ${selectedAddOns.has('Holographic Upgrade') ? 'Holo' : 'Standard'}`,
       price: cartBasePrice,
       quantity: 1,
       addOns: cartAddOns.length > 0 ? cartAddOns : undefined,
@@ -293,11 +293,6 @@ export default function MylarPackaging() {
 
   if (!category) return <div className="section-container py-20 text-center text-muted-foreground">Mylar Packaging pricing not configured.</div>
 
-  const mockupTabs = [
-    { id: 'pouch' as MockupType, label: 'Mylar Pouch', icon: Package },
-    { id: 'foil' as MockupType, label: 'Holographic', icon: Sparkles },
-    { id: 'jar' as MockupType, label: 'Jar', icon: Box },
-  ]
 
   return (
     <>
@@ -306,10 +301,17 @@ export default function MylarPackaging() {
           <ServicePageIntro
             eyebrow="Custom Mylar"
             title="Custom Mylar & Packaging"
-            description="Upload your artwork, preview your packaging and choose your print run."
+            description="Choose your pouch size, finish and print run. Send artwork now or after ordering."
           />
           <div className="grid md:grid-cols-2 gap-6 items-start">
-            <div className="space-y-3 md:sticky md:top-24">            {/* Upload Card */}
+            <div className="space-y-3 md:sticky md:top-24">
+            <figure className="overflow-hidden rounded-2xl border border-border bg-card">
+              <img src={oliveLandArtwork} alt="Olive Land pita-chip packaging artwork" className="aspect-[4/3] max-h-80 md:max-h-none w-full object-contain bg-white" />
+              <figcaption className="p-4 text-sm"><p className="font-bold">Your brand, on the pack</p><p className="text-muted-foreground mt-1">Olive Land packaging artwork from a shop project. This is a design example; your proof confirms the layout for your selected packaging.</p></figcaption>
+            </figure>
+            <details className="rounded-2xl border border-border bg-card p-4">
+            <summary className="cursor-pointer font-semibold text-sm">Add artwork (optional)</summary>
+            {/* Upload Card */}
             <motion.div
               initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}
               className={`flex flex-col justify-center rounded-2xl border bg-card p-4 text-center transition-colors ${isDragging ? 'border-primary ring-2 ring-primary/20' : 'border-border'}`}
@@ -340,34 +342,27 @@ export default function MylarPackaging() {
               </div>
             </motion.div>
 
-            {/* Mockup Preview */}
-            <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.15 }} className="rounded-2xl border border-border bg-card p-6">
-              <div className="flex justify-center gap-1 mb-4">
-                {mockupTabs.map(tab => (
-                  <button key={tab.id} onClick={() => setActiveMockup(tab.id)} className={`flex items-center gap-1.5 rounded-full px-4 py-2 text-xs font-medium transition-colors ${activeMockup === tab.id ? 'bg-primary text-primary-foreground' : 'bg-muted text-muted-foreground hover:text-foreground'}`}>
-                    <tab.icon className="h-3.5 w-3.5" /> {tab.label}
-                  </button>
-                ))}
-              </div>
+            {/* Artwork placement only; product choices control this preview. */}
+            {previewUrl && <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.15 }} className="rounded-2xl border border-border bg-card p-6">
               <div className="rounded-xl bg-muted/50 border border-border">
-                {activeMockup === 'pouch' && <PouchMockup previewUrl={previewUrl} pouchColor={pouchColor} finish={finish} scale={scale} />}
+                {activeMockup === 'pouch' && <PouchMockup previewUrl={previewUrl} pouchColor={pouchColor} finish={selectedAddOns.has('Foil Finish') ? 'foil' : finish} scale={scale} />}
                 {activeMockup === 'foil' && <FoilMockup previewUrl={previewUrl} scale={scale} />}
                 {activeMockup === 'jar' && <JarMockup previewUrl={previewUrl} />}
               </div>
               <p className="mt-3 text-center text-xs text-muted-foreground">
                 {previewUrl ? 'Your design preview' : uploadedFile ? 'File selected. Image and SVG files can preview live' : 'Upload artwork to see it mocked up'} — {item?.size ?? 'Select a size'}
               </p>
-            </motion.div>
-<p className="text-xs text-muted-foreground">Placement preview only. Your production proof confirms the final layout.</p></div>
+            </motion.div>}
+<p className="text-xs text-muted-foreground mt-3">Placement preview only, not a material sample. Your emailed proof confirms the final layout.</p></details></div>
             <div className="space-y-4">            {/* LEFT: Controls */}
             <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }} className="space-y-6 rounded-2xl border border-border bg-card p-5 md:p-6">
               {/* Pouch Size */}
               <div className="space-y-3">
-                <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Pouch Size</p>
+                <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Size / product</p>
                 <div className="flex flex-wrap gap-2">
                   {items.map((p, i) => (
-                    <button key={p.size} onClick={() => { setSelectedItem(i); setActiveMockup(p.size.toLowerCase().includes('jar') ? 'jar' : 'pouch') }} className={`rounded-full border px-4 py-2 text-xs font-medium transition-colors ${selectedItem === i ? 'border-primary bg-primary/10 text-primary' : 'border-border bg-muted text-muted-foreground hover:text-foreground hover:border-foreground/20'}`}>
-                      {p.size}
+                    <button key={displaySize(p.size)} aria-pressed={selectedItem === i} onClick={() => { setSelectedItem(i); setSelectedAddOns(new Set()) }} className={`rounded-full border px-4 py-2 text-xs font-medium transition-colors ${selectedItem === i ? 'border-primary bg-primary/10 text-primary' : 'border-border bg-muted text-muted-foreground hover:text-foreground hover:border-foreground/20'}`}>
+                      {displaySize(p.size)}
                     </button>
                   ))}
                 </div>
@@ -378,8 +373,8 @@ export default function MylarPackaging() {
                 <div className="space-y-3">
                   <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Finish</p>
                   <div className="flex flex-wrap gap-2">
-                    {(['matte', 'gloss', 'foil'] as const).map(f => (
-                      <button key={f} onClick={() => setFinish(f)} className={`rounded-full border px-4 py-2 text-xs font-medium transition-colors capitalize ${finish === f ? 'border-primary bg-primary/10 text-primary' : 'border-border bg-muted text-muted-foreground hover:text-foreground hover:border-foreground/20'}`}>
+                    {(['matte', 'gloss'] as const).map(f => (
+                      <button key={f} aria-pressed={finish === f && !selectedAddOns.has('Foil Finish')} onClick={() => { setFinish(f); setSelectedAddOns(prev => new Set([...prev].filter(name => name !== 'Foil Finish'))) }} className={`rounded-full border px-4 py-2 text-xs font-medium transition-colors capitalize ${finish === f && !selectedAddOns.has('Foil Finish') ? 'border-primary bg-primary/10 text-primary' : 'border-border bg-muted text-muted-foreground hover:text-foreground hover:border-foreground/20'}`}>
                         {f}
                       </button>
                     ))}
@@ -402,6 +397,7 @@ export default function MylarPackaging() {
                 </div>
               )}
 
+              <p className="text-sm text-muted-foreground">{isJar ? 'The listed jar option includes a 2oz jar and custom label. Your proof confirms the label layout. Tell us about any required packaging specifications before ordering.' : <>Matte has a low-shine surface; gloss reflects more light. Holographic adds a rainbow effect; foil adds metallic accents. These are separate paid upgrades below. For a specific barrier, food-contact or child-resistant requirement, request a quote before ordering.</>}</p>
               {/* Quantity */}
               <div className="space-y-3">
                 <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Quantity</p>
@@ -410,6 +406,8 @@ export default function MylarPackaging() {
                   aria-label="Packaging quantity"
                   step={1}
                   min={1}
+                  max={100000}
+                  aria-invalid={quantityInvalid}
                   className="w-full rounded-lg border border-border bg-muted px-4 py-2.5 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"
                   value={quantity}
                   onChange={e => setQuantity(Number(e.target.value) || 0)}
@@ -417,13 +415,14 @@ export default function MylarPackaging() {
                 />
               </div>
 
+              {quantityInvalid && <p role="alert" className="text-sm text-red-400">Enter a whole quantity from 1 to 100,000.</p>}
               {/* Add-Ons */}
               {addOns.length > 0 && (
                 <div className="space-y-3">
-                  <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Options / Add-Ons</p>
+                  <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Optional upgrades · priced per piece</p>
                   <div className="flex flex-wrap gap-2">
-                    {addOns.map((addon: AddOn) => (
-                      <button key={addon.name} onClick={() => toggleAddOn(addon.name)} className={`rounded-full border px-4 py-2 text-xs font-medium transition-colors ${selectedAddOns.has(addon.name) ? 'border-primary bg-primary text-primary-foreground' : 'border-border bg-muted text-muted-foreground hover:text-foreground'}`}>
+                    {addOns.filter(addon => !isJar || addon.name === 'Foil Finish').map((addon: AddOn) => (
+                      <button key={addon.name} aria-pressed={selectedAddOns.has(addon.name)} onClick={() => toggleAddOn(addon.name)} className={`rounded-full border px-4 py-2 text-xs font-medium transition-colors ${selectedAddOns.has(addon.name) ? 'border-primary bg-primary text-primary-foreground' : 'border-border bg-muted text-muted-foreground hover:text-foreground'}`}>
                         {addon.name} (+${addon.value.toFixed(2)}/ea)
                       </button>
                     ))}
@@ -443,7 +442,7 @@ export default function MylarPackaging() {
                   <div className="rounded-xl bg-muted px-4 py-4 text-sm space-y-2">
                     <div className="flex justify-between">
                       <span className="text-muted-foreground">Product</span>
-                      <span className="font-medium text-right text-xs">{item?.size}</span>
+                      <span className="font-medium text-right text-xs">{item ? displaySize(item.size) : ''}</span>
                     </div>
                     <div className="flex justify-between">
                       <span className="text-muted-foreground">Quantity</span>
@@ -460,13 +459,13 @@ export default function MylarPackaging() {
                       </div>
                     ))}
                     <div className="flex justify-between border-t border-border pt-2 mt-2">
-                      <span className="text-muted-foreground">Est. total</span>
+                      <span className="text-muted-foreground">Subtotal</span>
                       <span className="font-bold text-lg">${totalPrice.toFixed(2)}</span>
                     </div>
                   </div>
                 )}
                 <p className="mt-3 text-[10px] text-muted-foreground text-center">
-                  Custom requirements outside these options need a separate quote.
+                  Discounts and any applicable tax are shown at checkout. For custom stock, print method or packaging requirements, request a quote first.
                 </p>
               </div>
 
@@ -475,7 +474,7 @@ export default function MylarPackaging() {
                 <div className="rounded-2xl border border-primary/30 bg-primary/5 p-5">
                   <button
                     onClick={handleAddToCart}
-                    disabled={!Number.isInteger(quantity) || (Boolean(uploadedFile) && artworkStatus !== 'uploaded')}
+                    disabled={quantityInvalid || (Boolean(uploadedFile) && artworkStatus !== 'uploaded')}
                     className={`btn-primary w-full disabled:opacity-50 disabled:cursor-not-allowed ${added ? 'bg-green-600' : ''}`}
                   >
                     {added ? (
@@ -495,7 +494,7 @@ export default function MylarPackaging() {
               {/* Help CTA */}
               <div className="rounded-2xl border border-dashed border-border bg-muted/40 p-5 text-center">
                 <p className="font-medium text-foreground mb-2">Need custom artwork help?</p>
-                <p className="text-sm text-muted-foreground mb-4">Send your logo, strain list, and any compliance notes.</p>
+                <p className="text-sm text-muted-foreground mb-4">Send your logo, product details, dimensions and any required label text.</p>
                 <a href="/contact" className="inline-flex items-center justify-center rounded-full border border-border px-5 py-2.5 text-sm font-medium text-foreground hover:bg-muted transition-colors">
                   Fill out project form
                 </a>
@@ -503,7 +502,7 @@ export default function MylarPackaging() {
             </motion.div>
 </div>
           </div>
-          <MobileOrderAction regionId="configure" price={`$${totalPrice.toFixed(2)}`} detail={`${quantity} pieces`} label={added ? 'Added!' : 'Add to Cart'} disabled={!qtyTier || !Number.isInteger(quantity) || quantity < 1 || (Boolean(uploadedFile) && artworkStatus !== 'uploaded')} onClick={handleAddToCart} />
+          <MobileOrderAction regionId="configure" price={`$${totalPrice.toFixed(2)}`} detail={`${quantity} pieces`} label={added ? 'Added!' : 'Add to Cart'} disabled={!qtyTier || quantityInvalid || (Boolean(uploadedFile) && artworkStatus !== 'uploaded')} onClick={handleAddToCart} />
         </div>
       </section>
       <section id="quote" className="py-12 md:py-20 border-t border-border/50 scroll-mt-24">
@@ -525,7 +524,7 @@ export default function MylarPackaging() {
                 label: 'Bag size',
                 type: 'select',
                 required: true,
-                options: ['Eighths (3"×5")', 'Quarters (4"×6")', 'Ounce (5"×8")', 'Half Pound (10"×12")', 'Pound (14"×16")', 'Custom size', 'Jar labels instead'],
+                options: ['3"×5" pouch', '4"×6" pouch', '5"×8" pouch', '10"×12" pouch', '14"×16" pouch', 'Custom size', 'Jar labels instead'],
               },
               { name: 'quantity', label: 'Estimated quantity', type: 'text', required: true, placeholder: 'e.g. 1,000 · 5,000 · 10,000+' },
               {
@@ -545,11 +544,11 @@ export default function MylarPackaging() {
             subtitle="Explore pouch projects and flat artwork for food and retail packaging."
             projects={[
               { src: oliveLandArtwork, alt: 'Flat Olive Land garlic pita-chip packaging artwork', caption: 'Olive Land · food packaging artwork', fit: 'contain', href: '/projects?project=olive-land-pita-packaging-artwork' },
-              { src: mylarCandyshockGreen, alt: 'Candy Shock green custom mylar pouch', caption: 'Candy Shock — Green' },
-              { src: mylarCandyshockBlue, alt: 'Candy Shock blue custom mylar pouch', caption: 'Candy Shock — Blue' },
-              { src: mylarAtomicshock, alt: 'Atomic Shock custom mylar pouch', caption: 'Atomic Shock' },
+              { src: mylarCandyshockGreen, alt: 'Candy Shock green custom mylar pouch', caption: 'Candy Shock — Green · design mockup' },
+              { src: mylarCandyshockBlue, alt: 'Candy Shock blue custom mylar pouch', caption: 'Candy Shock — Blue · design mockup' },
+              { src: mylarAtomicshock, alt: 'Atomic Shock custom mylar pouch', caption: 'Atomic Shock · design mockup' },
               { src: mylarTripleA, alt: 'Triple A cannabis flower mylar packaging', caption: 'Triple A · packaging artwork' },
-              { src: mylarElevatedSnack, alt: 'Elevated 925 mystery exotic snack pack mylar packaging', caption: 'Elevated 925 — Snack Pack' },
+              { src: mylarElevatedSnack, alt: 'Elevated 925 mystery exotic snack pack mylar packaging', caption: 'Elevated 925 · promotional artwork' },
             ]}
           />
         </div>

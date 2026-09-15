@@ -2,7 +2,7 @@ import { useEffect } from 'react'
 import { Link, useLocation } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import { ArrowRight, Home } from 'lucide-react'
-import tornVinyl from '@/assets/pages/404-torn.jpg'
+import tornVinyl from '@/assets/optimized/projects/drive-magdre-die-cut-stacks.webp'
 
 export default function NotFound() {
   const location = useLocation()
@@ -49,7 +49,7 @@ export default function NotFound() {
           transition={{ delay: 0.25 }}
           className="text-muted-foreground mb-10"
         >
-          The route <span className="font-mono text-foreground bg-card border border-border rounded px-2 py-0.5 text-sm">{location.pathname}</span> doesn't exist. Let's get you back.
+          This link may have changed. Browse our products or return to the homepage.
         </motion.p>
         <motion.div
           initial={{ opacity: 0, y: 10 }}

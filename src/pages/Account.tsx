@@ -5,15 +5,11 @@ import { Link, useSearchParams } from 'react-router-dom'
 import PasswordRecovery from '@/components/PasswordRecovery'
 import {
   User, Package, Share2, Settings, LogOut, Loader2, Eye, EyeOff,
-  Copy, Check, Gift, ExternalLink, ArrowRight, TrendingUp,
+  ArrowRight, Check,
   AlertTriangle, RefreshCw, HardDrive,
 } from 'lucide-react'
 import { useAuth } from '@/context/AuthContext'
 import { supabase } from '@/lib/supabase'
-import {
-  registerReferrer, findReferrerByEmail, getReferralShareUrl,
-  type Referrer,
-} from '@/lib/referralRewards'
 import { toast } from 'sonner'
 
 // ─── Auth Forms ─────────────────────────────────────────────────────────────
@@ -203,8 +199,6 @@ function AccountDashboard() {
   const [verifiedOrders, setVerifiedOrders] = useState<AccountOrder[]>([])
   const [cachedOrders, setCachedOrders] = useState<AccountOrder[]>([])
   const [ordersError, setOrdersError] = useState('')
-  const [referrer, setReferrer] = useState<Referrer | null>(null)
-  const [copied, setCopied] = useState(false)
   const [loadingOrders, setLoadingOrders] = useState(true)
   const [reloadKey, setReloadKey] = useState(0)
 
@@ -257,29 +251,7 @@ function AccountDashboard() {
     return () => { cancelled = true }
   }, [userEmail, reloadKey])
 
-  useEffect(() => {
-    // Load referrer
-    const timer = window.setTimeout(() => {
-      const ref = findReferrerByEmail(userEmail)
-      setReferrer(ref ?? null)
-    }, 0)
-    return () => window.clearTimeout(timer)
-  }, [userEmail])
-
   const retryOrders = () => setReloadKey(k => k + 1)
-
-  const handleCopy = (text: string) => {
-    navigator.clipboard.writeText(text)
-    setCopied(true)
-    setTimeout(() => setCopied(false), 2000)
-    toast.success('Copied!')
-  }
-
-  const handleJoinReferral = () => {
-    const ref = registerReferrer(userName, userEmail, userPhone)
-    setReferrer(ref)
-    toast.success('Referral code created!')
-  }
 
   const handleSignOut = async () => {
     await signOut()
@@ -370,80 +342,11 @@ function AccountDashboard() {
           </motion.div>
         )}
 
-        {/* Referral Tab */}
-        {tab === 'referral' && (
-          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
-            {referrer ? (
-              <div className="space-y-6">
-                {/* Code + Share */}
-                <div className="bg-card border border-border rounded-2xl overflow-hidden">
-                  <div className="bg-gradient-to-r from-primary/20 to-primary/5 border-b border-border p-8 text-center">
-                    <p className="text-sm font-bold text-primary uppercase tracking-wider mb-2">Your Referral Code</p>
-                    <div className="flex items-center justify-center gap-3 mb-4">
-                      <span className="text-4xl font-black tracking-widest">{referrer.code}</span>
-                      <button onClick={() => handleCopy(referrer.code)}
-                        className="p-3 rounded-xl bg-background/50 border border-border hover:border-primary/50 transition-colors">
-                        {copied ? <Check size={20} className="text-green-400" /> : <Copy size={20} />}
-                      </button>
-                    </div>
-                    <p className="text-muted-foreground mb-1">Anyone who uses this code gets 10% off their order</p>
-                    <p className="text-sm font-semibold text-primary mb-4">You earn {referrer.tier === 'partner' ? '10%' : '5%'} of every sale{referrer.tier === 'partner' ? ' (Partner)' : ''}</p>
-                    <button onClick={() => handleCopy(getReferralShareUrl(referrer.code))}
-                      className="btn-primary inline-flex items-center gap-2">
-                      <ExternalLink size={16} /> Copy Share Link
-                    </button>
-                    <p className="text-xs text-muted-foreground mt-3 break-all">{getReferralShareUrl(referrer.code)}</p>
-                  </div>
-
-                  {/* Stats */}
-                  <div className="grid grid-cols-3 divide-x divide-border">
-                    <div className="p-6 text-center">
-                      <p className="text-3xl font-black text-primary">{referrer.clicks}</p>
-                      <p className="text-xs text-muted-foreground mt-1">Link Clicks</p>
-                    </div>
-                    <div className="p-6 text-center">
-                      <p className="text-3xl font-black text-green-400">{referrer.conversions}</p>
-                      <p className="text-xs text-muted-foreground mt-1">Orders Made</p>
-                    </div>
-                    <div className="p-6 text-center">
-                      <p className="text-3xl font-black text-yellow-400">${referrer.totalEarned.toFixed(2)}</p>
-                      <p className="text-xs text-muted-foreground mt-1">Commission Earned</p>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Reward codes */}
-                {referrer.rewardCodes.length > 0 && (
-                  <div className="bg-card border border-border rounded-2xl p-6">
-                    <h3 className="font-bold mb-3 flex items-center gap-2"><Gift size={16} className="text-primary" /> Your Reward Codes</h3>
-                    <div className="space-y-2">
-                      {referrer.rewardCodes.map(rc => (
-                        <div key={rc} className="flex items-center justify-between bg-green-400/10 border border-green-400/20 rounded-xl px-4 py-3">
-                          <code className="font-bold tracking-wider">{rc}</code>
-                          <button onClick={() => handleCopy(rc)} className="text-sm text-muted-foreground hover:text-foreground transition-colors flex items-center gap-1">
-                            <Copy size={12} /> Copy
-                          </button>
-                        </div>
-                      ))}
-                    </div>
-                    <p className="text-xs text-muted-foreground mt-3">Use at checkout for $10 off (min $25 order)</p>
-                  </div>
-                )}
-              </div>
-            ) : (
-              <div className="bg-card border border-border rounded-2xl p-12 text-center">
-                <Share2 size={48} className="mx-auto text-muted-foreground mb-4" />
-                <h3 className="text-xl font-bold mb-2">Join the Referral Program</h3>
-                <p className="text-muted-foreground mb-2 max-w-md mx-auto">
-                  Get your personal code. When friends use it, they save 10% and you earn $10 off your next order.
-                </p>
-                <button onClick={handleJoinReferral} className="btn-primary mt-4 inline-flex items-center gap-2">
-                  <TrendingUp size={16} /> Get My Referral Code
-                </button>
-              </div>
-            )}
-          </motion.div>
-        )}
+        {tab === 'referral' && <div className="rounded-2xl border border-border bg-card p-6">
+          <h2 className="text-xl font-bold mb-3">Your referrals</h2>
+          <p className="text-muted-foreground mb-4">Contact the shop to confirm a code, check an existing referral or ask about rewards. Include your code or order reference if you have one.</p>
+          <Link to="/referral#referral-request" className="btn-primary">Contact the referral team <ArrowRight size={16} /></Link>
+        </div>}
 
         {/* Profile Tab */}
         {tab === 'profile' && (

@@ -1,3 +1,4 @@
+import shopPhoto from '@/assets/optimized/projects/sticker-smith-storefront.webp'
 import { Link, Navigate } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import { ArrowRight, MapPin, Truck, Clock, CheckCircle, Sticker, Car, Building2, Tent, Printer, Package } from 'lucide-react'
@@ -8,7 +9,7 @@ const services = [
   { icon: Car, title: (city: string) => `${city} Vehicle Graphics`, description: 'Wraps, fleet branding, door decals, and spot graphics.', href: '/services/vehicle-graphics#quote' },
   { icon: Building2, title: (city: string) => `${city} Business Signs`, description: 'Storefront signs, wall graphics, A-frames, banners, and window vinyl.', href: '/services/business-signage#shop' },
   { icon: Tent, title: (city: string) => `${city} Canopies & Banners`, description: 'Custom canopy tents, feather flags, banners, table covers, and retractables.', href: '/services/event-displays#shop' },
-  { icon: Printer, title: (city: string) => `${city} Business Print`, description: 'Business cards, flyers, brochures, postcards, and marketing collateral.', href: '/services/business-print#shop' },
+  { icon: Printer, title: (city: string) => `${city} Business Print`, description: 'Business cards, flyers, brochures, postcards, and promotional print.', href: '/services/business-print#shop' },
   { icon: Package, title: (city: string) => `${city} Mylar Packaging`, description: 'Custom branded mylar bags, labels, and product packaging.', href: '/mylar#configure' },
 ]
 
@@ -20,13 +21,12 @@ function CityPageInner({ city }: { city: CityConfig }) {
         <div className="absolute inset-0 opacity-[0.04] pointer-events-none" style={{ backgroundImage: 'linear-gradient(#fff 1px, transparent 1px), linear-gradient(90deg, #fff 1px, transparent 1px)', backgroundSize: '60px 60px' }} />
         <div className="absolute -top-32 -left-32 w-[500px] h-[500px] rounded-full bg-cyan-500/[0.07] blur-3xl pointer-events-none" />
         <div className="absolute -bottom-32 -right-32 w-[500px] h-[500px] rounded-full bg-pink-500/[0.06] blur-3xl pointer-events-none" />
-        <div className="section-container relative">
+        <div className="section-container relative grid md:grid-cols-[1.25fr_1fr] gap-8 items-center">
           <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }} className="max-w-3xl">
             <div className="flex items-center gap-2 mb-5">
               <MapPin className="w-4 h-4 text-primary" />
               <span className="text-[10px] md:text-xs font-mono uppercase tracking-widest text-primary">
                 {city.name} · {city.region}
-                {city.distanceMiles > 0 && ` · ${city.distanceMiles} mi from our shop`}
               </span>
             </div>
             <h1 className="text-4xl sm:text-5xl md:text-6xl font-black mb-4 tracking-tight leading-[1.05] text-white">
@@ -34,10 +34,11 @@ function CityPageInner({ city }: { city: CityConfig }) {
             </h1>
             <p className="text-base md:text-lg text-neutral-300 max-w-2xl mb-7">{city.intro}</p>
             <div className="flex flex-wrap gap-3">
-              <Link to="/contact" className="btn-primary">Get a {city.name} Quote <ArrowRight size={16} /></Link>
+              <Link to={`/contact?message=${encodeURIComponent(`I am planning a print project in ${city.name}.`)}`} className="btn-primary">Get a Quote for {city.name} <ArrowRight size={16} /></Link>
               <Link to="/stickers" className="inline-flex items-center justify-center gap-2 px-5 py-3 rounded-full border border-white/20 text-white hover:bg-white/5 hover:border-white/40 transition-colors text-sm font-semibold">Order Stickers</Link>
             </div>
           </motion.div>
+          <figure><img src={shopPhoto} alt="The Sticker Smith shop in Hayward" width={800} height={600} className="w-full aspect-[4/3] rounded-2xl object-cover" /><figcaption className="mt-2 text-sm text-neutral-300">Our Hayward shop · pickup by appointment</figcaption></figure>
         </div>
       </section>
 
@@ -69,8 +70,8 @@ function CityPageInner({ city }: { city: CityConfig }) {
       <section className="py-12 md:py-20 bg-card">
         <div className="section-container max-w-5xl">
           <motion.div initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} className="mb-10">
-            <p className="text-primary font-bold text-xs uppercase tracking-widest mb-3">What we make here</p>
-            <h2 className="text-3xl md:text-4xl font-black">Common {city.name} projects</h2>
+            <p className="text-primary font-bold text-xs uppercase tracking-widest mb-3">Project ideas</p>
+            <h2 className="text-3xl md:text-4xl font-black">Print ideas for {city.name}</h2>
           </motion.div>
           <div className="grid md:grid-cols-2 gap-5">
             {city.commonProjects.map((p, i) => (
@@ -163,7 +164,7 @@ function CityPageInner({ city }: { city: CityConfig }) {
             <p className="text-muted-foreground text-base md:text-lg mb-8 leading-relaxed">
               Tell us what you need. Free quote, free digital proof, and an honest answer on how fast we can get it done.
             </p>
-            <Link to="/contact" className="btn-primary">Get a Free Quote <ArrowRight size={18} /></Link>
+            <Link to={`/contact?message=${encodeURIComponent(`I am planning a print project in ${city.name}.`)}`} className="btn-primary">Get a Free Quote <ArrowRight size={18} /></Link>
           </motion.div>
         </div>
       </section>

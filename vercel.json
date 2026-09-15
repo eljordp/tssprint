@@ -48,7 +48,6 @@
     { "source": "/checkout", "destination": "/index.html" },
     { "source": "/order-confirmation", "destination": "/index.html" },
     { "source": "/account", "destination": "/index.html" },
-    { "source": "/admin", "destination": "/index.html" },
-    { "source": "/case-studies/:slug", "destination": "/index.html" }
+    { "source": "/admin", "destination": "/index.html" }
   ]
 }

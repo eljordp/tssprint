@@ -1,3 +1,4 @@
+import { MotionConfig } from 'framer-motion'
 import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 import { Toaster } from 'sonner'
@@ -6,7 +7,7 @@ import App from './App'
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
-    <App />
+    <MotionConfig reducedMotion="user"><App /></MotionConfig>
     <Toaster
       position="top-right"
       toastOptions={{

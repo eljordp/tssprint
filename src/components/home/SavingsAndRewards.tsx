@@ -45,9 +45,9 @@ export default function SavingsAndRewards() {
           viewport={{ once: true }}
           className="text-center mb-10"
         >
-          <h2 className="text-3xl md:text-5xl font-black mb-3">Save + Earn</h2>
+          <h2 className="text-3xl md:text-5xl font-black mb-3">Offers & Referrals</h2>
           <p className="text-muted-foreground text-base md:text-lg max-w-2xl mx-auto">
-            Promo codes on us. And a cut when you send us someone.
+            Explore available offers and ask about referring customers.
           </p>
         </motion.div>
 
@@ -124,27 +124,11 @@ export default function SavingsAndRewards() {
               Know someone who needs stickers?
             </h3>
             <p className="text-muted-foreground text-sm mb-5">
-              They get <strong className="text-foreground">10% off</strong>, you earn{' '}
-              <strong className="text-foreground">5% commission</strong> on every order they place.
-              No limits.
+              Contact the shop to confirm your referral code, eligible orders and reward terms before sharing.
             </p>
-            <div className="grid grid-cols-2 gap-3 mb-6">
-              <div className="bg-background/60 border border-border rounded-xl p-4 text-center">
-                <p className="text-3xl md:text-4xl font-black text-primary leading-none">10%</p>
-                <p className="text-xs text-muted-foreground mt-2 uppercase tracking-widest font-bold">
-                  they save
-                </p>
-              </div>
-              <div className="bg-background/60 border border-border rounded-xl p-4 text-center">
-                <p className="text-3xl md:text-4xl font-black text-primary leading-none">5%</p>
-                <p className="text-xs text-muted-foreground mt-2 uppercase tracking-widest font-bold">
-                  you earn
-                </p>
-              </div>
-            </div>
             <div className="flex flex-wrap gap-2">
-              <Link to="/account" className="btn-primary inline-flex items-center gap-2 text-sm">
-                Get your code <ArrowRight size={14} />
+              <Link to="/referral" className="btn-primary inline-flex items-center gap-2 text-sm">
+                Ask about referrals <ArrowRight size={14} />
               </Link>
               <Link
                 to="/referral"

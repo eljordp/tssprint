@@ -111,10 +111,8 @@ export const projects: Project[] = [
     title: 'Albertsons Fleet Graphics',
     client: 'Albertsons',
     category: 'Vehicle Graphics',
-    description:
-      'Brand-consistent delivery van graphics rolled across the East Bay fleet. Color-matched to Albertsons spec, installed without pulling vehicles from service.',
-    scope: 'Fleet rollout',
-    materials: '3M cast vinyl + UV laminate',
+    description: 'Albertsons branding on a delivery van. The photograph shows the placement of the logo and graphics across the vehicle.',
+    scope: 'Delivery van graphics',
   },
   {
     slug: 'safeway-fleet-graphics',
@@ -122,10 +120,8 @@ export const projects: Project[] = [
     title: 'Safeway Truck Wrap',
     client: 'Safeway',
     category: 'Vehicle Graphics',
-    description:
-      'Multi-vehicle delivery truck graphics with strict Pantone match. Rolling install schedule kept the fleet on the road through the whole deployment.',
-    scope: '20+ vehicles',
-    materials: '3M IJ180Cv3 + overlaminate',
+    description: 'Safeway branding on a delivery truck. A real project reference for vehicle coverage and logo placement.',
+    scope: 'Delivery truck graphics',
     caseStudySlug: 'safeway-fleet-graphics',
   },
   {
@@ -134,11 +130,8 @@ export const projects: Project[] = [
     title: 'Bhogal Construction',
     client: 'Bhogal Construction',
     category: 'Vehicle Graphics',
-    description:
-      'Full box-truck wrap built to read as a rolling billboard at 50 feet. Bold red/black layout, phone and services dominant — designed to earn calls from every jobsite.',
-    scope: 'Full wrap, box truck',
-    materials: 'Premium 3M cast vinyl',
-    year: '2024',
+    description: 'Bhogal Brothers Construction lettering on a truck cab. The project photograph shows the business identity on the sleeper panel.',
+    scope: 'Truck cab lettering',
     caseStudySlug: 'bhogal-construction-truck-wrap',
   },
   {
@@ -172,7 +165,6 @@ export const projects: Project[] = [
     description:
       'Design, print, and install of a clean fleet wrap for Brothers Carwash. Every truck on the road becomes a 24/7 mobile billboard.',
     scope: 'Fleet wrap — design + print + install',
-    materials: 'ORACAL 751 vinyl',
   },
   {
     slug: 'tesla-custom-wrap',
@@ -192,10 +184,8 @@ export const projects: Project[] = [
     title: 'Atlas Pizza Signage',
     client: 'Atlas Pizza',
     category: 'Business Signage',
-    description:
-      'Storefront + window + interior signage for a Bay Area pizza opening. Designed for sidewalk readability and a complete, intentional storefront on day one.',
-    scope: '~30 sq ft storefront',
-    materials: 'Premium substrate, UV-stable',
+    description: 'Atlas Pizza storefront signage and a sidewalk A-frame, photographed together at the business.',
+    scope: 'Storefront + A-frame',
     caseStudySlug: 'atlas-pizza-storefront',
   },
   {
@@ -226,21 +216,18 @@ export const projects: Project[] = [
     title: 'Plu2o Dispensary Signage',
     client: 'Plu2o',
     category: 'Business Signage',
-    description:
-      'Interior + exterior signage for a licensed dispensary. Compliance-aware sizing, brand-aligned finishes.',
-    scope: 'Multi-surface signage',
+    description: 'Branded graphics on interior glass at PLU2O. The photograph shows logos and full-color artwork across the glass panels.',
+    scope: 'Interior glass graphics',
     materials: 'Rigid + vinyl',
   },
   {
     slug: 'safeway-in-store',
     image: safewayInstall,
-    title: 'Safeway In-Store Install',
+    title: 'Safeway Door Graphics Install',
     client: 'Safeway',
-    category: 'Business Signage',
-    description:
-      'In-store signage rollout — built in-shop, installed on location with zero downtime to store operations.',
-    scope: 'In-store rollout',
-    materials: 'Mounted graphics',
+    category: 'Vehicle Graphics',
+    description: 'Applying Safeway branding to a vehicle door. This is a vehicle installation photograph.',
+    scope: 'Vehicle door lettering',
     hideOnMobile: true,
   },
   {
@@ -531,10 +518,10 @@ export const projects: Project[] = [
     title: 'Candy Shock — Green',
     client: 'Shock Co.',
     category: 'Mylar Packaging',
-    description:
-      'Custom 3.5g mylar pouch design for Shock Co. Candy-themed illustration, bold display type, lightning brand mark, full compliance icons baked into the layout.',
+    description: 'Candy Shock packaging design presentation with illustrated artwork and a pouch mockup. This shows the design, not a verified material or certification.',
     scope: 'Brand + packaging design',
     materials: 'CR mylar pouch, full-color print',
+    imageKind: 'Design mockup',
   },
   {
     slug: 'shockco-candyshock-blue',
@@ -542,10 +529,10 @@ export const projects: Project[] = [
     title: 'Candy Shock — Blue',
     client: 'Shock Co.',
     category: 'Mylar Packaging',
-    description:
-      'Companion colorway in the Shock Co. Candy Shock series — same brand system, cool palette. Designed as part of a shelf-set so the variants read as a family.',
+    description: 'A blue colorway of the Candy Shock packaging design, shown as a pouch mockup.',
     scope: 'Brand + packaging design',
     materials: 'CR mylar pouch, full-color print',
+    imageKind: 'Design mockup',
   },
   {
     slug: 'shockco-atomicshock',
@@ -553,10 +540,10 @@ export const projects: Project[] = [
     title: 'Atomic Shock',
     client: 'Shock Co.',
     category: 'Mylar Packaging',
-    description:
-      'Atomic Shock 3.5g pouch — illustrated mushroom-cloud over city, graffiti-style display type. End-to-end design + print, compliance-ready for licensed retail.',
+    description: 'Atomic Shock packaging design with illustrated artwork, shown as a pouch mockup.',
     scope: 'Brand + packaging design',
     materials: 'CR mylar pouch, full-color print',
+    imageKind: 'Design mockup',
   },
   {
     slug: 'triple-a-cannabis',
@@ -566,7 +553,7 @@ export const projects: Project[] = [
     client: 'Triple A',
     category: 'Mylar Packaging',
     description:
-      'High-end black marble + gold foil treatment for a 3.5g cannabis flower pouch. Custom monogram crown mark, full back-panel compliance, retail-shelf ready.',
+      'High-end black marble + gold foil treatment for a 3.5g cannabis flower pouch. Custom monogram crown mark, front and back information panels shown in the artwork.',
     scope: 'Front + back panel design',
     materials: 'Premium mylar, metallic finish',
   },
@@ -576,10 +563,10 @@ export const projects: Project[] = [
     title: 'Elevated 925 — Mystery Exotic Snack Pack',
     client: 'Elevated 925',
     category: 'Mylar Packaging',
-    description:
-      'Custom 14x16in (pound-size) mylar pouches for Elevated 925 — collage of exotic snack-pack artwork, "Flavors From All Over The World" tagline. Made for large-format packaging needs.',
-    scope: '14x16in pound bag — custom print',
+    description: 'Promotional composite artwork for the Elevated 925 Mystery Exotic Snack Pack. A design example rather than a photograph of finished packaging.',
+    scope: 'Promotional packaging artwork',
     materials: 'Custom-print mylar pouch',
+    imageKind: 'Artwork',
   },
 
   // ── Business Print ────────────────────────────────────────────
