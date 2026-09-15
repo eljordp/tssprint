@@ -1,6 +1,8 @@
 # Customer page review — September 14, 2026
 
-This is a customer-facing review of the whole public site. Scores are editorial judgments of clarity, useful imagery and the next step, not conversion measurements. The previous overall 6/10 is now **about 7/10**, with the revised marketing/product pages around **7.5/10**. Completed payments, recovery email delivery and measured tracking remain separate gates; the historical **3/10 tracking score has not been independently revalidated in this pass**.
+This is a customer-facing review of the whole public site. Scores are editorial judgments of clarity, useful imagery and the next step, not conversion measurements. The initial summary of this pass was **about 7/10 overall / 7.5/10 for marketing and product pages**. After recovering the September 8 rubric, the comparable September 14 customer-interface score is **7.6/10**, versus **5.75/10 originally** and **7.35/10 for the September 8 preview**. The earlier rounded summary was not a calculation using the historical weights and must not be read as evidence that the site deteriorated. See the [ledger's dated scoring history and common rubric](sticker-smith-ledger.md#dated-score-history-and-comparable-rubric).
+
+Completed payments, recovery email delivery and measured tracking remain separate gates. The historical **3/10 live tracking score and 5.6/10 prepared tracking implementation score are historical assessments, not fresh September 14 measurements**. This page pass does not re-certify that system or override later operational evidence from the Intuit/tracking task.
 
 ## Every public page
 
