@@ -26,6 +26,7 @@ const About = lazy(() => import('@/pages/About'))
 const Projects = lazy(() => import('@/pages/Projects'))
 const CaseStudyDetail = lazy(() => import('@/pages/CaseStudyDetail'))
 const Referral = lazy(() => import('@/pages/Referral'))
+const Legal = lazy(() => import('@/pages/Legal'))
 const OrderHelp = lazy(() => import('@/pages/OrderHelp'))
 const Account = lazy(() => import('@/pages/Account'))
 const Admin = lazy(() => import('@/pages/Admin'))
@@ -117,6 +118,8 @@ const pageMeta: Record<string, PageMeta> = {
     title: 'Referral Program | The Sticker Smith',
     description: 'Share The Sticker Smith with friends, creators, and businesses and earn referral rewards on new print orders.',
   },
+  '/terms': { title: 'Terms & EULA | The Sticker Smith', description: 'Website license, artwork, proof approval, payments and ordering terms for The Sticker Smith.' },
+  '/privacy': { title: 'Privacy Policy | The Sticker Smith', description: 'How The Sticker Smith collects and uses website, artwork, order and account information, and how to make a privacy request.' },
   '/order-help': { title: 'Ordering, Proofs & Pickup | The Sticker Smith', description: 'How to send artwork, review your print proof and arrange pickup or order support.' },
   '/account': {
     title: 'Account | The Sticker Smith',
@@ -346,6 +349,8 @@ export default function App() {
                 <Route path="/case-studies" element={<Navigate to="/projects" replace />} />
                 <Route path="/case-studies/:slug" element={<CaseStudyDetail />} />
                 <Route path="/referral" element={<Referral />} />
+                <Route path="/terms" element={<Legal kind="terms" />} />
+                <Route path="/privacy" element={<Legal kind="privacy" />} />
                 <Route path="/order-help" element={<OrderHelp />} />
                 <Route path="/account" element={<Account />} />
                 <Route path="/admin" element={<Admin />} />

@@ -55,6 +55,8 @@ const ROUTE_TITLES = {
   '/case-studies/bhogal-construction-truck-wrap': 'Project Case Study | The Sticker Smith',
   '/case-studies/atlas-pizza-storefront': 'Project Case Study | The Sticker Smith',
   '/projects': 'Print Projects & Portfolio | The Sticker Smith',
+  '/terms': 'Terms & EULA | The Sticker Smith',
+  '/privacy': 'Privacy Policy | The Sticker Smith',
   '/order-help': 'Ordering, Proofs & Pickup | The Sticker Smith',
   '/about': 'About The Sticker Smith | Bay Area Print Studio',
   '/contact': 'Contact & Free Quote | The Sticker Smith',
@@ -99,7 +101,7 @@ async function main() {
 
   const appShellHtml = await readFile(path.join(DIST, 'index.html'), 'utf8')
 
-  const port = 4179
+  const port = Number(process.env.PRERENDER_PORT || 4179)
   console.log(`[prerender] starting vite preview on :${port}`)
   const preview = spawn(
     'npx',
