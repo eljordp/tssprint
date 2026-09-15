@@ -38,7 +38,7 @@ export async function loadServerPricing() {
 }
 
 export async function hasPaidOrder(email, excludeOrderId) {
-  const query = new URLSearchParams({ select: 'id', customer_email: `ilike.${email}`, payment_status: 'eq.captured', limit: '1' })
+  const query = new URLSearchParams({ select: 'id', customer_email: `ilike.${email}`, payment_status: 'in.(captured,payment_recorded)', limit: '1' })
   if (excludeOrderId) query.set('id', `neq.${excludeOrderId}`)
   const rows = await storeRead(`orders?${query}`, { privateRead: true })
   return rows.length > 0

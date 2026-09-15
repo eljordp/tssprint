@@ -20,6 +20,7 @@ const BusinessPrint = lazy(() => import('@/pages/BusinessPrint'))
 const MylarPackaging = lazy(() => import('@/pages/MylarPackaging'))
 const Cart = lazy(() => import('@/pages/Cart'))
 const Checkout = lazy(() => import('@/pages/Checkout'))
+const PaymentStatus = lazy(() => import('@/pages/PaymentStatus'))
 const OrderConfirmation = lazy(() => import('@/pages/OrderConfirmation'))
 const Contact = lazy(() => import('@/pages/Contact'))
 const About = lazy(() => import('@/pages/About'))
@@ -93,6 +94,7 @@ const pageMeta: Record<string, PageMeta> = {
     description: 'Complete your Sticker Smith order with proof-based production, shipping, or Bay Area pickup.',
     robots: NOINDEX_ROBOTS,
   },
+  '/payment-status': { title: 'Invoice & Payment Status | The Sticker Smith', description: 'Review your invoice and payment status.' },
   '/order-confirmation': {
     title: 'Order Confirmation | The Sticker Smith',
     description: 'Your Sticker Smith order has been received. Watch for your digital proof and next steps.',
@@ -341,6 +343,7 @@ export default function App() {
                 <Route path="/mylar" element={<MylarPackaging />} />
                 <Route path="/cart" element={<Cart />} />
                 <Route path="/checkout" element={<Checkout />} />
+                <Route path="/payment-status" element={<PaymentStatus />} />
                 <Route path="/order-confirmation" element={<OrderConfirmation />} />
                 <Route path="/contact" element={<Contact />} />
                 <Route path="/quote" element={<Contact />} />

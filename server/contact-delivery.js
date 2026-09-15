@@ -1,5 +1,9 @@
 import { supabaseFetch, requireAdmin, readBody, sendJson } from './square-api.js'
 import { requireTrustedBrowserRequest, consumeRateLimit } from './request-guards.js'
+import { waitUntil } from '@vercel/functions'
+import { processWebhookEvents } from './quickbooks-webhook.js'
+import { reconcileCheckouts } from './quickbooks-checkout.js'
+import { processQuickBooksDelivery } from './quickbooks-delivery.js'
 
 const uuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
 const escape = value => String(value || '').replace(/[&<>"']/g, c => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' })[c])
@@ -82,6 +86,7 @@ export default async function contactDeliveryHandler(req, res) {
   try {
     if (req.method === 'GET') {
       if (!process.env.CRON_SECRET || req.headers.authorization !== `Bearer ${process.env.CRON_SECRET}`) return sendJson(res, 401, { error: 'Unauthorized' })
+      waitUntil(processWebhookEvents().then(() => reconcileCheckouts()).then(() => processQuickBooksDelivery()).catch(() => console.warn('QuickBooks backup processing requires review')))
       const started = Date.now()
       let processed = 0
       for (let batch = 0; batch < 20 && Date.now() - started < 25000; batch++) {

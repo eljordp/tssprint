@@ -68,7 +68,7 @@ interface OrderItem {
 }
 
 type OrderStatus = 'completed' | 'shipped' | 'processing' | 'artwork_needed' | 'artwork_review' | 'awaiting_approval' | 'in_production' | 'ready_pickup' | 'cancelled'
-type PaymentStatus = 'refunded' | 'captured' | 'not_captured' | 'not_found' | 'unverified' | 'checking' | 'error'
+type PaymentStatus = 'payment_recorded' | 'refunded' | 'captured' | 'not_captured' | 'not_found' | 'unverified' | 'checking' | 'error'
 
 interface Order {
   id: string; date: string
@@ -371,6 +371,7 @@ const providerLabel = { paypal: 'PayPal', square: 'Square', quickbooks: 'QuickBo
 
 const paymentConfig: Record<PaymentStatus, { label: string; icon: typeof Package; color: string }> = {
   refunded: { label: 'Refunded', icon: RotateCcw, color: 'text-muted-foreground border-border' },
+  payment_recorded: { label: 'Payment recorded in QuickBooks', icon: CheckCircle, color: 'text-green-400 bg-green-400/10 border-green-400/20' },
   captured: { label: 'Payment captured', icon: CheckCircle, color: 'text-green-400 bg-green-400/10 border-green-400/20' },
   not_captured: { label: 'No capture found', icon: AlertCircle, color: 'text-red-400 bg-red-400/10 border-red-400/20' },
   not_found: { label: 'Payment not found', icon: AlertCircle, color: 'text-red-400 bg-red-400/10 border-red-400/20' },
@@ -380,7 +381,7 @@ const paymentConfig: Record<PaymentStatus, { label: string; icon: typeof Package
 }
 
 function normalizePaymentStatus(value: unknown): PaymentStatus {
-  if (value === 'refunded' || value === 'captured' || value === 'not_captured' || value === 'not_found' || value === 'checking' || value === 'error') {
+  if (value === 'payment_recorded' || value === 'refunded' || value === 'captured' || value === 'not_captured' || value === 'not_found' || value === 'checking' || value === 'error') {
     return value
   }
   return 'unverified'
@@ -392,7 +393,7 @@ function normalizeOrderStatus(value: unknown): OrderStatus {
 }
 
 function needsPaymentReview(order: Order) {
-  return order.paymentStatus !== 'captured' && order.paymentStatus !== 'refunded' && order.status !== 'cancelled'
+  return order.paymentStatus !== 'captured' && order.paymentStatus !== 'payment_recorded' && order.paymentStatus !== 'refunded' && order.status !== 'cancelled'
 }
 
 function getVisibleStatusConfig(order: Order) { return statusConfig[order.status] }
@@ -470,7 +471,7 @@ function OrdersTab() {
     try {
       let query = supabase.from('orders').select(filter === 'overdue' ? '*,production:order_production_details!inner(*)' : '*,production:order_production_details(*)', { count: 'exact' }).order('created_at', { ascending: false }).order('id').range(page * 25, page * 25 + 24)
       if (record) query = query.eq('id', record)
-      if (filter === 'payment_review') query = query.neq('payment_status', 'captured').neq('payment_status', 'refunded')
+      if (filter === 'payment_review') query = query.not('payment_status', 'in', '(captured,payment_recorded,refunded)')
       else if (filter === 'overdue') query = query.lt('production.due_date', new Date().toLocaleDateString('en-CA')).not('status', 'in', '(completed,cancelled,shipped)')
       else if (filter !== 'all') query = query.eq('status', filter)
       const q = searchText(search)
@@ -573,7 +574,7 @@ function OrdersTab() {
     finally { setSaving(null) }
   }
 
-  const paidOrders = orders.filter(o => o.paymentStatus === 'captured')
+  const paidOrders = orders.filter(o => ['captured','payment_recorded'].includes(o.paymentStatus))
   const reviewOrders = orders.filter(needsPaymentReview)
   const totalRevenue = paidOrders.reduce((sum, o) => sum + parseFloat(o.total), 0)
   const uniqueCustomers = new Set(orders.map(o => o.customer.email)).size
@@ -620,7 +621,7 @@ function OrdersTab() {
             const payment = paymentConfig[order.paymentStatus]
             const PaymentIcon = payment.icon
             const isPaymentChecking = order.paymentStatus === 'checking'
-            const isPaymentCaptured = order.paymentStatus === 'captured'
+            const isPaymentCaptured = ['captured','payment_recorded'].includes(order.paymentStatus)
             return (
               <motion.div key={order.id} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: i * 0.05 }} className="bg-card border border-border rounded-2xl overflow-hidden">
@@ -1674,7 +1675,7 @@ function AnalyticsTab() {
       } = await fetchLiveAnalyticsRows<OrderAnalyticsRow>('orders', 'total, payment_status, attribution, created_at', since)
       const orders = orderCount ?? ordersInRange.length
       const revenue = ordersInRange
-        .filter(o => o.payment_status === 'captured')
+        .filter(o => ['captured','payment_recorded'].includes(o.payment_status || ''))
         .reduce((sum, o) => sum + (Number(o.total) || 0), 0)
 
       const sourceTotals = new Map<string, { source: string; leads: number; orders: number; revenue: number }>()
@@ -1689,7 +1690,7 @@ function AnalyticsTab() {
       ordersInRange.forEach(order => {
         const row = sourceRow(sourceKey(order.attribution))
         row.orders++
-        if (order.payment_status === 'captured') row.revenue += Number(order.total) || 0
+        if (['captured','payment_recorded'].includes(order.payment_status || '')) row.revenue += Number(order.total) || 0
       })
       const sourceBreakdown = [...sourceTotals.values()]
         .sort((a, b) => (b.revenue - a.revenue) || (b.orders - a.orders) || (b.leads - a.leads))
@@ -1831,7 +1832,7 @@ function AnalyticsTab() {
 
       <div className="rounded-2xl border border-primary/20 bg-primary/5 p-4 text-sm">
         <p className="font-bold">Measurement baseline: {range === 'today' ? 'today' : range === 'all' ? 'all recorded history' : `the last ${range}`}</p>
-        <p className="mt-1 text-xs text-muted-foreground">Use this as the starting line before more SEO traffic arrives. Gross paid revenue uses orders with a captured payment status, before refunds, fees and tax adjustments. Calls are tap-to-call clicks. Confirmation-page views do not prove payment.</p>
+        <p className="mt-1 text-xs text-muted-foreground">Use this as the starting line before more SEO traffic arrives. Gross paid revenue uses captured payments and payments recorded in QuickBooks, before refunds, fees and tax adjustments. Calls are tap-to-call clicks. Confirmation-page views do not prove payment.</p>
       </div>
 
       {/* Headline business numbers */}
