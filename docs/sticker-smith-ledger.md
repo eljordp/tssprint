@@ -2,6 +2,35 @@
 
 Updated September 14, 2026 (Pacific). Canonical record of customer-experience decisions, dated audits, useful research and verification. Retain important findings and their source/version, not transcripts, credentials, customer records or repetitive tool logs. Preserve earlier ratings as history and mark corrections explicitly.
 
+## Current plan, tracking and clarity assessment — September 14, 22:24 PDT
+
+User explicitly deferred reviewing all 602 Drive entries; preserve inventory for later. Updated the existing [completion plan](customer-next-steps-plan-2026-09-14.md#current-completion-plan--september-14-2224-pdt), covering formats, accurate funnel reporting, copy/product evidence, upload/recovery/admin tests, payment and final device/release checks. Planning only; no app edits, payments, emails or new asset review. No routine contact with the other task.
+
+Live `/stickers` DOM and screenshot: Individual/Sheets/Rolls are present but visually secondary preview-like pills. Sheets retains individual sticker-count pricing and a quote link for multi-design sheets. Dedicated sheet landing copy promises multiple designs and initializes a different cut from switching formats in the hub. Recommendation: retain useful dedicated landing URLs with the shared configurator, promote three clear format choices on the hub, reconcile actual product/price/unit semantics first. Do not delete useful search pages or invent per-sheet prices.
+
+Tracking **6.0/10 provisional readiness judgment**, replacing use of historical ~3 as if current. This is not an end-to-end verified score or a measured reliability percentage. Historical weights retained: events/funnel 20%×8; cart identity/persistence 20%×7; attribution/exclusion 10%×6; payment linkage 20%×4; recovery/email 20%×5; reporting/failure visibility 10%×6 = 6.0. Based on previously recorded GA4 event receipt, persisted/editable carts, provider delivery and deployed queue visibility; incomplete purchase reconciliation, recovery completion, GA4 filter enforcement and reporting semantics constrain it. The September 8 prepared-code 5.6 score was a different evidence scope. Earlier decision to withhold a fresh verified operations score remains valid; this new provisional estimate is supplied at the user's explicit request.
+
+New reporting finding in current `Admin.tsx`: page funnel counts independent sets, not temporally ordered cohort transitions; direct checkout skips cart, so “drop-off” wording overstates what the data proves. Upload branches are absent from this chart despite events in Tracking checks. Lead source breakdown takes limited rows whereas headline leads use exact count; verify/report completeness. Do not interpret confirmation views as paid conversion. See plan phase 2.
+
+Admin organization **7.5/10 provisional**, based on current deployed code and recorded earlier authenticated checks: navigation/action finding 8 (40%), record workflow clarity 8 (30%), reporting clarity 6 (30%) = 7.4, rounded to nearest half-point. Eight work groups, attention queues, search, job details, source reporting and delivery-status/retry visibility improve organization. No comparable prior admin number was recorded, so do not invent a numeric before score. Fresh authenticated visual review was unavailable: both current IAB and Chrome Jordan profile showed Admin Login. No login credentials requested or entered. Operational reliability remains separately unverified.
+
+Where to look after login:
+
+| Task | Admin location |
+| --- | --- |
+| Revenue, leads, sources, page reach | Reports → Sales & traffic (`/admin?tab=analytics`) |
+| Upload and checkout milestone timestamps; quote delivery queue; GA4/Resend links | Reports → Tracking checks (`/admin?tab=tracking`) |
+| Inactive/paid cart records, recovery email state | Orders → Abandoned carts (`/admin?tab=carts`) |
+| Payment state, order artwork, approval/production/pickup/shipping | Orders → Orders (`/admin?tab=orders`) |
+| Saved quotes and follow-up | Quotes → Quotes & inquiries (`/admin?tab=inquiries`) |
+| Search reporting | Reports → Search performance (`/admin?tab=seo`) |
+
+Tracking checks reads the latest 500 matching site events; it is not GA4 delivery proof or lifetime totals. Inactive means 60 minutes without activity on a nonempty cart, not proven lost revenue. Ratings live in this ledger, not as admin score widgets.
+
+Customer interface stays **7.75 (~7.8)/10**; this discovery adds unfinished work rather than an automatic rating increase. Current qualitative judgment: easier to browse, edit and retain artwork; still excess repetition in proof reassurance, local SEO copy and overlapping project blocks. Historical defined scenario improved 9→6 actions and 4→3 pages before checkout fields/payment; no new all-products click-count or completed purchase claimed. Upload happy paths have evidence; expired files, interruptions and all file/device combinations do not.
+
+Primary sources opened September 14, approximately22:18–22:23PDT: [Google ecommerce navigation](https://developers.google.com/search/docs/specialty/ecommerce/help-google-understand-your-ecommerce-site-structure), [URL/variant canonical guidance](https://developers.google.com/search/docs/specialty/ecommerce/designing-a-url-structure-for-ecommerce-sites), [StickerApp sheets](https://stickerapp.com/stickers/sticker-sheets), [StickerApp rolls](https://stickerapp.com/labels/labels-on-roll), [Sticker Mule die-cut](https://www.stickermule.com/products/die-cut-stickers). Google supports linked useful product/category pages and consistent URLs; it does not prove TSS traffic/ranking benefits. StickerApp separates sheet size/layout and roll-label products; Sticker Mule has a compact size/quantity/next-upload ordering hierarchy. Both have supporting content below ordering. Recommendation is to reduce repetition and clarify decision hierarchy, not indiscriminately remove text or copy competitor manufacturing claims. No exhaustive comparison with every competitor or Search Console performance audit.
+
 **Active next-work plan:** [Cart editing, material evidence and order/recovery verification](customer-next-steps-plan-2026-09-14.md), created September 14 at 21:09 PDT at the user's request. Proposed sequence with ownership and acceptance criteria; no implementation or deployment performed in the planning turn.
 
 ## User decisions

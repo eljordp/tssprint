@@ -2,7 +2,61 @@
 
 Created September 14, 2026, 21:09 PDT. Status: approved and in progress. Cart editing is deployed and verified; remaining material facts and operational outcomes are tracked below. Audience: Jordan and the two existing website tasks. Canonical plan lives here, linked from the [Sticker Smith ledger](sticker-smith-ledger.md). This continues the deployed page work rather than creating a new redesign.
 
-## Starting point and ownership
+## Current completion plan — September 14, 22:24 PDT
+
+This section supersedes the original execution order below; earlier checkpoints remain history. Status: proposed in response to the user's request to plan remaining work. No application changes or deployment in this planning pass. Current application baseline is `7e54d3d`, incorporating operations `84a330b`; last verified customer-interface assessment is 7.75/10. The 602 Drive entries remain inventoried, **not fully visually reviewed**, and a full review is deferred at the user's explicit direction. Use known shortlisted sources only when a specific gap warrants it. No routine messages to the other task.
+
+### 1. Make sticker formats clear and consistent
+
+Keep `/stickers` as the main ordering hub, with prominent **Individual stickers / Sticker sheets / Roll labels** choices and a short use explanation. Keep useful `/sticker-sheets` and `/roll-labels` landing pages; they already embed the shared Order component and preselect a format. Separate URLs do not require separate ordering implementations or an extra customer step.
+
+Live finding: the format controls sit under Upload & preview and resemble preview toggles. Switching from Individual to Sheets retains Die-Cut, while entering the dedicated sheet route initializes Kiss-Cut. The sheet quantity is a count of individual stickers arranged on backing sheets, while the landing copy promises multi-design sheets. This is a product-definition mismatch, not a missing route.
+
+Work: distinguish repeated individual labels on backing sheets from a multi-design sheet sold by sheet count. Confirm existing shop specifications and approved prices before offering sheet-based instant checkout. If records cannot establish them, use a clearly labeled sheet quote path, retaining artwork and selected details. Never relabel a per-sticker price as a per-sheet price. Confirm label count, roll/core/unwind requirements and compatible stocks for rolls; machine-specific work can use the existing quote flow. Match format, cut, units, summary, saved cart and server validation across both entry paths. Fix related-card photo claims where illustrations or roll-fed production are described as finished shop products.
+
+Acceptance: a customer can recognize all three choices without interpreting the mockup; direct landing entry and hub selection produce consistent valid defaults, prices and units. Switching formats preserves applicable artwork/options and explains incompatible changes. Saved/legacy carts retain their original meaning. No invented sheet/roll pricing.
+
+### 2. Correct reporting before interpreting abandonment
+
+`Admin.tsx` currently computes separate unique browser counts for product/cart/checkout/confirmation pages, then labels differences as drop-off. These are not ordered journeys for the same cohort. Direct Continue to Checkout bypasses `/cart`, so this can imply a loss where there was a valid shortcut.
+
+Work: initially label the existing chart as page reach and remove unsupported drop-off claims. Build the real event-based funnel with explicit identity, time window, event ordering and deduplication; support both direct checkout and cart-review paths. Treat artwork upload as an optional branch because send-later/design-help are valid choices. Final purchase stage must use a reconciled paid order, not a confirmation view. Expose uploads started/succeeded/failed, recoverable failures, abandoned/inactive carts and recovery outcomes with consistent periods. Audit pagination: source breakdown currently samples lead rows while the headline uses exact lead count; cart listing also needs explicit completeness handling.
+
+Acceptance: controlled journeys with and without a cart visit, with each artwork choice, repeated reloads and a failed upload appear in the correct stages once. Missing data is labeled unavailable/capped, not zero. GA4 and site-record counts have explained differences. Staff/test filtering is verified before real-customer trends or campaign decisions are drawn. A purchase check waits for phase 5.
+
+### 3. Reduce repetition and finish product evidence
+
+Keep the entry gate, Noto Sans, genuine imagery and restrained motion. Shorten repeated proof reminders and Bay Area paragraphs; consolidate overlapping project sections and repeated links. Put specifications, quantity/price, artwork options and the next action before supporting copy. Expand details/FAQs on demand while keeping essential limitations visible. Preserve each useful landing page's distinct product information. Review `/custom-labels` overlap using Search Console/indexing evidence before any merge or redirect; audit canonical URLs, internal links and sitemap together.
+
+Use the existing material/photo gap list. Backdrop photo is complete. Remaining priorities: exact sticker stocks/finishes, physical pouch, sheet example, paper weights/printed sides, relevant accessories and business-approved turnaround/policies. Review known sources first and consolidate only truly missing shop facts into one request. No full Drive sweep, new AI photography, new video or font replacement.
+
+Acceptance: each page answers what it is, who it suits, what is included, price or quote basis, artwork requirement and next step without repeated paragraphs. Photos have honest source/type captions. Phone and desktop crops are usable. No unsupported material or delivery claim is introduced.
+
+### 4. Verify artwork, recovery and admin work end to end
+
+Previously passed: representative real card/pouch uploads survive edit/save/reload; all five secondary product families have configuration-edit coverage; live phone card editing passed. Do not redo that implementation. Exercise remaining file types, size limits, unavailable previews, expired artwork, interrupted/failed upload, retry, replacement/removal, multi-item checkout editing and saved-cart restoration across browsers. A selected file is not marked saved until persistent storage succeeds.
+
+Verify actual recipient completion of cart recovery and password reset, expired/reused links, quote/customer/staff delivery and safe retry without duplicate messages. Provider Delivered is existing evidence, not proof of inbox placement or successful link completion. Use controlled records and authorized recipients; password entry remains with the user. Keep direct email proof approval.
+
+Admin: repeat signed-in queue/search/filter/detail journeys on desktop and phone; verify notes, artwork, approval evidence, shipment/pickup fields and customer-facing status stay aligned. Prior all-eight-group live checks and rollback SQL checks are recorded in the ledger. This turn's available browsers showed Admin Login, so a fresh authenticated review remains pending.
+
+Acceptance: a customer can recover from each failure without rebuilding the order; the shop sees the same correct configuration/artwork and actionable status. Record release, test reference and outcome, without copying customer data into the ledger.
+
+### 5. Close payment and operational verification
+
+The existing payment task owns Intuit. Preserve its changes; consult its status only when the integration becomes an actual dependency. When production setup is ready, verify an authorized bounded transaction through checkout, invoice/payment reconciliation, one order, receipt, correct totals/promo/artwork and one purchase event. Test return/retry/cancel paths without duplicate charges/orders. Verify actual enabled card/wallet methods on supported devices; buttons/logos and sandbox simulation are insufficient. Exercise direct proof approval and appropriate pickup/shipping notification using controlled orders, without claiming physical fulfillment from a test.
+
+Acceptance: provider, order, customer confirmation/email, admin and analytics agree on the transaction and amount. Remaining provider/business decisions stay explicitly pending rather than receiving a passing rating.
+
+### 6. Final usability, accessibility and release gate
+
+Check representative sticker, sheet/roll, business-print, packaging and quote journeys on desktop and phone, including keyboard/focus, zoom, contrast, errors, reduced motion and slow connections. Measure performance; 320/390px emulation is not real-device Safari/Android coverage or field Core Web Vitals. Count actions and pages for a defined scenario, then separately count checkout/payment effort. The historical 9→6 actions / 4→3 pages comparison stopped before checkout entry and payment.
+
+Acceptance: focused tests and staged checks pass, current combined production revision is preserved, changed live routes are checked, and the same rating rubric is updated with evidence. Report paid-flow readiness separately. Later uncoached customer sessions can test comprehension; they are not required to invent a 10/10 score or claim conversion gains.
+
+**First implementation checkpoint:** format discoverability/units and honest funnel labels. These can proceed without Intuit; true sheet prices require verified shop inputs. The fuller event funnel and operational tests follow, not another redesign.
+
+## Original starting point and ownership — historical
 
 - Last verified customer release: combined commit `fc4b0ed`, deployment `dpl_5QExPMWTvy3jtueqygxLQvzhvzfE`. Recheck the current combined branch before implementation so later payment/admin work is retained.
 - Customer-interface assessment: 7.6/10 using the historical weights. This is reviewer judgment, not measured conversion. See the [page-by-page findings](customer-page-review-2026-09-14.md).
