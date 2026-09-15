@@ -14,7 +14,6 @@ export default function SearchModal({ isOpen, onClose }: { isOpen: boolean; onCl
   useEffect(() => {
     if (!isOpen) return
     const timer = window.setTimeout(() => {
-      setQuery('')
       inputRef.current?.focus()
     }, 100)
     return () => window.clearTimeout(timer)
