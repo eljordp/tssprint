@@ -698,7 +698,7 @@ function OrdersTab() {
                         ))}
                       </div>
                     </div>
-                    <JobDetails key={`${order.id}-${order.status}`} id={order.id} initial={order} />
+                    <JobDetails key={`${order.id}-${order.status}`} id={order.id} initial={order} onSaved={fields => setOrders(previous => previous.map(o => o.id === order.id ? { ...o, ...fields } : o))} />
                     <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 pt-2 border-t border-border">
                       <div className="space-y-2">
                         <p className="text-xs text-muted-foreground break-all">{providerLabel[order.paymentProvider]} order ID: {order.id}</p>

@@ -11,11 +11,20 @@ type Fields = {
 export default function JobDetails({
   id,
   initial,
+  onSaved,
 }: {
   id: string;
   initial: Fields;
+  onSaved: (fields: Fields) => void;
 }) {
-  const [form, setForm] = useState(initial);
+  const [form, setForm] = useState<Fields>(() => ({
+    staff_notes: initial.staff_notes,
+    assigned_to: initial.assigned_to,
+    due_date: initial.due_date,
+    tracking_url: initial.tracking_url,
+    proof_reference: initial.proof_reference,
+    proof_approved_at: initial.proof_approved_at,
+  }));
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState("");
   const [history, setHistory] = useState<
@@ -53,6 +62,7 @@ export default function JobDetails({
         .select("order_id")
         .single();
       if (error) throw error;
+      onSaved(form);
       setMessage("Saved to the shared order.");
       await load();
     } catch {
