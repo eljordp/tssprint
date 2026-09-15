@@ -8,7 +8,7 @@ import FirstOrderChip from '@/components/FirstOrderChip'
 import heroPrinter from '@/assets/optimized/projects/stickers-roll-1000.webp'
 
 const HERO_VIDEO = '/videos/flight-risk-holographic.mp4'
-const HERO_POSTER = '/videos/flight-risk-holographic.jpg'
+import HERO_POSTER from '@/assets/optimized/flight-risk-holographic-poster.jpg'
 
 function isPrerenderSnapshot() {
   return Boolean((window as unknown as { __prerender?: boolean }).__prerender)
@@ -45,7 +45,7 @@ export default function Hero() {
         <div className="grid lg:grid-cols-[1.2fr_0.8fr] gap-4 sm:gap-6 lg:gap-12 items-center">
           {/* Printer hero visual — shows above text on mobile, right side on desktop */}
           <motion.div
-            initial={{ opacity: 0, scale: 0.95 }}
+            initial={false}
             animate={{ opacity: 1, scale: 1 }}
             transition={{ duration: 0.8, delay: 0.2 }}
             className="relative order-1 lg:order-2"
@@ -70,6 +70,9 @@ export default function Hero() {
                 ) : (
                   <ResponsiveImage
                     src={HERO_POSTER}
+                    sizes="(min-width: 1024px) 448px, (min-width: 640px) 384px, 230px"
+                    width={960}
+                    height={1707}
                     alt="Holographic stickers fresh off the printer"
                     className="absolute inset-0 w-full h-full object-cover"
                     decoding="async"
@@ -89,22 +92,22 @@ export default function Hero() {
             <div className="mb-3 sm:mb-4 flex justify-center lg:justify-start">
               <FirstOrderChip />
             </div>
-            <motion.h1 initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6, delay: 0.3 }} className="text-[2rem] leading-[1.08] sm:text-5xl md:text-6xl lg:text-7xl font-black mb-3 md:mb-6 tracking-tight">
+            <motion.h1 initial={false} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6, delay: 0.3 }} className="text-[2rem] leading-[1.08] sm:text-5xl md:text-6xl lg:text-7xl font-black mb-3 md:mb-6 tracking-tight">
               <span className="text-gradient">Custom Stickers</span>{' '}
               <br />
               Labels & Roll Labels
             </motion.h1>
 
-            <motion.p initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6, delay: 0.4 }} className="text-base md:text-xl text-muted-foreground max-w-xl mx-auto lg:mx-0 mb-5 md:mb-8">
+            <motion.p initial={false} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6, delay: 0.4 }} className="text-base md:text-xl text-muted-foreground max-w-xl mx-auto lg:mx-0 mb-5 md:mb-8">
               Order die-cut stickers, sticker sheets, and product labels with a fast digital proof. Need signs, wraps, or packaging? Send a quote request.
             </motion.p>
 
-            <motion.div initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6, delay: 0.5 }} className="flex flex-col sm:flex-row gap-3 mb-5 sm:mb-8 max-w-sm mx-auto lg:mx-0 lg:max-w-none">
+            <motion.div initial={false} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6, delay: 0.5 }} className="flex flex-col sm:flex-row gap-3 mb-5 sm:mb-8 max-w-sm mx-auto lg:mx-0 lg:max-w-none">
               <Link to="/stickers" className="btn-primary text-base md:text-lg px-8 md:px-10 py-3.5 md:py-4">Order Stickers<ArrowRight size={20} /></Link>
               <Link to="/contact" className="btn-secondary text-base md:text-lg px-8 md:px-10 py-3.5 md:py-4">Get a Quote</Link>
             </motion.div>
 
-            <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6, delay: 0.6 }} className="flex flex-wrap justify-center lg:justify-start gap-2 md:gap-3">
+            <motion.div initial={false} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6, delay: 0.6 }} className="flex flex-wrap justify-center lg:justify-start gap-2 md:gap-3">
               <div className="flex items-center gap-1.5 bg-white/5 border border-border rounded-full px-3 py-1.5 text-xs md:text-sm text-muted-foreground whitespace-nowrap">
                 <Clock size={14} className="text-primary" />24hr Proof
               </div>

@@ -38,12 +38,13 @@ export function getQuickBooksAttempt(request: unknown): QuickBooksAttempt {
 }
 export async function ga4CheckoutIdentity() {
   const measurementId = import.meta.env.VITE_GA4_MEASUREMENT_ID
-  const { shouldSuppressAnalytics } = await import('./analytics')
-  if (shouldSuppressAnalytics() || !measurementId || !window.gtag) return null
+  const { shouldSuppressAnalytics, isGa4DebugSession } = await import('./analytics')
+  const debugMode = isGa4DebugSession()
+  if ((shouldSuppressAnalytics() && !debugMode) || !measurementId || !window.gtag) return null
   const read = (field: string) => new Promise<string | null>(resolve => {
     const timer = window.setTimeout(() => resolve(null), 700)
     window.gtag?.('get', measurementId, field, (value: unknown) => { window.clearTimeout(timer); resolve(typeof value === 'string' || typeof value === 'number' ? String(value) : null) })
   })
   const [clientId, sessionId] = await Promise.all([read('client_id'), read('session_id')])
-  return clientId ? { clientId, sessionId } : null
+  return clientId ? { clientId, sessionId, ...(debugMode ? { debugMode: true } : {}) } : null
 }

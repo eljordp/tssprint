@@ -96,7 +96,7 @@ export default function Contact() {
           <ResponsiveImage src={contactPrinter} alt="The Sticker Smith print shop" className="w-full h-full object-cover" />
           <div className="absolute inset-0 bg-gradient-to-b from-black/50 via-black/70 to-background" />
         </div>
-        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="relative text-center section-container z-10">
+        <motion.div initial={false} animate={{ opacity: 1, y: 0 }} className="relative text-center section-container z-10">
           <p className="text-primary font-bold text-xs uppercase tracking-widest mb-3">Custom Quote</p>
           <h1 className="text-4xl md:text-6xl font-black mb-4 text-white">
             {isQuotePage ? 'Get a Fast Print Quote' : 'Get a Free Quote'}

@@ -69,7 +69,7 @@ export default function PageHero({
         {layout === 'split' ? (
           <div className="grid lg:grid-cols-12 gap-8 lg:gap-12 items-center">
             <motion.div
-              initial={{ opacity: 0, y: 20 }}
+              initial={false}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.5 }}
               className="lg:col-span-7"
@@ -103,7 +103,7 @@ export default function PageHero({
             </motion.div>
             {image && (
               <motion.div
-                initial={{ opacity: 0, scale: 0.97 }}
+                initial={false}
                 animate={{ opacity: 1, scale: 1 }}
                 transition={{ duration: 0.5, delay: 0.1 }}
                 className="lg:col-span-5 relative"
@@ -111,6 +111,8 @@ export default function PageHero({
                 <div className="relative rounded-2xl overflow-hidden border border-white/10 shadow-2xl aspect-[4/3] lg:aspect-square">
                   <ResponsiveImage
                     src={image}
+                    fetchPriority="high"
+                    sizes="(min-width: 1024px) 500px, 100vw"
                     alt={imageAlt ?? title}
                     className="w-full h-full object-cover"
                   />
@@ -121,7 +123,7 @@ export default function PageHero({
           </div>
         ) : (
           <motion.div
-            initial={{ opacity: 0, y: 20 }}
+            initial={false}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5 }}
             className="text-center max-w-3xl mx-auto"

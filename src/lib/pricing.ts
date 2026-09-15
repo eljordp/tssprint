@@ -1,4 +1,3 @@
-import { supabase } from './supabase'
 export { getBasePrice } from './stickerPricing'
 
 const STORAGE_KEY = 'tss-pricing'
@@ -30,6 +29,7 @@ export function getPricing(): PricingConfig {
 
 export async function loadPricing(strict = false): Promise<PricingConfig> {
   try {
+    const { supabase } = await import('./supabase')
     const { data, error } = await supabase
       .from('pricing_configs')
       .select('config')
@@ -48,6 +48,7 @@ export async function loadPricing(strict = false): Promise<PricingConfig> {
 }
 
 export async function savePricing(config: PricingConfig) {
+  const { supabase } = await import('./supabase')
   const normalized = normalizePricingConfig(config)
 
   const { error } = await supabase

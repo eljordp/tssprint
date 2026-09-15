@@ -49,6 +49,7 @@ export async function processQuickBooksDelivery(checkoutId = null, { db = supaba
         const payload = job.request_payload || { client_id: row.checkout.ga4.clientId, timestamp_micros: Date.parse(job.created_at) * 1000, events: [{ name: 'purchase', params: {
           transaction_id: row.order_id, currency: 'USD', value: row.checkout.total, tax: Number(row.tax), shipping: 0,
           ...(row.checkout.ga4.sessionId ? { session_id: Number(row.checkout.ga4.sessionId) } : {}), engagement_time_msec: 1,
+          ...(row.checkout.ga4.debugMode === true ? { debug_mode: true, traffic_type: 'internal' } : {}),
           ...(row.checkout.promoCode ? { coupon: row.checkout.promoCode } : {}),
           items: row.checkout.items.map(item => ({ item_id: item.id.slice(0,100), item_name: item.category || item.name, item_variant: `${item.option} | ${item.size}`, price: item.unitPrice, quantity: item.quantity })),
         } }] }

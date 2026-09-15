@@ -11,7 +11,7 @@ Vercel's production history before September 14, 2026 (America/Los_Angeles) iden
 - Restored `Order`, `PageHero`, `PortfolioStrip`, `StudioMockup`, projects, and cities into `src/pages/original-stickers`.
 - All six recovered files match that commit exactly, normalizing only local import paths in Order. Referenced image files match the original Git object hashes.
 - Scoped original foreground colors to this page; retained current shared navigation, footer, pricing module, checkout, and other routes.
-- Removed the rejected hybrid page/material-guide changes. Embedded product configurators retain their prior production source.
+- Main route uses the recovered original page. Shared Order/MaterialGuide components used by other routes are identical to current production commit 9204428.
 
 ## Verification
 
@@ -20,6 +20,12 @@ Vercel's production history before September 14, 2026 (America/Los_Angeles) iden
 - Existing pricing and cart-editing suites: 13 tests passed.
 - Browser: Circle, Gloss, 100 pieces, artwork after checkout results in the original $62 summary and Add to Cart acknowledgement.
 - Original page behavior is restored, including its original upload/preview controls. Shared current server-side checkout and price validation are retained.
+
+## Latest release preserved
+
+Production advanced during verification to deployment `dpl_5zkJKUPK6ry4CMcUeEtGaWyWfsAB`, commit `920442827bcd067ea6e8571d7a36af10554a67af`. Merged it before promotion. All application/server/API files match that release except the main sticker route import and isolated historical files. Updated only the sticker-specific preload mapping and its existing test fixture.
+
+Additional checks: 624 original-page cart combinations accepted by the current server price validator; mobile page has no horizontal overflow at 390px; two boot-route tests and route preload test pass.
 
 ## Superseded earlier attempt
 
