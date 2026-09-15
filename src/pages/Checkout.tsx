@@ -745,7 +745,7 @@ export default function Checkout() {
                           )}
                           {item.artworkIntent === 'send_later' && <p className="text-xs text-primary mt-1">Artwork after checkout</p>}
                           {item.artworkIntent === 'design_help' && <p className="text-xs text-primary mt-1">Design help requested</p>}
-                          {item.artworkIntent === 'uploaded' && item.artwork && <p className="text-xs text-green-400 mt-1 break-words">Artwork: {item.artwork.fileName}</p>}
+                          {item.artwork && <p className="text-xs text-green-400 mt-1 break-words">Artwork: {item.artwork.fileName}</p>}
                         </div>
                         <span className="font-bold text-primary shrink-0">${itemTotal.toFixed(2)}</span>
                       </div>

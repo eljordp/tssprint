@@ -282,6 +282,7 @@ export default function MylarPackaging() {
       price: cartBasePrice,
       quantity: 1,
       addOns: cartAddOns.length > 0 ? cartAddOns : undefined,
+      artworkIntent: artworkUpload ? 'uploaded' : 'send_later',
       artwork: artworkUpload || undefined,
     })
     setAdded(true)
