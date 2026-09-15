@@ -199,3 +199,8 @@ Live recovery review/error improvements: **dpl_Aopf8CJLhrYFyCNWgyUZ3aPNsEny** (a
 User created eljordp customer account. Signup confirmation and branded reset arrived; actual links reached My Account and Choose a new password. **Still pending user password save + login, then reused-link check.** Welcome/reset HTML saved in Supabase and versioned under `supabase/templates/`; actual logo is public and renders normally. Supabase preview blocks the external logo via its own CSP. Final logo refinement has browser/template verification, not a fresh received-email check.
 
 Next: finish password handoff, reconcile recovery/admin tracking, then broader multi-item mobile checkout/editing/accessibility/performance and remaining product evidence. Keep existing ratings provisional, intentional entry gate unchanged, 602-entry Drive review deferred.
+
+
+### Password recovery completed — September 15, 00:48 PDT
+
+User saved the new password; the live account page displayed “Password updated. Log in with your new password.” The user then logged in, and the same browser displayed My Account / Welcome back, Jordi P. Reopening the actual delivered reset link in a separate tab correctly showed “This link is missing, invalid or expired” and Request a new reset link, with no password-entry form. This closes the password save/login and used-link checks previously marked pending. Agent did not enter, read, or record passwords. No additional email sent or deployment required. Remaining next work: recovery-source/admin/GA4 reconciliation and broader mobile cart/accessibility/performance checks; ratings unchanged.

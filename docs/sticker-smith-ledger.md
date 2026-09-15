@@ -305,3 +305,8 @@ Live: **dpl_Aopf8CJLhrYFyCNWgyUZ3aPNsEny**, `https://tssprint-7kmi88kwp-jordis-p
 - Verification: 12 cart/token/API/request tests pass, including expired/cleared links and HTTP error handling; scoped ESLint/TypeScript, combined QuickBooks checkout test and 33-route prerender pass. 390px recovery layout visually checked without horizontal overflow; live invalid-link route verified after promotion. Email HTML checked at 390px/desktop, no exhaustive mail-client coverage.
 
 Scores remain customer **7.75**, tracking **6 provisional**, admin **7.5 provisional**. Pending: user password completion/reused-link check, source/admin/GA4 reconciliation, broader mobile cart/accessibility/performance, exact material evidence. Automated abandoned-cart campaigns were not enabled; this tested customer-requested Email my cart. 602-entry Drive review stays deferred.
+
+
+### Password recovery completed — September 15, 00:48 PDT
+
+User saved the new password; the live account page displayed “Password updated. Log in with your new password.” The user then logged in, and the same browser displayed My Account / Welcome back, Jordi P. Reopening the actual delivered reset link in a separate tab correctly showed “This link is missing, invalid or expired” and Request a new reset link, with no password-entry form. This closes the password save/login and used-link checks previously marked pending. Agent did not enter, read, or record passwords. No additional email sent or deployment required. Remaining next work: recovery-source/admin/GA4 reconciliation and broader mobile cart/accessibility/performance checks; ratings unchanged.
