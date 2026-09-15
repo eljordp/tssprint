@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useState } from 'react'
+import QuickBooksOrders from './QuickBooksOrders'
 import QuickBooksInvoiceTests from './QuickBooksInvoiceTests'
 import { supabase } from '@/lib/supabase'
 
@@ -118,6 +119,7 @@ export default function QuickBooksConnection() {
         <h4 className="font-semibold">Available products and services</h4>
         <ul className="space-y-2 text-sm">{readiness.items.map(item => <li key={item.id} className="rounded-lg border border-border p-3"><strong>{item.name}</strong> · {item.type}<br />Income account: {item.incomeAccount || 'Not reported'} · Taxable: {item.taxable === null ? 'Not reported' : item.taxable ? 'Yes' : 'No'}</li>)}</ul>
       </section>}
+      {status.status === 'connected' && <QuickBooksOrders request={request} />}
       {status.environment === 'sandbox' && status.status === 'connected' && <QuickBooksInvoiceTests request={request} />}
     </> : <p className="text-muted-foreground">Loading connection settings…</p>}
   </div>

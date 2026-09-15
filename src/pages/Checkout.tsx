@@ -6,6 +6,7 @@ import { PayPalScriptProvider, PayPalButtons } from '@paypal/react-paypal-js'
 import { ArrowLeft, Lock, ShieldCheck, Tag, X, Check, MapPin, Truck } from 'lucide-react'
 import { useCart } from '@/context/CartContext'
 import PaymentDisclosure from '@/components/PaymentDisclosure'
+import QuickBooksPayment from '@/components/QuickBooksPayment'
 import SquareCardPayment from '@/components/SquareCardPayment'
 import { checkoutSchema, type CheckoutFormErrors } from '@/lib/validation'
 import { supabase } from '@/lib/supabase'
@@ -737,6 +738,8 @@ export default function Checkout() {
                     {paymentError}
                   </div>
                 )}
+
+                <QuickBooksPayment disabled={!formValid || !quoteReady || processing} payload={checkoutPayload} onBusy={setProcessing} onError={setPaymentError} />
 
                 <SquareCardPayment
                   amount={finalTotal}
