@@ -151,3 +151,14 @@ test('an invalid item identifies what the shopper can edit or remove', async () 
     return true
   })
 })
+
+test('product-page descriptive labels and legacy carts share approved pricing', async () => {
+  const request = body()
+  request.items[0].name = `Business Cards — ${card.size}`
+  assert.equal((await normalizeCheckout(request, dependencies)).total, 65)
+  request.items[0].price = 0.01
+  await assert.rejects(normalizeCheckout(request, dependencies), /price/i)
+  request.items[0].price = 65
+  request.items[0].name = `Unapproved Cards — ${card.size}`
+  await assert.rejects(normalizeCheckout(request, dependencies), /details/i)
+})
