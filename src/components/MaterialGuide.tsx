@@ -23,47 +23,30 @@ const materialGuide = [
 export default function MaterialGuide({ value, onSelect }: { value: string; onSelect: (value: string) => void }) {
   const [open, setOpen] = useState(false)
   const selected = materialGuide.find(item => item.value === value) || materialGuide[0]
+  const isVinyl = value === 'Matte Vinyl' || value === 'Glossy Vinyl'
   return (
-    <div className="col-span-full rounded-2xl border border-border bg-card p-5 md:p-6 text-sm">
-      <div className="grid md:grid-cols-[1fr_280px] gap-5 items-center">
-        <div>
-          <p className="text-xs font-bold uppercase tracking-wider text-primary mb-2">Your finish, explained</p>
-          <h3 className="font-bold text-xl">{selected.label}</h3>
-          <p className="mt-2 text-muted-foreground">{selected.appearance}</p>
-          <p className="mt-2 text-muted-foreground">Works well for: {selected.use}</p>
-          <p className="mt-2 text-xs text-muted-foreground">{selected.care}</p>
-          <button type="button" aria-expanded={open} aria-controls="finish-comparison" className="mt-4 min-h-11 text-primary font-bold underline underline-offset-4 focus-visible:outline-2 focus-visible:outline-primary focus-visible:outline-offset-4" onClick={() => { setOpen(!open); if (!open) trackEvent('material_compare_open') }}>{open ? 'Close comparison' : 'Compare all finishes'}</button>
-        </div>
-        <figure>
-          <img src={selected.image} alt={selected.alt} width={560} height={420} loading="lazy" className="w-full rounded-lg aspect-[4/3] object-cover bg-black" style={{ objectPosition: selected.position }} />
-          <figcaption className="text-[11px] leading-relaxed text-muted-foreground mt-2">
-            <span className="block">{selected.photoNote}</span>
-            <a href={selected.sourceUrl} target={selected.sourceUrl.startsWith('https:') ? '_blank' : undefined} rel={selected.sourceUrl.startsWith('https:') ? 'noopener noreferrer' : undefined} className="underline underline-offset-2">Photo: {selected.source}</a>
-          </figcaption>
-        </figure>
+    <fieldset className="min-w-0 text-sm">
+      <legend className="font-bold mb-2">Material</legend>
+      <div className="grid grid-cols-3 gap-2">
+        {materialGuide.map(item => <button key={item.value} type="button" aria-label={`Use ${item.label}`} aria-pressed={value === item.value} onClick={() => onSelect(item.value)} className={`min-h-11 rounded-lg border px-2 py-2 text-sm font-semibold flex items-center justify-center gap-1 focus-visible:outline-2 focus-visible:outline-primary focus-visible:outline-offset-2 ${value === item.value ? 'border-primary bg-primary/10 text-primary' : 'border-border hover:border-primary/50'}`}>
+          {item.label}{value === item.value && <Check size={14} aria-hidden="true" className="shrink-0" />}
+        </button>)}
       </div>
-      {open && <div id="finish-comparison" className="mt-5 border-t border-border pt-5">
-        <h4 className="font-bold text-base">See the difference</h4>
-        <p className="mt-1 mb-4 text-xs text-muted-foreground">Photographed finish examples. Artwork and stock vary; ask us for a shop sample to check the final feel.</p>
-        <div className="grid grid-cols-2 lg:grid-cols-3 gap-3">
-          {materialGuide.map(item => <div key={item.value} className={`rounded-xl overflow-hidden border ${value === item.value ? 'border-primary bg-primary/10' : 'border-border'}`}>
-            <button type="button" aria-label={`Use ${item.label}`} aria-pressed={value === item.value} onClick={() => onSelect(item.value)} className="block w-full text-left hover:bg-primary/5 focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-primary">
-              <img src={item.image} alt={item.alt} width={420} height={315} loading="lazy" className="w-full aspect-[4/3] object-cover bg-black" style={{ objectPosition: item.position }} />
-              <span className="block p-3 min-h-24">
-                <span className="font-bold flex items-center gap-1.5">{item.label}{value === item.value && <Check size={15} aria-hidden="true" className="text-primary shrink-0" />}</span>
-                <span className="block mt-1 text-xs text-muted-foreground">{item.cue}</span>
-              </span>
-            </button>
-            <a href={item.sourceUrl} target={item.sourceUrl.startsWith('https:') ? '_blank' : undefined} rel={item.sourceUrl.startsWith('https:') ? 'noopener noreferrer' : undefined} className="block px-3 pb-3 text-[10px] text-muted-foreground underline underline-offset-2">Photo: {item.source}</a>
-          </div>)}
-        </div>
-        <figure className="mt-5 rounded-xl border border-border p-3">
-          <figcaption className="font-bold mb-3">Same design: gloss vs. matte</figcaption>
-          <img src={comparisonPhoto} alt="The same pointing-hand sticker photographed in glossy finish on the left and matte finish on the right" width={1200} height={722} loading="lazy" className="w-full h-auto rounded-lg" />
-          <p className="text-xs text-muted-foreground mt-3">Compare the bright reflection on the left with the soft finish on the right. <a href="https://www.jukeboxprint.com/blog/glossy-vs-matte-stickers" target="_blank" rel="noopener noreferrer" className="underline underline-offset-2">Photo: Jukebox</a></p>
-        </figure>
-        <Link className="text-primary text-xs font-bold block mt-4 py-2" to="/contact?service=Sticker%20samples&message=Can%20I%20see%20samples%20of%20your%20available%20sticker%20materials%3F">Ask about physical material samples →</Link>
+      <p className="text-xs text-muted-foreground mt-2">{selected.cue}</p>
+      <figure className="mt-3">
+        <img src={isVinyl ? comparisonPhoto : selected.image} alt={isVinyl ? 'The same sticker: glossy on the left, matte on the right' : selected.alt} width={isVinyl ? 1200 : 560} height={isVinyl ? 722 : 420} loading="lazy" className="w-full h-40 sm:h-44 object-contain rounded-lg bg-black/20" />
+        <figcaption className="text-[11px] text-muted-foreground mt-1 flex flex-wrap justify-between gap-1">
+          <span>{isVinyl ? 'Same design · gloss vs. matte' : selected.photoNote}</span>
+          <a href={isVinyl ? 'https://www.jukeboxprint.com/blog/glossy-vs-matte-stickers' : selected.sourceUrl} target="_blank" rel="noopener noreferrer" className="underline underline-offset-2">Photo: {isVinyl ? 'Jukebox' : selected.source}</a>
+        </figcaption>
+      </figure>
+      <button type="button" aria-expanded={open} aria-controls="finish-comparison" className="min-h-11 text-xs text-primary font-semibold underline underline-offset-4" onClick={() => { setOpen(!open); if (!open) trackEvent('material_compare_open') }}>{open ? 'Hide material details' : 'Material details & samples'}</button>
+      {open && <div id="finish-comparison" className="rounded-xl border border-border p-3 text-xs text-muted-foreground space-y-2">
+        <p>{selected.appearance} Works well for: {selected.use}</p>
+        <p>{selected.care}</p>
+        <p>Photographed references; exact stock can vary.</p>
+        <Link className="text-primary font-semibold block py-2" to="/contact?service=Sticker%20samples&message=Can%20I%20see%20samples%20of%20your%20available%20sticker%20materials%3F">Ask about physical material samples →</Link>
       </div>}
-    </div>
+    </fieldset>
   )
 }

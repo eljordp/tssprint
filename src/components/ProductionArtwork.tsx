@@ -1,3 +1,4 @@
+import { createArtworkPreview, readArtworkPreview, saveArtworkPreview, type ArtworkPreview } from '@/lib/artworkPreview'
 import { trackEvent } from '@/lib/analytics'
 import { useEffect, useRef, useState } from 'react'
 import { Upload, FileCheck, LoaderCircle, ImagePlus } from 'lucide-react'
@@ -18,24 +19,37 @@ export default function ProductionArtwork({ size, onChange, purpose = 'order', i
   const generation = useRef(0)
   const [retained, setRetained] = useState(initialArtwork)
   const [file, setFile] = useState<File | null>(null)
-  const [preview, setPreview] = useState('')
+  const [preview, setPreview] = useState<ArtworkPreview | null>(() => initialArtwork ? readArtworkPreview(initialArtwork.path) : null)
+  const [previewLoading, setPreviewLoading] = useState(false)
+  const [previewError, setPreviewError] = useState('')
   const [status, setStatus] = useState<ArtworkSelection['status']>(initialArtwork ? 'uploaded' : 'idle')
   const [error, setError] = useState('')
   const [imageFailed, setImageFailed] = useState(false)
 
   useEffect(() => {
-    if (!file || !/\.(png|jpe?g|gif|webp|svg)$/i.test(file.name)) return
-    const url = URL.createObjectURL(file)
-    setPreview(url)
-    return () => URL.revokeObjectURL(url)
+    if (!file) { setPreviewLoading(false); return }
+    const controller = new AbortController()
+    setPreviewLoading(true)
+    setPreviewError('')
+    void createArtworkPreview(file, controller.signal).then(result => {
+      if (!controller.signal.aborted) setPreview(result)
+    }).catch(cause => {
+      if (!controller.signal.aborted) setPreviewError(cause instanceof Error ? cause.message : 'Preview unavailable.')
+    }).finally(() => {
+      if (!controller.signal.aborted) setPreviewLoading(false)
+    })
+    return () => controller.abort()
   }, [file])
+  useEffect(() => {
+    if (retained && preview) saveArtworkPreview(retained.path, preview)
+  }, [retained, preview])
   useEffect(() => () => { generation.current += 1 }, [])
 
   const upload = async (next: File) => {
     const request = ++generation.current
     setRetained(undefined)
     setFile(next)
-    setPreview('')
+    if (next !== file) { setPreview(null); setPreviewError('') }
     setImageFailed(false)
     setError('')
     trackEvent('artwork_upload_started', { purpose })
@@ -47,7 +61,7 @@ export default function ProductionArtwork({ size, onChange, purpose = 'order', i
         method: 'POST', headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ fileName: next.name, contentType: next.type, size: next.size }),
       })
-      const data = await response.json()
+      const data = await response.json().catch(() => ({}))
       if (!response.ok) throw new Error(data.error || 'Could not prepare your upload. Please retry.')
       if (request !== generation.current) return
       const { supabase } = await import('@/lib/supabase')
@@ -57,10 +71,12 @@ export default function ProductionArtwork({ size, onChange, purpose = 'order', i
       if (request !== generation.current) return
       trackEvent('artwork_upload_succeeded', { purpose })
       setStatus('uploaded')
-      onChange({ status: 'uploaded', artwork: {
+      const artwork = {
         bucket: data.bucket, path: data.path, fileName: next.name,
         contentType, size: next.size, uploadedAt: new Date().toISOString(),
-      } })
+      }
+      setRetained(artwork)
+      onChange({ status: 'uploaded', artwork })
     } catch (cause) {
       if (request !== generation.current) return
       trackEvent('artwork_upload_failed', { purpose })
@@ -74,7 +90,8 @@ export default function ProductionArtwork({ size, onChange, purpose = 'order', i
     generation.current += 1
     setRetained(undefined)
     setFile(null)
-    setPreview('')
+    setPreview(null)
+    setPreviewError('')
     setError('')
     setStatus('idle')
     onChange({ status: 'idle' })
@@ -93,9 +110,9 @@ export default function ProductionArtwork({ size, onChange, purpose = 'order', i
         onDragOver={event => event.preventDefault()}
         onDrop={event => { event.preventDefault(); const next = event.dataTransfer.files[0]; if (next) void upload(next) }}>
         {preview && !imageFailed ? (
-          <img src={preview} alt={`Your uploaded artwork: ${file?.name}`} onError={() => setImageFailed(true)} className="max-h-full max-w-full object-contain" />
+          <img src={preview.url} alt={`Your uploaded artwork: ${file?.name || retained?.fileName}`} onError={() => setImageFailed(true)} className="max-h-full max-w-full object-contain bg-white" />
         ) : file || retained ? (
-          <div className="text-center min-w-0"><FileCheck className="mx-auto mb-3 text-primary" size={36} /><p className="font-semibold break-words">{file?.name || retained?.fileName}</p><p className="text-xs text-muted-foreground mt-2">{retained ? 'Saved production file retained. Choose a file again only if you want to replace it. Your proof confirms placement.' : 'This file has no browser preview. We’ll prepare a digital proof.'}</p></div>
+          <div className="text-center min-w-0"><FileCheck className="mx-auto mb-3 text-primary" size={36} /><p className="font-semibold break-words">{file?.name || retained?.fileName}</p><p className="text-xs text-muted-foreground mt-2">{previewLoading ? 'Preparing artwork preview…' : previewError || (retained ? 'Artwork saved. Reselect the file to preview it on this device.' : 'Preview unavailable. We’ll prepare a digital proof.')}</p></div>
         ) : (
           <button type="button" onClick={() => input.current?.click()} className="w-full h-full flex flex-col items-center justify-center gap-3 rounded-lg focus-visible:outline-2 focus-visible:outline-primary">
             <ImagePlus size={40} className="text-primary" /><span className="font-bold text-lg">Upload & preview</span><span className="text-sm text-muted-foreground">Drop your design here or choose a file</span>
@@ -103,15 +120,16 @@ export default function ProductionArtwork({ size, onChange, purpose = 'order', i
         )}
       </div>
       <div className="p-4 md:p-5 space-y-3">
+        {preview && <p role="status" className="text-xs text-muted-foreground">{preview.pages ? `PDF preview · page 1 of ${preview.pages}` : "Preview of your design"}</p>}
         <p className="text-sm font-medium">{size}</p>
         <button type="button" onClick={() => input.current?.click()} className="btn-primary w-full justify-center"><Upload size={16} />{file || retained ? 'Change artwork' : 'Choose artwork'}</button>
         <div aria-live="polite" className="text-xs">
           {status === 'uploading' && <p className="flex items-center gap-2"><LoaderCircle size={14} className="animate-spin" />Uploading production file…</p>}
-          {status === 'uploaded' && <p className="text-green-400 break-words">✓ {file?.name || retained?.fileName} attached — ready to attach to your {purpose === 'quote' ? 'request' : 'cart'}.</p>}
+          {status === 'uploaded' && <p className="text-green-400 break-words">✓ {file?.name || retained?.fileName} saved — ready to add to your {purpose === 'quote' ? 'request' : 'cart'}.</p>}
           {status === 'error' && <p role="alert" className="text-red-400">{error} <button type="button" className="underline" onClick={() => file && void upload(file)}>Retry upload</button></p>}
           {status === 'idle' && <p className="text-muted-foreground">No file yet. You can send artwork {purpose === 'quote' ? 'with your project follow-up' : 'after ordering'}.</p>}
         </div>
-        <details className="text-xs text-muted-foreground"><summary className="cursor-pointer">File types & proof details · up to 50 MB</summary><p className="mt-2">PNG, JPG, SVG and WebP preview. PDF, AI and other production files accepted. For front and back, upload one PDF containing both pages.</p><p className="mt-2">Preview shows your file, without cropping. Final size, bleed, placement and finishes are checked in your proof.</p></details>
+        <details className="text-xs text-muted-foreground"><summary className="cursor-pointer">File types & proof details · up to 50 MB</summary><p className="mt-2">PDF, PNG, JPG, GIF, SVG and WebP preview. PDF-compatible AI files also preview. Other production files are accepted without a browser preview. For front and back, upload one PDF containing both pages.</p><p className="mt-2">Preview shows your file, without cropping. Final size, bleed, placement and finishes are checked in your proof.</p></details>
         {(file || retained) && <button type="button" onClick={sendLater} className="text-sm text-muted-foreground underline underline-offset-4">Remove file / send artwork later</button>}
       </div>
     </section>
