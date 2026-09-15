@@ -2,6 +2,17 @@
 
 Status: on-site card checkout is deployed and enabled on tssprint.com. Real-money charge, receipt delivery, GA4 purchase and bank settlement remain unverified. On-site Apple Pay is not implemented. Updated 2026-09-15.
 
+## Apple Pay setup — September 15 follow-up
+
+- User approved keeping Intuit for cards, adding PayPal for on-site Apple Pay, and recording both in QuickBooks. Do not switch all payments to PayPal or restore the old untaxed PayPal checkout.
+- The live PayPal `tssprint` app initially showed Apple Pay not provisioned. Owner completed the merchant activation form and accepted PayPal's card and alternate-payment agreements. The live app now shows Apple Pay enabled.
+- Published PayPal's production domain association file at `https://tssprint.com/.well-known/apple-developer-merchantid-domain-association`; exact downloaded bytes verified against the live HTTP 200 response with `application/octet-stream`. Deployment `dpl_DBimYUmKAhkCE5KXv5sDjrfgd2RH`, source `3e19700`, promoted; direct QuickBooks config remains enabled.
+- PayPal displayed **Your website is registered with Apple Pay!** after registering `tssprint.com`. No need to register `www` while it redirects customers to the canonical domain and does not display checkout itself.
+- Prepared `server/paypal-wallet-core.js` with tests for tax-inclusive itemization, merchant/order binding, delivery address, payment source, capture status and amount verification. This module is not routed or deployed as an active payment method. Tests use fixtures, not real PayPal API responses.
+- Asked whether an existing PayPal-to-QuickBooks sales import is active. This determines how to avoid duplicate sales. Answer pending; do not infer that no connector exists.
+- Remaining implementation: serialize wallet and Intuit attempts against the same private checkout; durable PayPal create/capture/recovery; verify provider GET responses and merchant identity; record the external payment against the existing taxed QuickBooks invoice without triggering an Intuit charge; preserve receipt/cart/analytics jobs and actual provider references; mount the native wallet sheet and handle cancellation/unknown outcomes; sandbox/failure tests; owner-approved live wallet payment and accounting/email/GA4 verification. Domain registration is not payment verification.
+- Primary integration reference: https://developer.paypal.com/v5/apple-pay/integrate/ (read September 15). Production registration requires merchant provisioning and the hosted domain file; the documented current Apple SDK supports non-Safari browser handoff. Intuit's public direct charges contract still does not document Apple Pay token acceptance.
+
 ## Current production release
 
 - Deployed source `01972fb` via READY deployment `dpl_39gvNensawvZuv6qYzuc1T3ZZFAw`, promoted to tssprint.com.
