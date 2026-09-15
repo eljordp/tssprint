@@ -8,6 +8,7 @@ import ExitIntentModal from '@/components/ExitIntentModal'
 export default function Layout() {
   const { pathname } = useLocation()
   useEffect(() => { window.scrollTo(0, 0) }, [pathname])
+  if (pathname === '/admin' || pathname.startsWith('/admin/')) return <Outlet />
   return (
     <div className="min-h-screen flex flex-col">
       <Header />

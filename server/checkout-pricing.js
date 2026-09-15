@@ -5,11 +5,12 @@ const CART_CATEGORIES = new Set(['Mylar Packaging', 'Event Displays', 'Backdrops
 const TOTAL_TIERS = new Set(['Business Cards', 'Flyers & Door Hangers', 'Postcards'])
 const MATERIAL_LABELS = { 'Matte Vinyl': 'Matte', 'Glossy Vinyl': 'Gloss', Clear: 'Clear', Holographic: 'Holographic', Paper: 'Paper', 'Embossed/UV': 'Embossed/UV' }
 const SHAPES = new Set(['Die-Cut', 'Kiss-Cut', 'Square', 'Circle', 'Rectangle'])
-export const APPROVED_PROMOS = Object.freeze({
-  AUTO10: { type: 'percent', value: 10, minOrder: 35 },
-  WELCOME15: { type: 'percent', value: 15, minOrder: 50 },
-  FIRST10: { type: 'fixed', value: 10, minOrder: 50 },
-})
+export { DEFAULT_PROMOS as APPROVED_PROMOS } from '../src/lib/approvedPromos.js'
+import { DEFAULT_PROMOS, validatePromos } from '../src/lib/approvedPromos.js'
+export async function loadApprovedPromos() {
+ const rows = await storeRead('pricing_configs?id=eq.checkout_promos&select=config')
+ return rows.length ? validatePromos(rows[0].config) : DEFAULT_PROMOS
+}
 const money = value => Math.round(value * 100) / 100
 export function checkoutError(message, status = 400) {
   return Object.assign(new Error(message), { status })
@@ -103,11 +104,12 @@ export function priceItem(item, config) {
   return { ...item, name, category, price, addOns }
 }
 
-export async function approvedDiscount(code, subtotal, email, checkPaid = hasPaidOrder) {
+export async function approvedDiscount(code, subtotal, email, checkPaid = hasPaidOrder, promos = DEFAULT_PROMOS) {
   if (!code) return 0
-  if (typeof code !== 'string' || !Object.hasOwn(APPROVED_PROMOS, code.trim().toUpperCase())) throw checkoutError('This promo code is not approved for online checkout.')
-  const promo = APPROVED_PROMOS[code.trim().toUpperCase()]
+  if (typeof code !== 'string' || !Object.hasOwn(promos, code.trim().toUpperCase())) throw checkoutError('This promo code is not approved for online checkout.')
+  const promo = promos[code.trim().toUpperCase()]
+  if (!promo.active || (promo.expiresAt && `${promo.expiresAt}T23:59:59.999Z` < new Date().toISOString())) throw checkoutError('This promo code is no longer active.')
   if (subtotal < promo.minOrder) throw checkoutError(`This promo requires an order of at least $${promo.minOrder}.`)
-  if (await checkPaid(email)) throw checkoutError('This promo is for first orders only. Remove it to continue.')
+  if (promo.firstOrderOnly && await checkPaid(email)) throw checkoutError('This promo is for first orders only. Remove it to continue.')
   return promo.type === 'percent' ? money(subtotal * promo.value / 100) : Math.min(subtotal, promo.value)
 }

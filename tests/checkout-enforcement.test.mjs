@@ -1,3 +1,4 @@
+import { DEFAULT_PROMOS } from '../src/lib/approvedPromos.js'
 import test from 'node:test'
 import assert from 'node:assert/strict'
 import { Readable } from 'node:stream'
@@ -6,7 +7,7 @@ import { getStickerPrice } from '../src/lib/stickerPricing.js'
 import { normalizeCheckout, buildPayPalOrderPayload, assertPayPalCheckout } from '../server/paypal-api.js'
 import { priceItem, approvedDiscount, loadServerPricing } from '../server/checkout-pricing.js'
 
-const dependencies = { loadPricing: async () => defaultPricing, hasPaidOrder: async () => false }
+const dependencies = { loadPromos: async () => DEFAULT_PROMOS, loadPricing: async () => defaultPricing, hasPaidOrder: async () => false }
 const card = { id: 'test', name: 'Standard (3.5"×2")', size: 'Standard (3.5"×2")', option: '250 pcs', quantity: 1, price: 65, category: 'Business Cards' }
 const customerInfo = { firstName: 'Checkout', lastName: 'Test', email: 'checkout-test@example.com', deliveryMethod: 'pickup' }
 const body = () => ({ items: [structuredClone(card)], customerInfo: { ...customerInfo }, total: '65.00' })
@@ -161,4 +162,23 @@ test('product-page descriptive labels and legacy carts share approved pricing', 
   request.items[0].price = 65
   request.items[0].name = `Unapproved Cards — ${card.size}`
   await assert.rejects(normalizeCheckout(request, dependencies), /details/i)
+})
+
+test('published custom discounts and deactivation use shared server settings', async () => {
+ const promos = { TRADE25: {type:'fixed', value:25,minOrder:50,active:true,firstOrderOnly:false} }
+ const request = {...body(),promoCode:'TRADE25',promoDiscount:25,total:40}
+ const live = {...dependencies,loadPromos:async()=>promos,hasPaidOrder:async()=>true}
+ assert.equal((await normalizeCheckout(request,live)).total,40)
+ promos.TRADE25.active=false
+ await assert.rejects(normalizeCheckout(request,live),/no longer active/)
+ promos.TRADE25.active=true;promos.TRADE25.expiresAt='2020-01-01'
+ await assert.rejects(normalizeCheckout(request,live),/no longer active/)
+ await assert.rejects(normalizeCheckout(request,{...live,loadPromos:async()=>{throw new Error('Shared discounts unavailable')}}),/unavailable/)
+})
+
+test('shared promo read rejects corrupt settings and never revives disabled defaults', async () => {
+ const {validatePromos}=await import('../src/lib/approvedPromos.js')
+ assert.throws(()=>validatePromos({FAKE:{type:'percent',value:110,minOrder:0,active:true,firstOrderOnly:false}}))
+ assert.throws(()=>validatePromos(JSON.parse('{"__proto__":{"type":"fixed","value":1}}')))
+ assert.deepEqual(Object.keys(validatePromos({})),[])
 })

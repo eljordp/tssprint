@@ -1,3 +1,4 @@
+import { trackEvent } from '@/lib/analytics'
 import { useEffect, useRef, useState } from 'react'
 import { motion } from 'framer-motion'
 import { ShoppingCart, Check, Plus, Sparkles, ArrowRight } from 'lucide-react'
@@ -63,6 +64,8 @@ function createCartItemId(categoryName: string, size: string) {
 
 export default function ProductOrder({ categoryNames, onCategoryChange, checkoutMode = 'cart', onEstimateRequest, artworkFirst = false, onArtworkChange }: Props) {
   const { addItem } = useCart()
+  const trackedCategory = categoryNames.join('|')
+  useEffect(() => { trackEvent('view_item', { product: trackedCategory }) }, [trackedCategory])
   const [pricing, setPricing] = useState(() => getPricing())
 
   useEffect(() => {

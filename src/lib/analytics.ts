@@ -326,6 +326,7 @@ export function trackEvent(name: string, properties: AnalyticsProperties = {}) {
     // Analytics should never block a lead, checkout, or navigation action.
   }
   sendGa4Event(name, clean)
+  if (['view_item','artwork_upload_started','artwork_upload_succeeded','artwork_upload_failed','artwork_option_selected','payment_failed','quote_submit','checkout_validation_error'].includes(name)) logCartMilestone(name)
 }
 
 export function trackLeadSubmission({

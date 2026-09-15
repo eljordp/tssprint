@@ -1,3 +1,4 @@
+import { DEFAULT_PROMOS } from '../src/lib/approvedPromos.js'
 import test from 'node:test'
 import assert from 'node:assert/strict'
 import { defaultPricing } from '../src/lib/pricingCatalog.js'
@@ -21,7 +22,7 @@ test.beforeEach(() => {
   globalThis.fetch = async (input, options = {}) => {
     const url = new URL(input); const body = options.body ? JSON.parse(options.body) : null; const method = options.method || 'GET'
     if (url.hostname === 'invoice-db.example.invalid') {
-      if (url.pathname.endsWith('/pricing_configs')) return response([{ config: defaultPricing }])
+      if (url.pathname.endsWith('/pricing_configs')) return response([{ config: url.searchParams.get('id') === 'eq.checkout_promos' ? DEFAULT_PROMOS : defaultPricing }])
       if (url.pathname.endsWith('/quickbooks_connections')) return response([{ environment: 'sandbox', realm_id: '123', version: 'test', status: 'connected', access_expires_at: new Date(Date.now() + 3600000).toISOString(), encrypted_tokens: encryptTokens({ accessToken: 'unit-access', refreshToken: 'unit-refresh' }, encryptionKey('ab'.repeat(32)), 'sandbox', '123') }])
       if (url.pathname.endsWith('/acquire_quickbooks_invoice_test_lock')) {
         if (row.lock_id) return response([])

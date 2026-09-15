@@ -170,9 +170,9 @@ export default function Checkout() {
     }
   }
 
-  const handleApplyPromo = () => {
+  const handleApplyPromo = async () => {
     if (!promoInput.trim()) return
-    const result = applyPromo(promoInput.trim())
+    const result = await applyPromo(promoInput.trim())
     if (result.valid) {
       setPromoError('')
       setPromoSuccess(true)

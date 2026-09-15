@@ -1,5 +1,5 @@
 import { createContext, useContext, useState, useEffect, useCallback, useRef, type ReactNode } from 'react'
-import { validatePromoCode, applyPromoCode, type PromoResult, AUTO_DISCOUNT_CODE, AUTO_APPLIED_KEY } from '@/lib/promoCodes'
+import { validatePromoCode, loadPromoCodes, applyPromoCode, type PromoResult, AUTO_DISCOUNT_CODE, AUTO_APPLIED_KEY } from '@/lib/promoCodes'
 import { getAnalyticsIdentity, trackAddToCart, trackCartEvent, shouldSuppressAnalytics } from '@/lib/analytics'
 import { cartRequest, getCartCredentials, resetCartCredentials } from '@/lib/cartSession'
 
@@ -57,7 +57,7 @@ interface CartContextType {
   promoCode: string | null
   promoDiscount: number
   promoLabel: string | null
-  applyPromo: (code: string) => PromoResult
+  applyPromo: (code: string) => Promise<PromoResult>
   removePromo: () => void
   finalizePromo: () => void
 }
@@ -193,6 +193,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
     setCartStage(undefined)
   }
 
+  const [promosReady, setPromosReady] = useState(false)
   const total = items.reduce((sum, i) => {
     const addOnTotal = i.addOns?.reduce((a, b) => a + b.price, 0) || 0
     return sum + (i.price + addOnTotal) * i.quantity
@@ -202,7 +203,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
 
   // Re-validate promo when cart changes
   useEffect(() => {
-    if (!promoCode) return
+    if (!promoCode || !promosReady) return
     const timer = window.setTimeout(() => {
       const result = validatePromoCode(promoCode, total)
       if (result.valid && result.discount !== undefined) {
@@ -214,11 +215,11 @@ export function CartProvider({ children }: { children: ReactNode }) {
       }
     }, 0)
     return () => window.clearTimeout(timer)
-  }, [total, promoCode])
+  }, [total, promoCode, promosReady])
 
   // Auto-apply first-order discount for first-time buyers
   useEffect(() => {
-    if (items.length === 0 || autoPromoDismissed) return
+    if (!promosReady || items.length === 0 || autoPromoDismissed) return
     if (promoCode) return // user already has a code applied
     const timer = window.setTimeout(() => {
       const hasOrdered = localStorage.getItem('tss_order_completed') === 'true'
@@ -232,9 +233,12 @@ export function CartProvider({ children }: { children: ReactNode }) {
       }
     }, 0)
     return () => window.clearTimeout(timer)
-  }, [items.length, total, promoCode, autoPromoDismissed])
+  }, [items.length, total, promoCode, autoPromoDismissed, promosReady])
 
-  const applyPromo = (code: string): PromoResult => {
+  useEffect(() => { void loadPromoCodes().then(() => setPromosReady(true)).catch(() => {}) }, [])
+
+  const applyPromo = async (code: string): Promise<PromoResult> => {
+    try { await loadPromoCodes() } catch { return { valid: false, error: 'Could not check discounts. Please retry.' } }
     const result = validatePromoCode(code, total)
     if (result.valid && result.code && result.discount !== undefined) {
       setPromoCode(result.code.code)
