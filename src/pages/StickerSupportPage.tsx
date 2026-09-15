@@ -11,7 +11,7 @@ function StickerSupportPageInner({ page }: { page: StickerSupportPageConfig }) {
 
   return (
     <>
-      <div className="section-container pt-6 md:pt-8"><ServicePageIntro eyebrow={page.eyebrow} title={page.heroTitle} description="Upload your artwork and choose your specs. Approve a production proof before printing." /></div>
+      <div className="section-container pt-6 md:pt-8"><ServicePageIntro eyebrow={page.eyebrow} title={page.heroTitle} description={page.slug === 'sticker-sheets' ? 'Order one design on backing sheets, or request a quote for multi-design sheets.' : 'Choose your specs and upload artwork. We email your proof before printing.'} /></div>
       <Order key={page.slug} embedded initialShape={page.slug === 'sticker-sheets' ? 'Kiss-Cut' : ['roll-labels', 'custom-labels'].includes(page.slug) ? 'Rectangle' : 'Die-Cut'} initialFormat={page.slug === 'sticker-sheets' ? 'sheet' : ['roll-labels', 'custom-labels'].includes(page.slug) ? 'roll' : 'handheld'} initialMaterial={page.slug === 'holographic-stickers' ? 'Holographic' : 'Matte Vinyl'} />
 
       <section className="py-12 md:py-16 border-b border-border/50">
@@ -129,10 +129,10 @@ function StickerSupportPageInner({ page }: { page: StickerSupportPageConfig }) {
           </div>
           <div className="grid gap-4">
             {page.faqs.map((faq) => (
-              <div key={faq.q} className="bg-card/70 border border-border rounded-xl p-5">
-                <h3 className="font-bold text-base md:text-lg mb-2">{faq.q}</h3>
-                <p className="text-sm md:text-base text-muted-foreground leading-relaxed">{faq.a}</p>
-              </div>
+              <details key={faq.q} className="bg-card/70 border border-border rounded-xl p-5">
+                <summary className="font-bold cursor-pointer">{faq.q}</summary>
+                <p className="mt-3 text-sm md:text-base text-muted-foreground leading-relaxed">{faq.a}</p>
+              </details>
             ))}
           </div>
         </div>
@@ -160,6 +160,7 @@ function StickerSupportPageInner({ page }: { page: StickerSupportPageConfig }) {
                   <img src={item.image} alt={item.imageAlt} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
                 </div>
                 <div className="p-4">
+                  {item.imageNote && <p className="text-xs text-muted-foreground mb-2">{item.imageNote}</p>}
                   <h3 className="font-bold mb-1">{item.title}</h3>
                   <p className="text-xs text-muted-foreground leading-relaxed">{item.serviceType}</p>
                 </div>

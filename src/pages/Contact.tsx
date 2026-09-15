@@ -5,19 +5,23 @@ import { Send, Mail, MapPin, Phone, Loader2 } from 'lucide-react'
 import { contactSchema, type ContactFormErrors } from '@/lib/validation'
 import { submitContactRequest } from '@/lib/contactSubmit'
 import { toast } from 'sonner'
+import ProductionArtwork, { type ArtworkSelection } from '@/components/ProductionArtwork'
 
 import contactPrinter from '@/assets/optimized/projects/sticker-smith-storefront.webp'
 
 export default function Contact() {
   const [searchParams] = useSearchParams()
   const location = useLocation()
+  const stickerQuote = location.state?.stickerQuote as { message?: string; artwork?: ArtworkSelection['artwork'] } | undefined
+  const [artwork, setArtwork] = useState<ArtworkSelection>({ status: stickerQuote?.artwork ? 'uploaded' : 'idle', artwork: stickerQuote?.artwork })
+  const isStickerQuote = ['Sticker sheets', 'Roll labels'].includes(searchParams.get('service') || '')
   const isQuotePage = location.pathname === '/quote'
   const sourceParam = searchParams.get('source')
   const isGbpLead = sourceParam === 'gbp'
   const [submitted, setSubmitted] = useState(false)
   const [loading, setLoading] = useState(false)
   const [errors, setErrors] = useState<ContactFormErrors>({})
-  const [formData, setFormData] = useState({ name: '', email: '', phone: '', service: '', message: searchParams.get('message') || (searchParams.get('project') ? `I’m interested in a project like ${searchParams.get('project')}.` : '') })
+  const [formData, setFormData] = useState({ name: '', email: '', phone: '', service: '', message: stickerQuote?.message || searchParams.get('message') || (searchParams.get('project') ? `I’m interested in a project like ${searchParams.get('project')}.` : '') })
   const [emailOptIn, setEmailOptIn] = useState(false)
 
   // Prefill from query params — lets other pages hand off context
@@ -42,6 +46,7 @@ export default function Contact() {
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault()
+    if (artwork.status === 'uploading' || artwork.status === 'error') return
     setErrors({})
 
     const result = contactSchema.safeParse(formData)
@@ -67,6 +72,7 @@ export default function Contact() {
       }
       await submitContactRequest({
         ...submission,
+        artwork: artwork.artwork,
         subject: `${isGbpLead ? '[Google Business Profile] ' : ''}New quote request from ${submission.name}`,
         source: isGbpLead ? 'google-business-profile' : isQuotePage ? 'quote-page' : 'contact-page',
         subscribe: emailOptIn,
@@ -157,6 +163,7 @@ export default function Contact() {
                       className="w-full px-5 py-3.5 rounded-xl border border-border bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 transition-all"
                     >
                       <option value="">What do you need? (optional)</option>
+                      {formData.service && !['Stickers & Labels', 'Vehicle Graphics', 'Business Signage', 'Event Displays', 'Mylar Packaging', 'Business Print', 'Other'].includes(formData.service) && <option value={formData.service}>{formData.service}</option>}
                       <option value="Stickers & Labels">Stickers &amp; Labels</option>
                       <option value="Vehicle Graphics">Vehicle Graphics</option>
                       <option value="Business Signage">Business Signage</option>
@@ -178,6 +185,7 @@ export default function Contact() {
                     />
                     {errors.message && <p id="message-error" className="text-sm text-destructive mt-1">{errors.message}</p>}
                   </div>
+                  {isStickerQuote && <ProductionArtwork purpose="quote" size="Your requested layout" initialArtwork={stickerQuote?.artwork} onChange={setArtwork} />}
                   <label className="flex items-start gap-3 rounded-xl border border-border bg-card/50 px-4 py-3 text-sm text-muted-foreground">
                     <input
                       type="checkbox"
@@ -187,7 +195,7 @@ export default function Contact() {
                     />
                     <span>Send me occasional print deals, file tips, and project ideas from The Sticker Smith.</span>
                   </label>
-                  <button type="submit" className="btn-primary w-full" disabled={loading}>
+                  <button type="submit" className="btn-primary w-full" disabled={loading || artwork.status === 'uploading' || artwork.status === 'error'}>
                     {loading ? <><Loader2 size={18} className="animate-spin" /> Sending...</> : <>Send Quote Request<Send size={18} /></>}
                   </button>
                 </form>

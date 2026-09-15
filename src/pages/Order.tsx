@@ -89,9 +89,9 @@ function formatSizeForShape(size: string, shape: string): string {
 const qtyOptions = STICKER_QUANTITIES
 const MIN_QTY = MIN_STICKER_QUANTITY
 const stickerFormats = [
-  { value: 'handheld', label: 'Individual', cartLabel: 'Individual stickers', icon: Hand },
-  { value: 'sheet', label: 'Sheets', cartLabel: 'Sticker sheets', icon: PanelsTopLeft },
-  { value: 'roll', label: 'Rolls', cartLabel: 'Roll labels', icon: ScrollText },
+  { value: 'handheld', label: 'Individual stickers', description: 'Separate stickers for handouts and merch.', cartLabel: 'Individual stickers', icon: Hand },
+  { value: 'sheet', label: 'Sticker sheets', description: 'Stickers together on a backing sheet.', cartLabel: 'Stickers on backing sheets', icon: PanelsTopLeft },
+  { value: 'roll', label: 'Roll labels', description: 'Labels for bottles, bags and packaging.', cartLabel: 'Roll labels', icon: ScrollText },
 ] as const
 
 const localStickerTypes = [
@@ -259,8 +259,8 @@ export default function Order({ embedded = false, initialShape = 'Die-Cut', init
 
     const shapeParam = params.get('shape')
     const nextShape =
-      product.includes('sheet') ? 'Kiss-Cut'
-        : product.includes('roll') || product.includes('label') ? 'Rectangle'
+      nextFormat === 'sheet' ? 'Kiss-Cut'
+        : nextFormat === 'roll' ? 'Rectangle'
           : product.includes('die-cut') || product.includes('sample') ? 'Die-Cut'
             : shapeData.find(s => s.value.toLowerCase() === shapeParam?.toLowerCase())?.value
     if (nextShape) {
@@ -449,34 +449,52 @@ export default function Order({ embedded = false, initialShape = 'Die-Cut', init
     setTimeout(() => setAdded(false), 2000)
   }
 
+  const selectFormat = (format: StickerFormat) => {
+    if (format === mockupView) return
+    const nextShape = format === 'sheet' ? 'Kiss-Cut' : format === 'roll' ? 'Rectangle' : 'Die-Cut'
+    setMockupView(format)
+    setShape(nextShape)
+    const validSizes = getSizesForShape(nextShape)
+    if (!validSizes.includes(size)) setSize(validSizes[0])
+    trackEvent('configuration_change', { field: 'format', value: format })
+  }
+  const formatQuote = {
+    artwork: artworkUpload || undefined,
+    message: mockupView === 'sheet'
+      ? `I'd like a quote for multi-design sticker sheets.\nSelected material: ${material}\nIndividual sticker size considered: ${size}\nSheet size: please advise\nNumber of sheets: \nDesigns per sheet: \n`
+      : `I'd like a quote for roll labels.\nLabels: ${effectiveQty}\nLabel size: ${size}\nMaterial: ${material}\nCore size / unwind direction / labeling machine: \n`,
+  }
+
   const configurator = (
       <section id="configure" className="pt-4 pb-24 md:pb-12 scroll-mt-24">
         <div className="section-container">
+          <fieldset className="max-w-6xl mx-auto mb-6">
+            <legend className="text-sm font-bold mb-3">Choose your sticker format</legend>
+            <div className="grid grid-cols-3 gap-2 sm:gap-3">
+              {stickerFormats.map(format => {
+                const FormatIcon = format.icon
+                return <button key={format.value} type="button" aria-pressed={mockupView === format.value}
+                  onClick={() => selectFormat(format.value)}
+                  className={`rounded-xl border p-3 sm:p-4 text-left transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary ${mockupView === format.value ? 'border-primary bg-primary/10' : 'border-border bg-card hover:border-primary/50'}`}>
+                  <span className="relative flex flex-col sm:flex-row items-start sm:items-center gap-2 font-bold text-xs sm:text-sm"><FormatIcon size={18} aria-hidden="true" />{format.label}{mockupView === format.value && <Check size={16} className="absolute right-0 top-0 sm:static sm:ml-auto text-primary" aria-hidden="true" />}</span>
+                  <span className="hidden sm:block text-xs text-muted-foreground mt-1">{format.description}</span>
+                </button>
+              })}
+            </div>
+            {mockupView !== 'handheld' && <div className="mt-3 rounded-xl border border-border p-4 text-sm" aria-live="polite">
+              <p className="font-semibold">{mockupView === 'sheet' ? 'One design on backing sheets · priced per sticker' : 'Priced per label, not per roll'}</p>
+              <p className="text-muted-foreground mt-1">{mockupView === 'sheet' ? 'The options below count individual stickers. For multiple designs or a specific number of whole sheets, request a sheet quote.' : 'For machine application, we need your core size and unwind direction before confirming compatibility.'}</p>
+              <Link to={`/contact?service=${mockupView === 'sheet' ? 'Sticker%20sheets' : 'Roll%20labels'}`} state={{ stickerQuote: formatQuote }} aria-disabled={artworkStatus === 'uploading'} onClick={event => { if (artworkStatus === 'uploading') event.preventDefault() }} className="inline-flex items-center gap-2 mt-2 text-primary font-bold underline underline-offset-4">
+                {mockupView === 'sheet' ? 'Get a multi-design sheet quote' : 'Request machine-compatible roll labels'}<ArrowRight size={16} aria-hidden="true" />
+              </Link>
+              {artworkStatus === 'uploading' && <p className="text-xs mt-2">Wait for your artwork to finish uploading if you want to include it in the quote.</p>}
+            </div>}
+          </fieldset>
           <div className="max-w-6xl mx-auto grid grid-cols-1 md:grid-cols-2 items-start gap-6 lg:gap-8">
             <div className="min-w-0 space-y-3 md:sticky md:top-24">
             {/* Mockup preview */}
             <div className="bg-card border border-border rounded-2xl p-4 flex flex-col items-center">
               <button type="button" onClick={() => chooseArtworkIntent('upload')} className="btn-primary w-full justify-center mb-3"><FileUp size={16} />{artworkFile ? 'Change artwork' : 'Upload & preview'}</button>
-              {/* View toggle */}
-              <div className="flex gap-1 bg-muted/60 p-1 rounded-full mb-3">
-                {stickerFormats.map(format => {
-                  const FormatIcon = format.icon
-                  return (
-                    <button
-                      key={format.value}
-                      onClick={() => setMockupView(format.value)}
-                      className={`flex items-center gap-1.5 px-4 py-2 rounded-full text-xs font-medium transition-all ${
-                        mockupView === format.value
-                          ? 'bg-primary text-white shadow-sm'
-                          : 'text-muted-foreground hover:text-foreground'
-                      }`}
-                    >
-                      <FormatIcon size={13} /> {format.label}
-                    </button>
-                  )
-                })}
-              </div>
-
               {/* Preview area */}
               <div className="flex-1 flex items-center justify-center w-full min-w-0 overflow-hidden min-h-[160px] md:min-h-[240px] py-4">
                 {mockupView === 'handheld' && (
@@ -511,7 +529,7 @@ export default function Order({ embedded = false, initialShape = 'Die-Cut', init
             <fieldset className="min-w-0 bg-card border border-border rounded-2xl p-4 flex flex-col items-center justify-center text-center">
               <legend className="sr-only">Choose how you will provide artwork</legend>
               <h3 className="font-bold text-lg mb-1">How will you provide artwork?</h3>
-              <p className="text-sm text-muted-foreground mb-3">Choose one. Every order gets a proof before printing.</p>
+              <p className="text-sm text-muted-foreground mb-3">Upload now, send it later, or get design help.</p>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 w-full">
                 <button
                   type="button"
@@ -595,7 +613,7 @@ export default function Order({ embedded = false, initialShape = 'Die-Cut', init
               </div>
             </fieldset>
 
-<p className="text-xs text-muted-foreground">Placement preview only. We send a production proof for your approval before printing.</p>
+<p className="text-xs text-muted-foreground">Placement preview only; your emailed proof confirms the final cut and layout.</p>
             </div><div className="min-w-0 space-y-5"><div className="grid grid-cols-2 gap-3">
 <label className="text-sm font-bold">Shape<select aria-label="Sticker shape" className="mt-2 w-full rounded-xl border border-border bg-card p-3" value={shape} onChange={e => { setShape(e.target.value); const sizes = getSizesForShape(e.target.value); if (!sizes.includes(size)) setSize(sizes[0]) }}>{shapeData.map(s => <option key={s.value} value={s.value}>{s.name}</option>)}</select></label>
 <label className="text-sm font-bold">Size<select aria-label="Sticker size" className="mt-2 w-full rounded-xl border border-border bg-card p-3" value={size} onChange={e => setSize(e.target.value)}>{getSizesForShape(shape).map(s => <option key={s} value={s}>{formatSizeForShape(s, shape)}</option>)}</select></label>
@@ -603,9 +621,8 @@ export default function Order({ embedded = false, initialShape = 'Die-Cut', init
 </div><MaterialGuide value={material} onSelect={next => { setMaterial(next); trackEvent('configuration_change', { field: 'material', value: next }) }} />            {/* Quantity */}
             <div>
               <h3 className="text-sm font-black uppercase tracking-wider mb-3">Quantity</h3>
-              {mockupView === 'sheet' && <p className="text-sm text-muted-foreground mb-3">Quantity is the total number of stickers, arranged on backing sheets. Your proof confirms the sheet layout. For a set number of multi-design sheets, <Link to="/contact?service=Sticker%20sheets" className="text-primary underline">request a sheet quote</Link>.</p>}
-              {mockupView === 'roll' && <p className="text-sm text-muted-foreground mb-3">Quantity is the total number of labels. Using a labeling machine? <Link to="/contact?service=Roll%20labels" className="text-primary underline">Send its core size and unwind requirements</Link> so we can confirm compatibility.</p>}
-              <p className="text-xs text-muted-foreground mb-3">Prices include your selected size and material. Bulk savings are per sticker compared with {MIN_QTY} pieces; add-ons and cart discounts are shown separately.</p>
+              {mockupView !== 'handheld' && <p className="text-sm text-muted-foreground mb-3">{mockupView === 'sheet' ? 'Count individual stickers, not backing sheets. Size is for each sticker.' : 'Count individual labels, not rolls. Size is for each label.'}</p>}
+              <p className="text-xs text-muted-foreground mb-3">Prices include your selected size and material. Bulk savings compare the unit price with {MIN_QTY} pcs; add-ons and cart discounts are shown separately.</p>
               <div className="grid grid-cols-2 gap-2">
                 {qtyOptions.map(q => {
                   const total = getQtyTotal(q)
@@ -667,7 +684,7 @@ export default function Order({ embedded = false, initialShape = 'Die-Cut', init
                 Order Summary
               </h3>
               <div className="text-center mb-4">
-                <p className="text-xl font-black">{quantityValid ? `${effectiveQty} stickers` : 'Choose a valid quantity'}</p>
+                <p className="text-xl font-black">{quantityValid ? `${effectiveQty} {mockupView === 'roll' ? 'labels' : 'stickers'}` : 'Choose a valid quantity'}</p>
                 <p className="text-sm text-muted-foreground">{shapeLabel} &middot; {formatSizeForShape(size, shape)}</p>
                 <p className="text-sm text-muted-foreground">{materialLabel}</p>
                 <p className="text-sm text-primary">{formatLabel}</p>
@@ -676,7 +693,7 @@ export default function Order({ embedded = false, initialShape = 'Die-Cut', init
               {/* Price breakdown */}
               {quantityValid && <div className="border-t border-border/60 pt-4 space-y-1.5 text-xs">
                 <div className="flex justify-between text-muted-foreground">
-                  <span>{effectiveQty} stickers · base price</span>
+                  <span>{effectiveQty} {mockupView === 'roll' ? 'labels' : 'stickers'} · base price</span>
                   <span className="tabular-nums">${priceBreakdown.baseTotal.toFixed(2)}</span>
                 </div>
                 {sizeMult !== 1 && (
@@ -769,7 +786,7 @@ export default function Order({ embedded = false, initialShape = 'Die-Cut', init
             </div>
 </div>
           </div>
-          <MobileOrderAction regionId="configure" price={quantityValid ? `$${totalPrice.toFixed(2)}` : '—'} detail={`${effectiveQty || 0} stickers`} label={added ? 'Saved!' : editingItem ? 'Save changes' : 'Continue to Checkout'} disabled={!quantityValid || (Boolean(artworkFile) && artworkStatus !== 'uploaded')} onClick={() => handleAddToCart(true)} />
+          <MobileOrderAction regionId="configure" price={quantityValid ? `$${totalPrice.toFixed(2)}` : '—'} detail={`${effectiveQty || 0} ${mockupView === 'roll' ? 'labels' : 'stickers'}`} label={added ? 'Saved!' : editingItem ? 'Save changes' : 'Continue to Checkout'} disabled={!quantityValid || (Boolean(artworkFile) && artworkStatus !== 'uploaded')} onClick={() => handleAddToCart(true)} />
           {/* Specs grid — trust signal, small, under the cart not blocking it */}
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -806,14 +823,11 @@ export default function Order({ embedded = false, initialShape = 'Die-Cut', init
                 Bay Area sticker printing
               </p>
               <h2 className="text-3xl md:text-4xl font-black mb-4">
-                Custom stickers for Bay Area brands, artists, shops, and events.
+                Printed in Hayward. Made for your brand.
               </h2>
               <div className="space-y-4 text-muted-foreground leading-relaxed">
                 <p>
-                  The Sticker Smith prints custom stickers in Hayward for customers across the East Bay and the wider Bay Area. If you need a small run for a launch, waterproof vinyl for packaging, or a fast reorder before an event, you can review your proof by email and pick up locally at the shop.
-                </p>
-                <p>
-                  Every order gets a real digital proof before production. We check cut lines, bleed, sizing, material choice, and whether your artwork will hold up as a sticker before anything hits the printer.
+                  From merch drops to packaging labels, choose local pickup in Hayward or free US shipping. We check your artwork, cut lines and layout before production.
                 </p>
               </div>
               <div className="mt-6 flex flex-wrap gap-2">
@@ -844,7 +858,7 @@ export default function Order({ embedded = false, initialShape = 'Die-Cut', init
                   <StickerIcon className="w-5 h-5 text-primary mb-3" />
                   <h3 className="font-bold text-sm group-hover:text-primary transition-colors">{type.label}</h3>
                   <p className="mt-1 text-xs text-muted-foreground leading-relaxed">
-                    Proofed, printed, and finished for local pickup or shipping.
+                    View format details and ordering options.
                   </p>
                   <span className="mt-3 inline-flex items-center gap-1 text-[10px] font-bold uppercase tracking-widest text-primary">
                     Explore options <ArrowRight size={12} />
@@ -885,10 +899,6 @@ export default function Order({ embedded = false, initialShape = 'Die-Cut', init
           </div>
           <div className="mt-6 flex flex-wrap items-center gap-3">
             <Link to="/projects" className="btn-secondary text-sm">See More Sticker Projects</Link>
-            <Link to="/die-cut-stickers" className="text-sm font-bold text-primary hover:underline">Die-cut stickers</Link>
-            <Link to="/sticker-sheets" className="text-sm font-bold text-primary hover:underline">Sticker sheets</Link>
-            <Link to="/roll-labels" className="text-sm font-bold text-primary hover:underline">Roll labels</Link>
-            <Link to="/holographic-stickers" className="text-sm font-bold text-primary hover:underline">Holographic stickers</Link>
           </div>
         </div>
       </section>
@@ -901,10 +911,10 @@ export default function Order({ embedded = false, initialShape = 'Die-Cut', init
           </div>
           <div className="grid gap-4">
             {stickerFaqs.map((faq) => (
-              <div key={faq.q} className="bg-card/70 border border-border rounded-xl p-5">
-                <h3 className="font-bold text-base md:text-lg mb-2">{faq.q}</h3>
-                <p className="text-sm md:text-base text-muted-foreground leading-relaxed">{faq.a}</p>
-              </div>
+              <details key={faq.q} className="bg-card/70 border border-border rounded-xl p-5">
+                <summary className="font-bold cursor-pointer">{faq.q}</summary>
+                <p className="text-sm md:text-base text-muted-foreground leading-relaxed mt-3">{faq.a}</p>
+              </details>
             ))}
           </div>
         </div>

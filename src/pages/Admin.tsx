@@ -1,3 +1,4 @@
+import { orderingActivity } from '@/lib/orderingActivity'
 import CustomerHistory from '@/components/admin/CustomerHistory'
 import Tracking from '@/components/admin/Tracking'
 import QuoteFollowUp from '@/components/admin/QuoteFollowUp'
@@ -193,6 +194,7 @@ interface AnalyticsSummary {
   sourceBreakdown: { source: string; leads: number; orders: number; revenue: number }[]
   topProducts: { name: string; views: number }[]
   topClicks: { element: string; count: number }[]
+  ordering: ReturnType<typeof orderingActivity>
   funnel: { label: string; count: number; pct: number }[]
   abandonedCarts: AbandonedCartRow[]
   capped: boolean
@@ -1389,15 +1391,27 @@ function CartsTab() {
   const [loading, setLoading] = useState(true)
   const [filter, setFilter] = useState<'all' | 'abandoned' | 'converted'>('all')
   const [cartError, setCartError] = useState('')
+  const [cartsCapped, setCartsCapped] = useState(false)
 
   useEffect(() => { fetchCarts() }, [])
 
   const fetchCarts = async () => {
     setLoading(true)
     try {
-      const { data, error } = await supabase.from('cart_sessions').select('id,email,items,total_price,converted,created_at,updated_at,access_token_hash,last_activity_at,checkout_started_at,payment_issue_at,recovered_at,paid_order_id,expires_at,email_status,is_test').order('updated_at', { ascending: false })
-      if (error) throw error
-      setCarts((data || []).filter(cart => !cart.is_test) as CartSession[])
+      const rows: CartSession[] = []
+      let totalCount = 0
+      for (let from = 0; from < ANALYTICS_MAX_ROWS; from += ANALYTICS_PAGE_SIZE) {
+        const { data, count, error } = await supabase.from('cart_sessions')
+          .select('id,email,items,total_price,converted,created_at,updated_at,access_token_hash,last_activity_at,checkout_started_at,payment_issue_at,recovered_at,paid_order_id,expires_at,email_status,is_test', { count: 'exact' })
+          .or('is_test.is.null,is_test.eq.false').order('updated_at', { ascending: false }).order('id')
+          .range(from, Math.min(from + ANALYTICS_PAGE_SIZE, ANALYTICS_MAX_ROWS) - 1)
+        if (error) throw error
+        totalCount = count ?? totalCount
+        rows.push(...(data || []) as CartSession[])
+        if (!data || data.length < ANALYTICS_PAGE_SIZE) break
+      }
+      setCarts(rows)
+      setCartsCapped(totalCount > rows.length)
       setCartError('')
     } catch { setCartError('Cart records could not be loaded. This is a reporting error, not a zero-cart result.') }
     finally { setLoading(false) }
@@ -1424,6 +1438,7 @@ function CartsTab() {
 
   return (
     <div className="space-y-6">
+      {cartsCapped && <p role="status" className="text-sm text-yellow-600 dark:text-yellow-300">Showing the latest {ANALYTICS_MAX_ROWS.toLocaleString()} carts. Counts and subtotals below cover these loaded records only.</p>}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         <StatCard icon={ShoppingCart} label="Inactive Carts" value={abandonedCount} color="text-yellow-400" delay={0.1} />
         <StatCard icon={DollarSign} label="Inactive Subtotal" value={`$${abandonedValue.toFixed(2)}`} color="text-red-400" delay={0.2} />
@@ -1481,7 +1496,7 @@ function CartsTab() {
 
 // ─── Analytics Tab ───────────────────────────────────────────────────────────
 
-type AnalyticsTable = 'page_views' | 'click_events' | 'orders'
+type AnalyticsTable = 'page_views' | 'click_events' | 'orders' | 'contact_submissions'
 
 type PageViewRow = {
   path: string
@@ -1492,6 +1507,7 @@ type PageViewRow = {
 }
 
 type ClickEventRow = {
+  session_id: string | null
   element: string | null
   path: string | null
   visitor_id: string | null
@@ -1611,7 +1627,7 @@ function AnalyticsTab() {
       const views = pageViewRows.filter(v => !isInternalPath(v.path) && !isBotUserAgent(v.user_agent))
 
       const pageViews = views.length
-      const visitors = new Set(views.map(v => v.visitor_id)).size
+      const visitors = new Set(views.map(v => v.visitor_id).filter(Boolean)).size
 
       // Most-viewed products/services
       const productCounts: Record<string, number> = {}
@@ -1626,7 +1642,7 @@ function AnalyticsTab() {
       const {
         rows: clickRows,
         capped: clicksCapped,
-      } = await fetchLiveAnalyticsRows<ClickEventRow>('click_events', 'element, path, visitor_id, event_type, attribution, created_at', since, true)
+      } = await fetchLiveAnalyticsRows<ClickEventRow>('click_events', 'element, path, visitor_id, session_id, event_type, attribution, created_at', since, true)
       const clicks = clickRows.filter(c => !isInternalPath(c.path || ''))
 
       const clickCounts: Record<string, number> = {}
@@ -1643,15 +1659,10 @@ function AnalyticsTab() {
         .map(([element, count]) => ({ element, count }))
 
       // Leads — contact / quote form submissions
-      let leadQuery = supabase
-        .from('contact_submissions')
-        .select('name, email, phone, source, visitor_id, attribution, created_at', { count: 'exact' })
-        .order('created_at', { ascending: false })
-        .limit(ANALYTICS_PAGE_SIZE)
-      if (since) leadQuery = leadQuery.gte('created_at', since)
-      const { data: leadRows, count: leadCount, error: leadError } = await leadQuery
-      if (leadError) throw leadError
-      const leads = leadCount || 0
+      const { rows: leadRows, count: leadCount, capped: leadsCapped } = await fetchLiveAnalyticsRows<LeadContactRow>(
+        'contact_submissions', 'name, email, phone, source, visitor_id, attribution, created_at', since,
+      )
+      const leads = leadCount ?? leadRows.length
 
       const abandonedCarts: AbandonedCartRow[] = []
 
@@ -1683,12 +1694,9 @@ function AnalyticsTab() {
       const sourceBreakdown = [...sourceTotals.values()]
         .sort((a, b) => (b.revenue - a.revenue) || (b.orders - a.orders) || (b.leads - a.leads))
 
-      // Conversion funnel (unique visitors per stage; final stage = orders placed)
+      // Independent page reach: do not interpret these counts as ordered drop-off.
       const visitorsWho = (predicate: (path: string) => boolean) =>
-        new Set(views.filter(v => predicate(v.path)).map(v => v.visitor_id)).size
-      // All stages use unique visitors for a consistent cohort. The final stage
-      // uses /order-confirmation views, which are not proof of a captured payment
-      // rather than the raw order count, which isn't visitor-linked.
+        new Set(views.filter(v => v.visitor_id && predicate(v.path)).map(v => v.visitor_id)).size
       const funnelRaw = [
         { label: 'Tracked browser IDs', count: visitors },
         { label: 'Viewed a product', count: visitorsWho(p => !!PRODUCT_PAGE_NAMES[p]) },
@@ -1711,8 +1719,9 @@ function AnalyticsTab() {
         topProducts,
         topClicks,
         funnel,
+        ordering: orderingActivity(clicks),
         abandonedCarts,
-        capped: pageViewsCapped || clicksCapped || ordersCapped,
+        capped: pageViewsCapped || clicksCapped || ordersCapped || leadsCapped,
       })
       setLastUpdated(new Date())
     } catch (error) {
@@ -1730,6 +1739,7 @@ function AnalyticsTab() {
         topProducts: [],
         topClicks: [],
         funnel: [],
+        ordering: orderingActivity([]),
         abandonedCarts: [],
         capped: false,
       })
@@ -1815,7 +1825,7 @@ function AnalyticsTab() {
 
       {data.capped && (
         <div className="rounded-2xl border border-blue-400/20 bg-blue-400/10 p-4 text-sm text-blue-100">
-          Analytics is reading the newest {ANALYTICS_MAX_ROWS.toLocaleString()} rows for this range. Shorten the range if you need exact visitor, funnel, product, or click breakdowns.
+          Analytics is reading the newest {ANALYTICS_MAX_ROWS.toLocaleString()} rows for this range. Some breakdowns are incomplete. Shorten the range for complete visitor, source, product and event breakdowns; headline record counts can exceed the loaded rows.
         </div>
       )}
 
@@ -1850,22 +1860,19 @@ function AnalyticsTab() {
         )}
       </div>
 
-      {/* Conversion funnel */}
+      {/* Page reach is separate from ordered checkout activity. */}
       <div className="bg-card border border-border rounded-2xl p-6">
-        <h3 className="font-bold mb-1 flex items-center gap-2"><TrendingUp size={16} className="text-primary" /> Where customers go (and drop off)</h3>
-        <p className="text-xs text-muted-foreground mb-4">How tracked browsers move from browsing toward buying. Big drops show where sales are leaking.</p>
+        <h3 className="font-bold mb-1 flex items-center gap-2"><TrendingUp size={16} className="text-primary" /> Pages customers reached</h3>
+        <p className="text-xs text-muted-foreground mb-4">Independent browser counts for this date range, not a step-by-step funnel. Direct checkout can skip the cart page; confirmation views do not prove payment.</p>
         {data.funnel[0]?.count === 0 ? <p className="text-sm text-muted-foreground">No visitor activity yet for this period.</p> : (
           <div className="space-y-3">
-            {data.funnel.map((s, i) => {
-              const prev = i > 0 ? data.funnel[i - 1].count : s.count
-              const dropPct = prev > 0 ? Math.round(((prev - s.count) / prev) * 100) : 0
+            {data.funnel.map((s) => {
               return (
                 <div key={s.label}>
                   <div className="flex items-center justify-between text-sm mb-1">
                     <span className="font-medium">{s.label}</span>
                     <span className="text-muted-foreground">
                       <span className="font-bold text-foreground">{s.count}</span> ({s.pct}%)
-                      {i > 0 && dropPct > 0 && <span className="text-red-400 ml-2">−{dropPct}%</span>}
                     </span>
                   </div>
                   <div className="h-2 rounded-full bg-muted/40 overflow-hidden">
@@ -1876,6 +1883,16 @@ function AnalyticsTab() {
             })}
           </div>
         )}
+      </div>
+
+      <div className="bg-card border border-border rounded-2xl p-6 space-y-4">
+        <h3 className="font-bold">Ordered checkout activity</h3>
+        <p className="text-xs text-muted-foreground">Sessions with these events recorded in order within the selected dates. Each session counts once. Returning carts or sessions missing an earlier event are not included in later stages. Payment is checked separately in Orders.</p>
+        <div className="grid sm:grid-cols-3 gap-3">{data.ordering.stages.map(stage => <div key={stage.label} className="rounded-xl border border-border p-4"><p className="text-sm text-muted-foreground">{stage.label}</p><p className="text-2xl font-bold mt-1">{stage.count}</p></div>)}</div>
+        <h4 className="font-bold text-sm">Artwork uploads · optional step</h4>
+        <p className="text-xs text-muted-foreground">Sessions with each signal, independent of checkout. A failed upload followed by a successful retry appears in both groups. Send-later and design-help orders do not require an upload.</p>
+        <div className="grid sm:grid-cols-3 gap-3">{data.ordering.uploads.map(stage => <div key={stage.label} className="rounded-xl border border-border p-4"><p className="text-sm text-muted-foreground">{stage.label}</p><p className="text-xl font-bold mt-1">{stage.count}</p></div>)}</div>
+        {data.ordering.unidentified > 0 && <p className="text-xs text-muted-foreground">{data.ordering.unidentified} event records without a usable browser/session identity or timestamp are excluded from these session counts.</p>}
       </div>
 
       <div className="space-y-3"><h3 className="font-bold">Cart recovery</h3><p className="text-xs text-muted-foreground">Live cart lifecycle across all dates. Inactive means a nonempty cart with at least 60 minutes without activity; it does not prove the shopper has left for good.</p><CartsTab /></div>

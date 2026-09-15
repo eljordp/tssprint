@@ -14,6 +14,7 @@ export type StickerSupportPageConfig = {
   heroSubtitle: string
   image: string
   imageAlt: string
+  imageNote?: string
   serviceType: string
   intro: string
   bestFor: string[]
@@ -72,11 +73,12 @@ export const stickerSupportPages: StickerSupportPageConfig[] = [
     metaDescription:
       'Custom sticker sheets printed in Hayward for Bay Area creators, brands, events, schools, and packaging. Multiple designs on one sheet with free digital proof.',
     eyebrow: 'Custom Sticker Sheets',
-    heroTitle: 'Sticker sheets with multiple designs on one print.',
+    heroTitle: 'Sticker sheets for your designs.',
     heroSubtitle:
       'Kiss-cut sheets for merch drops, packaging, events, schools, and creator packs.',
     image: sheetImage,
-    imageAlt: 'Custom sticker sheet printed by The Sticker Smith',
+    imageAlt: 'Sticker sheet format illustration — not a finished-product photograph',
+    imageNote: 'Format illustration',
     serviceType: 'Bay Area custom sticker sheet printing',
     intro:
       'Sticker sheets are best when you need several shapes, small icons, labels, or mini designs together. They keep your stickers organized, feel more premium as a handout, and work well for events, packaging, and retail merch.',
@@ -113,7 +115,8 @@ export const stickerSupportPages: StickerSupportPageConfig[] = [
     heroSubtitle:
       'Clean product labels on rolls for bottles, jars, bags, boxes, pouches, and retail packaging.',
     image: rollImage,
-    imageAlt: 'Custom roll labels printed for product packaging',
+    imageAlt: 'Sticker artwork on roll-fed print equipment — production example',
+    imageNote: 'Roll-fed print production',
     serviceType: 'Bay Area custom roll label printing',
     intro:
       'Roll labels are built for production workflows: fast peeling, consistent placement, and clean presentation across product runs. We print roll labels in Hayward for packaging teams that need labels ready for bottles, jars, pouches, mailers, and retail goods.',
