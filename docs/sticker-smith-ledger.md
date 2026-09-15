@@ -198,3 +198,15 @@ Live admin: all eight main sections loaded; Cmd-K/product search navigation work
 QuickBooks **sandbox** invoice1038: $65 cards + $25 soft-touch − $13.50 discount = **$76.50**. Hosted link returned, simulated payment reconciled, same invoice reused. This is no real card charge, settlement, invoice email, Apple Pay or public QuickBooks checkout proof. Intuit is signed out and needs user sign-in. Production assessment/policies/credentials, customer checkout/order linkage and bounded real transaction verification remain unfinished.
 
 Validation:62 combined tests before final small additions, then21 targeted analytics/contact tests; build and targeted lint passed. Live empty retry action returned Checked0duejobs. Large-chunk warning remains; no measured speed/accessibility/conversion score added.
+
+## Instagram backdrop photo — September 14, approximately 22:04–22:15 PDT
+
+User approved suitable Instagram work. Added the real **Assam Convention installed backdrop** to the event selector, event gallery and [project detail](https://tssprint.com/projects?project=assam-convention-backdrop). This replaces the backdrop's unrelated OTAI design mockup; the table-cover mockup stays labeled. No generated imagery or new video was made.
+
+Correction to earlier source limitation: the first carousel slide contains a 3024×4032 photograph, and browser export succeeded. The failed video export does not block this image anymore. Preserved original plus 1200×900 / 116,390-byte crop; [source and exact transformation](asset-sources/marketing-drive-2026-09-14.md#instagram-backdrop-photo-selected--september-14-approximately-22042211-pdt). Removed excess wall/floor, retained real folds/lighting, and kept the full print/frame visible in the phone project detail. Claims are limited to the shop's identified project; today's quote still confirms hardware and installation.
+
+Application commit **7e54d3d**, based on latest operations/ledger **bc0d5e1**. Scoped lint and full31-route prerender passed. Local desktop/390px checks verified selector image, scope, correct category estimate and project-to-contact context without submitting a quote. Staged image loaded at1200×900 with contain-fit; no payment/admin logic changed. Deployment **dpl_FQN8TmJgjsfwMGSBY1KsRkoRxV5i**, [artifact](https://tssprint-zy4ylvbnf-jordis-projects-94d2df39.vercel.app). Live verification recorded below after promotion.
+
+User working preference: focus on the current task. Do not send routine progress messages to the other task every time. Coordinate only when necessary to resolve an actual ownership conflict, dependency or competing release; use existing code/state for routine checks.
+
+Live check after successful promotion: tssprint.com event page displayed the new Assam category image, selected full-size example and gallery image; all three loaded the same optimized asset. Direct live image returned200/image-webp and matched the local116,390-byte file exactly. The live event selector is left open for review. No overall score change claimed for this single photo replacement; the finished-backdrop-photo gap is closed.
