@@ -720,7 +720,7 @@ export default function Checkout() {
                 </details>
                 <div className="mt-6 flex items-center gap-2 text-xs text-muted-foreground">
                   <ShieldCheck size={16} className="text-green-400 shrink-0" aria-hidden="true" />
-                  <span>{!paymentConfig ? 'Loading secure payment options…' : onlyQuickBooks ? 'Card and wallet payments are handled securely by QuickBooks.' : squareAvailable ? 'Card details are handled by Square; PayPal remains available as a separate option.' : 'Payment details are handled securely by PayPal.'}</span>
+                  <span>{!paymentConfig ? 'Loading secure payment options…' : onlyQuickBooks ? 'Card payments are handled securely by QuickBooks.' : squareAvailable ? 'Card details are handled by Square; PayPal remains available as a separate option.' : 'Payment details are handled securely by PayPal.'}</span>
                 </div>
               </div>
             </div>
