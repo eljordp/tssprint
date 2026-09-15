@@ -9,16 +9,17 @@ process.env.SUPABASE_URL = 'https://database.example.test'
 process.env.SUPABASE_SERVICE_ROLE_KEY = 'fixture-key'
 process.env.CART_RECOVERY_SECRET = 'fixture-signing-secret'
 const originalFetch = globalThis.fetch
-let row, emails
-function reset() { row = null; emails = 0; delete process.env.RESEND_API_KEY; delete process.env.FROM_EMAIL }
+let row, emails, sourceRow
+function reset() { row = null; sourceRow = null; emails = 0; delete process.env.RESEND_API_KEY; delete process.env.FROM_EMAIL }
 globalThis.fetch = async (url, options = {}) => {
   const u = new URL(url)
   if (u.hostname === 'api.resend.com') { emails++; return Response.json({id:'email-fixture'}) }
   assert.equal(u.hostname,'database.example.test', 'Tests never reach a real service')
-  if (!options.method || options.method === 'GET') return Response.json(row ? [row] : [])
+  const isSource = sourceRow && u.searchParams.get('id') === `eq.${sourceRow.id}`
+  if (!options.method || options.method === 'GET') return Response.json(isSource ? [sourceRow] : row ? [row] : [])
   const data=JSON.parse(options.body)
   if (options.method === 'POST') row = {...data}
-  if (options.method === 'PATCH') row = {...row,...data}
+  if (options.method === 'PATCH') { if (isSource) sourceRow = {...sourceRow,...data}; else row = {...row,...data} }
   return new Response(null,{status:204})
 }
 async function request(action, body, headers={host:'tssprint.com',origin:'https://tssprint.com','x-real-ip':Math.random().toString()}) {
@@ -76,4 +77,25 @@ test('expired links and cleared saved carts cannot restore stale items', async (
   const token = signRecovery(row.id, row.email, process.env.CART_RECOVERY_SECRET)
   row.items = []
   assert.equal((await request('restore', {token})).statusCode, 410)
+})
+
+
+test('test carts stay excluded after later saves omit the verification marker', async () => {
+  reset()
+  await request('sync', {...credentials, items:[item], isTest:true})
+  await request('sync', {...credentials, items:[item], isTest:false})
+  assert.equal(row.is_test, true)
+})
+
+test('restoring a test cart inherits its exclusion and links both recovery records', async () => {
+  reset()
+  sourceRow = {id:'aaaaaaaa-1234-1234-1234-123456789abc', email:'fixture@example.test', is_test:true, converted:false, expires_at:new Date(Date.now()+86400000).toISOString()}
+  const sourceToken=signRecovery(sourceRow.id,sourceRow.email,process.env.CART_RECOVERY_SECRET)
+  assert.equal((await request('sync',{...credentials,items:[item],sourceToken})).statusCode,200)
+  assert.equal(row.is_test,true)
+  assert.equal(row.recovery_source_id,sourceRow.id)
+  assert.ok(sourceRow.recovered_at)
+  await request('sync',{...credentials,items:[item]})
+  assert.equal(row.is_test,true)
+  assert.equal(row.recovery_source_id,sourceRow.id)
 })

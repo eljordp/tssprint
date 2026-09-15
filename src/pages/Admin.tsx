@@ -91,6 +91,8 @@ interface Order {
 
 interface CartSession extends CartLifecycleRow {
   email_status?: string | null
+  email_sent_at?: string | null
+  recovery_source_id?: string | null
   id: string; email: string | null; items: unknown[]
   total_price: number; converted: boolean
   created_at: string; updated_at: string
@@ -1388,24 +1390,34 @@ function PricingTab() {
 // ─── Carts Tab ───────────────────────────────────────────────────────────────
 
 function CartsTab() {
+  const [showTests, setShowTests] = useState(false)
+  return <div className="space-y-4">
+    <div className="flex flex-wrap gap-2" aria-label="Cart record type">
+      <button type="button" aria-pressed={!showTests} onClick={() => setShowTests(false)} className="min-h-11 rounded-lg border border-border px-4 text-sm font-bold aria-pressed:bg-primary aria-pressed:text-primary-foreground">Customer carts</button>
+      <button type="button" aria-pressed={showTests} onClick={() => setShowTests(true)} className="min-h-11 rounded-lg border border-border px-4 text-sm font-bold aria-pressed:bg-primary aria-pressed:text-primary-foreground">Test carts</button>
+    </div>
+    <CartRecords key={String(showTests)} showTests={showTests} />
+  </div>
+}
+
+function CartRecords({ showTests }: { showTests: boolean }) {
   const [carts, setCarts] = useState<CartSession[]>([])
   const [loading, setLoading] = useState(true)
   const [filter, setFilter] = useState<'all' | 'abandoned' | 'converted'>('all')
   const [cartError, setCartError] = useState('')
   const [cartsCapped, setCartsCapped] = useState(false)
 
-  useEffect(() => { fetchCarts() }, [])
-
-  const fetchCarts = async () => {
+  const fetchCarts = useCallback(async () => {
     setLoading(true)
     try {
       const rows: CartSession[] = []
       let totalCount = 0
       for (let from = 0; from < ANALYTICS_MAX_ROWS; from += ANALYTICS_PAGE_SIZE) {
-        const { data, count, error } = await supabase.from('cart_sessions')
-          .select('id,email,items,total_price,converted,created_at,updated_at,access_token_hash,last_activity_at,checkout_started_at,payment_issue_at,recovered_at,paid_order_id,expires_at,email_status,is_test', { count: 'exact' })
-          .or('is_test.is.null,is_test.eq.false').order('updated_at', { ascending: false }).order('id')
+        const request = supabase.from('cart_sessions')
+          .select('id,email,items,total_price,converted,created_at,updated_at,access_token_hash,last_activity_at,checkout_started_at,payment_issue_at,recovered_at,paid_order_id,expires_at,email_status,email_sent_at,recovery_source_id,is_test', { count: 'exact' })
+          .order('updated_at', { ascending: false }).order('id')
           .range(from, Math.min(from + ANALYTICS_PAGE_SIZE, ANALYTICS_MAX_ROWS) - 1)
+        const { data, count, error } = await (showTests ? request.eq('is_test', true) : request.or('is_test.is.null,is_test.eq.false'))
         if (error) throw error
         totalCount = count ?? totalCount
         rows.push(...(data || []) as CartSession[])
@@ -1416,7 +1428,9 @@ function CartsTab() {
       setCartError('')
     } catch { setCartError('Cart records could not be loaded. This is a reporting error, not a zero-cart result.') }
     finally { setLoading(false) }
-  }
+  }, [showTests])
+
+  useEffect(() => { void fetchCarts() }, [fetchCarts])
 
   if (cartError && !loading) return <div role="alert" className="rounded-xl border border-yellow-500/30 p-5 text-sm">{cartError} <button onClick={fetchCarts} className="text-primary font-bold">Retry</button></div>
 
@@ -1440,15 +1454,15 @@ function CartsTab() {
   return (
     <div className="space-y-6">
       {cartsCapped && <p role="status" className="text-sm text-yellow-600 dark:text-yellow-300">Showing the latest {ANALYTICS_MAX_ROWS.toLocaleString()} carts. Counts and subtotals below cover these loaded records only.</p>}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+      {showTests ? <p className="text-sm text-muted-foreground">Test records are excluded from customer totals. Expand a record to check email and recovery activity.</p> : <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         <StatCard icon={ShoppingCart} label="Inactive Carts" value={abandonedCount} color="text-yellow-400" delay={0.1} />
         <StatCard icon={DollarSign} label="Inactive Subtotal" value={`$${abandonedValue.toFixed(2)}`} color="text-red-400" delay={0.2} />
         <StatCard icon={CheckCircle} label="Paid orders" value={convertedCount} color="text-green-400" delay={0.3} />
-      </div>
+      </div>}
 
-      <div className="flex items-center gap-2">
+      <div className="flex flex-wrap items-center gap-2">
         <button onClick={fetchCarts} className="text-primary text-sm font-bold">Refresh</button>
-        {(['all', 'abandoned', 'converted'] as const).map(f => (
+        {(showTests ? ['all'] as const : ['all', 'abandoned', 'converted'] as const).map(f => (
           <button key={f} onClick={() => setFilter(f)}
             className={`px-4 py-2 rounded-xl text-sm font-medium transition-all ${filter === f ? 'bg-primary text-primary-foreground' : 'bg-card border border-border text-muted-foreground hover:text-foreground'}`}>
             {f === 'abandoned' ? 'Inactive' : f === 'converted' ? 'Paid' : 'All'} {f === 'abandoned' ? `(${abandonedCount})` : f === 'converted' ? `(${convertedCount})` : `(${carts.length})`}
@@ -1470,11 +1484,11 @@ function CartsTab() {
                 transition={{ delay: i * 0.03 }} className="bg-card border border-border rounded-2xl p-5">
                 <div className="flex items-start justify-between gap-4">
                   <div className="min-w-0">
-                    <div className="flex items-center gap-2 mb-1">
+                    <div className="flex flex-wrap items-center gap-2 mb-1">
                       <Mail size={14} className="text-muted-foreground shrink-0" />
                       <p className="font-medium truncate">{cart.email || 'No email'}</p>
                       <span className={`px-2 py-0.5 rounded-lg text-xs font-bold ${cart.converted ? 'text-green-400 bg-green-400/10' : 'text-yellow-400 bg-yellow-400/10'}`}>
-                        {cartLifecycle(cart)}
+                        {showTests ? `Test · ${cartLifecycle({ ...cart, is_test: false })}` : cartLifecycle(cart)}
                       </span>
                     </div>
                     <p className="text-sm text-muted-foreground">
@@ -1486,6 +1500,17 @@ function CartsTab() {
                   </div>
                   <span className="font-black text-primary shrink-0">${(cart.total_price || 0).toFixed(2)}</span>
                 </div>
+                <details className="mt-3 text-xs text-muted-foreground">
+                  <summary className="cursor-pointer min-h-11 inline-flex items-center text-primary font-bold">Recovery details</summary>
+                  <dl className="space-y-2 break-words">
+                    <div><dt>Cart ID</dt><dd className="font-mono">{cart.id}</dd></div>
+                    <div><dt>Source cart</dt><dd className="font-mono">{cart.recovery_source_id || 'Not restored from an emailed cart'}</dd></div>
+                    <div><dt>Cart email accepted</dt><dd>{cart.email_sent_at ? new Date(cart.email_sent_at).toLocaleString() : 'Not recorded'}</dd></div>
+                    <div><dt>Restored from this cart</dt><dd>{cart.recovered_at ? new Date(cart.recovered_at).toLocaleString() : 'Not recorded'}</dd></div>
+                    <div><dt>Recorded payment</dt><dd>{cart.paid_order_id || 'None'}</dd></div>
+                  </dl>
+                  <p className="mt-3">Email accepted means the provider accepted it for sending. Restored means items were copied; it does not mean an order was paid.</p>
+                </details>
               </motion.div>
             )
           })}

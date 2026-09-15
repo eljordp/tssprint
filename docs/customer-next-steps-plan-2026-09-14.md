@@ -192,3 +192,24 @@ Real staged production-storage test: two-page PDF previews and uploads successfu
 Public tssprint.com check: fresh vector/text PDF both rendered (page 1 of 1) and showed the successful private upload status. No live cart or order created for this final check; one additional pending test artwork object. QA query markers used for the public check. The files are synthetic, marked TEST ONLY / DO NOT PRINT.
 
 Next priorities: (1) actual email-my-cart and password-reset recipient/link completion, including expired links and cross-browser cart restoration; (2) multi-item cart/checkout editing and mobile accessibility/performance, with payment work left to the existing task; (3) remaining exact material/paper/pouch specifications and genuine matched photos from known shortlisted sources/shop facts; (4) reconcile the controlled journeys with admin/GA4 before interpreting abandonment; (5) full authorized paid purchase, receipt, admin and purchase-event reconciliation once Intuit is ready. Keep the 602-entry Drive review deferred. Cal’s feedback remains evidence against adding complexity; no automatic score increase for this release.
+### Recovery pass — September 14, 23:59 PDT
+
+Live recovery review/error improvements: **dpl_Aopf8CJLhrYFyCNWgyUZ3aPNsEny** (application7b4139c; prerender record d2c0240). See the dated ledger entry for precise evidence. Two cart inbox deliveries, cross-browser two-item/PDF attachment restoration and reload, review-before-replace/keep-current behavior, mobile390 layout, invalid/expired link handling verified. 12 focused tests, scoped lint/TypeScript and prerender pass. Automated abandonment campaigns and admin/GA4 reconciliation remain unverified.
+
+User created eljordp customer account. Signup confirmation and branded reset arrived; actual links reached My Account and Choose a new password. **Still pending user password save + login, then reused-link check.** Welcome/reset HTML saved in Supabase and versioned under `supabase/templates/`; actual logo is public and renders normally. Supabase preview blocks the external logo via its own CSP. Final logo refinement has browser/template verification, not a fresh received-email check.
+
+Next: finish password handoff, reconcile recovery/admin tracking, then broader multi-item mobile checkout/editing/accessibility/performance and remaining product evidence. Keep existing ratings provisional, intentional entry gate unchanged, 602-entry Drive review deferred.
+
+
+### Password recovery completed — September 15, 00:48 PDT
+
+User saved the new password; the live account page displayed “Password updated. Log in with your new password.” The user then logged in, and the same browser displayed My Account / Welcome back, Jordi P. Reopening the actual delivered reset link in a separate tab correctly showed “This link is missing, invalid or expired” and Request a new reset link, with no password-entry form. This closes the password save/login and used-link checks previously marked pending. Agent did not enter, read, or record passwords. No additional email sent or deployment required. Remaining next work: recovery-source/admin/GA4 reconciliation and broader mobile cart/accessibility/performance checks; ratings unchanged.
+
+
+### Both follow-ups shipped — September 15, 01:10 PDT
+
+Live release **dpl_BXbVEVKWJ6L5YL3vkieFZN8NcYZE**, combined application **22eef01**. Cart edits now return to the original cart item; mobile has one persistent total/Checkout action and larger edit targets. Multi-item changes, pricing/batch totals, removal, checkout contact/pickup persistence and private PDF attachment retention were verified. 29 focused combined tests pass; scoped lint/build and 33-route prerender pass. Temporary test cart items removed; no payment, invoice, new email or upload.
+
+Admin → Reports → Sales & traffic → Cart recovery now separates Customer carts and Test carts. Expand Recovery details for cart/source IDs, email acceptance, restoration time and payment reference. Test status remains sticky on later saves and is inherited through restoration. The second controlled email source/destination are reconciled in live admin (accepted23:50:06, restored23:51:27 September14; no payment). The first source's failed restoration sync remains unproven; detailed limits and IDs are in the ledger. Customer list still includes old explicitly unverified/empty records, which must not be interpreted as a clean abandonment history.
+
+Next: GA4 receipt/attribution and missing milestone verification; authorized full payment/receipt/admin reconciliation after payment readiness; broader accessibility/device/performance and exact material evidence. Keep intentional entry gate, direct email proof process and the deferred602-entry Drive review unchanged. Current ratings remain customer7.75, tracking6 provisional, admin7.5 provisional.

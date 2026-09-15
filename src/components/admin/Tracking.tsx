@@ -131,7 +131,7 @@ export default function Tracking() {
           acceptance and delivery must be checked separately.
         </p>
         <p>
-          <strong>Cart email:</strong> Orders → Abandoned carts shows the send
+          <strong>Cart email:</strong> Reports → Sales &amp; traffic → Cart recovery shows the send
           status. “Accepted” means the email provider accepted the request, not
           that it reached the inbox.
         </p>

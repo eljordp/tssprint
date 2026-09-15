@@ -235,6 +235,7 @@ export default function Order({ embedded = false, initialShape = 'Die-Cut', init
   useEffect(() => { trackEvent('view_item', { product: 'custom-stickers' }) }, [])
   const queryString = searchParams.toString()
   const editingItem = items.find(item => item.id === searchParams.get('edit'))
+  const returnToCart = Boolean(editingItem && searchParams.get('returnTo') === 'cart')
 
   useEffect(() => {
     let active = true
@@ -461,7 +462,7 @@ export default function Order({ embedded = false, initialShape = 'Die-Cut', init
     submittedRef.current = true
     if (editingItem) replaceItem(editingItem.id, item)
     else addItem(item)
-    if (checkout) { navigate(`/stickers?edit=${encodeURIComponent(item.id)}#configure`, { replace: true }); navigate('/checkout'); return }
+    if (checkout) { navigate(`/stickers?edit=${encodeURIComponent(item.id)}#configure`, { replace: true }); navigate(returnToCart ? `/cart#item-${encodeURIComponent(item.id)}` : '/checkout'); return }
     setAdded(true)
     window.setTimeout(() => { submittedRef.current = false }, 1000)
     setTimeout(() => setAdded(false), 2000)
@@ -740,7 +741,7 @@ export default function Order({ embedded = false, initialShape = 'Die-Cut', init
                 ) : added ? (
                   <><Check size={18} /> Added to Cart!</>
                 ) : (
-                  <><ShoppingCart size={18} /> {editingItem ? 'Save & Continue to Checkout' : 'Continue to Checkout'}</>
+                  <><ShoppingCart size={18} /> {returnToCart ? 'Save & Return to Cart' : editingItem ? 'Save & Continue to Checkout' : 'Continue to Checkout'}</>
                 )}
               </button>
               <button type="button" className="mt-3 text-sm text-primary font-bold" disabled={!quantityValid} onClick={() => handleAddToCart(false)}>{added ? 'Saved to cart' : editingItem ? 'Save changes & keep shopping' : 'Add to cart & keep shopping'}</button>
