@@ -1,3 +1,4 @@
+import { signInWithMigration } from '@/lib/signIn'
 import { cartLifecycle, type CartLifecycleRow } from '@/lib/cartLifecycle'
 import { useState, useEffect, useRef, useCallback } from 'react'
 import { motion } from 'framer-motion'
@@ -292,7 +293,7 @@ function LoginForm({ onLogin }: { onLogin: () => void }) {
     setLoading(true)
 
     try {
-      const { error: signInError } = await supabase.auth.signInWithPassword({ email, password })
+      const { error: signInError } = await signInWithMigration(email, password)
       if (signInError) { setError(signInError.message); setLoading(false); return }
 
       const { data: { user } } = await supabase.auth.getUser()

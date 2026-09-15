@@ -5,6 +5,7 @@ import PasswordRecovery from '@/components/PasswordRecovery'
 import {
   User, Package, Share2, Settings, LogOut, Loader2, Eye, EyeOff,
   Copy, Check, Gift, ExternalLink, ArrowRight, TrendingUp,
+  AlertTriangle, RefreshCw, HardDrive,
 } from 'lucide-react'
 import { useAuth } from '@/context/AuthContext'
 import { supabase } from '@/lib/supabase'
@@ -146,61 +147,116 @@ function AuthForms() {
 
 // ─── Dashboard ──────────────────────────────────────────────────────────────
 
+type AccountOrder = {
+  id: string
+  date: string
+  total: string
+  status: string
+  items: Array<{ name: string; quantity: number }>
+  source: 'verified' | 'cached'
+}
+
+function formatTotal(value: unknown) {
+  if (value == null || value === '') return '—'
+  const n = Number(value)
+  return Number.isFinite(n) ? n.toFixed(2) : '—'
+}
+
+function normalizeOrderItems(value: unknown): AccountOrder['items'] {
+  if (!Array.isArray(value)) return []
+  return value.filter((item): item is AccountOrder['items'][number] =>
+    item != null && typeof item === 'object' && typeof item.name === 'string' &&
+    Number.isFinite(item.quantity) && item.quantity > 0
+  )
+}
+
+function formatDate(value: string) {
+  const d = new Date(value)
+  return Number.isNaN(d.getTime()) ? 'Date unavailable' : d.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })
+}
+
+function readCachedOrders(email: string): AccountOrder[] {
+  try {
+    const local = JSON.parse(localStorage.getItem('tss-orders') || '[]')
+    if (!Array.isArray(local)) return []
+    return local
+      .filter((o: { id?: unknown; customer?: { email?: string } }) =>
+        typeof o?.id === 'string' && o.customer?.email?.toLowerCase() === email.toLowerCase()
+      )
+      .map((o: { id: string; date?: string; total?: unknown; status?: string; items?: Array<{ name: string; quantity: number }> }) => ({
+        id: o.id,
+        date: o.date || '',
+        total: formatTotal(o.total),
+        status: o.status || 'processing',
+        items: normalizeOrderItems(o.items),
+        source: 'cached' as const,
+      }))
+  } catch {
+    return []
+  }
+}
+
 function AccountDashboard() {
   const { user, signOut } = useAuth()
   const [tab, setTab] = useState<'orders' | 'referral' | 'profile'>('orders')
-  const [orders, setOrders] = useState<Array<{ id: string; date: string; total: string; status: string; items: Array<{ name: string; quantity: number }> }>>([])
+  const [verifiedOrders, setVerifiedOrders] = useState<AccountOrder[]>([])
+  const [cachedOrders, setCachedOrders] = useState<AccountOrder[]>([])
+  const [ordersError, setOrdersError] = useState('')
   const [referrer, setReferrer] = useState<Referrer | null>(null)
   const [copied, setCopied] = useState(false)
   const [loadingOrders, setLoadingOrders] = useState(true)
+  const [reloadKey, setReloadKey] = useState(0)
 
   const userName = user?.user_metadata?.full_name || user?.email?.split('@')[0] || 'Customer'
   const userEmail = user?.email || ''
   const userPhone = user?.user_metadata?.phone || ''
 
   useEffect(() => {
-    // Load orders from Supabase
+    let cancelled = false
+
     const loadOrders = async () => {
+      setLoadingOrders(true)
+      setOrdersError('')
+
+      let verified: AccountOrder[] = []
+      let error = ''
       try {
-        const { data } = await supabase
+        const { data, error: queryError } = await supabase
           .from('orders')
           .select('id, created_at, total, status, items, customer_email')
           .eq('customer_email', userEmail)
           .order('created_at', { ascending: false })
-        if (data) {
-          setOrders(data.map(o => ({
+        if (queryError) {
+          console.error('Account order query failed:', queryError)
+          error = 'We couldn’t load your order history right now.'
+        } else {
+          verified = (data || []).map(o => ({
             id: o.id,
             date: o.created_at,
-            total: (o.total || 0).toFixed(2),
+            total: formatTotal(o.total),
             status: o.status || 'processing',
-            items: (o.items as Array<{ name: string; quantity: number }>) || [],
-          })))
+            items: normalizeOrderItems(o.items),
+            source: 'verified' as const,
+          }))
         }
-      } catch { /* fallback to localStorage */ }
+      } catch (err) {
+        console.error('Account order request failed:', err)
+        error = 'We couldn’t reach our order system. Check your connection and try again.'
+      }
 
-      // Also check localStorage orders
-      try {
-        const local = JSON.parse(localStorage.getItem('tss-orders') || '[]')
-        const myOrders = local.filter((o: { customer?: { email?: string } }) =>
-          o.customer?.email?.toLowerCase() === userEmail.toLowerCase()
-        )
-        if (myOrders.length > 0) {
-          setOrders(prev => {
-            const ids = new Set(prev.map(o => o.id))
-            const newOnes = myOrders
-              .filter((o: { id: string }) => !ids.has(o.id))
-              .map((o: { id: string; date: string; total: string; status: string; items: Array<{ name: string; quantity: number }> }) => ({
-                id: o.id, date: o.date, total: o.total, status: o.status, items: o.items || [],
-              }))
-            return [...prev, ...newOnes]
-          })
-        }
-      } catch { /* silent */ }
-
+      if (cancelled) return
+      const verifiedIds = new Set(verified.map(o => o.id))
+      setVerifiedOrders(verified)
+      setCachedOrders(readCachedOrders(userEmail).filter(o => !verifiedIds.has(o.id)))
+      setOrdersError(error)
       setLoadingOrders(false)
     }
     loadOrders()
 
+    return () => { cancelled = true }
+  }, [userEmail, reloadKey])
+
+  useEffect(() => {
     // Load referrer
     const timer = window.setTimeout(() => {
       const ref = findReferrerByEmail(userEmail)
@@ -208,6 +264,8 @@ function AccountDashboard() {
     }, 0)
     return () => window.clearTimeout(timer)
   }, [userEmail])
+
+  const retryOrders = () => setReloadKey(k => k + 1)
 
   const handleCopy = (text: string) => {
     navigator.clipboard.writeText(text)
@@ -262,11 +320,32 @@ function AccountDashboard() {
         {tab === 'orders' && (
           <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
             {loadingOrders ? (
-              <div className="bg-card border border-border rounded-2xl p-12 text-center">
+              <div className="bg-card border border-border rounded-2xl p-12 text-center" role="status">
                 <Loader2 size={32} className="mx-auto text-primary animate-spin mb-4" />
                 <p className="text-muted-foreground">Loading orders...</p>
               </div>
-            ) : orders.length === 0 ? (
+            ) : ordersError ? (
+              <div className="space-y-6">
+                <div className="bg-card border border-yellow-400/40 rounded-2xl p-8 text-center" role="alert">
+                  <AlertTriangle size={40} className="mx-auto text-yellow-400 mb-4" />
+                  <h3 className="text-xl font-bold mb-2">Order history unavailable</h3>
+                  <p className="text-muted-foreground mb-6 max-w-md mx-auto">
+                    {ordersError} This doesn&apos;t mean your orders are missing. Try again, or email{' '}
+                    <a href="mailto:thestickersmith@gmail.com" className="text-primary hover:underline">thestickersmith@gmail.com</a> with your order reference.
+                  </p>
+                  <button onClick={retryOrders} className="btn-primary inline-flex items-center gap-2">
+                    <RefreshCw size={16} /> Try Again
+                  </button>
+                </div>
+                {cachedOrders.length > 0 && (
+                  <OrderList
+                    title="Saved on this device"
+                    note="These were saved in this browser at checkout. We couldn’t check them against our order system, so the status shown may be out of date."
+                    orders={cachedOrders}
+                  />
+                )}
+              </div>
+            ) : verifiedOrders.length === 0 && cachedOrders.length === 0 ? (
               <div className="bg-card border border-border rounded-2xl p-12 text-center">
                 <Package size={48} className="mx-auto text-muted-foreground mb-4" />
                 <h3 className="text-xl font-bold mb-2">No orders yet</h3>
@@ -276,36 +355,15 @@ function AccountDashboard() {
                 </Link>
               </div>
             ) : (
-              <div className="space-y-4">
-                {orders.map((order, i) => (
-                  <motion.div key={order.id} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: i * 0.05 }} className="bg-card border border-border rounded-2xl p-6">
-                    <div className="flex items-start justify-between gap-4">
-                      <div>
-                        <p className="font-bold">Order #{order.id.slice(0, 8)}</p>
-                        <p className="text-xs text-muted-foreground mt-1">{new Date(order.date).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}</p>
-                        <div className="mt-3 space-y-1">
-                          {order.items.slice(0, 3).map((item, j) => (
-                            <p key={j} className="text-sm text-muted-foreground">{item.name} x{item.quantity}</p>
-                          ))}
-                          {order.items.length > 3 && (
-                            <p className="text-xs text-muted-foreground">+{order.items.length - 3} more items</p>
-                          )}
-                        </div>
-                      </div>
-                      <div className="text-right">
-                        <p className="text-xl font-black text-primary">${order.total}</p>
-                        <span className={`inline-block mt-2 px-2.5 py-1 rounded-lg text-xs font-bold ${
-                          order.status === 'completed' ? 'bg-green-400/10 text-green-400' :
-                          order.status === 'processing' ? 'bg-blue-400/10 text-blue-400' :
-                          'bg-yellow-400/10 text-yellow-400'
-                        }`}>
-                          {order.status}
-                        </span>
-                      </div>
-                    </div>
-                  </motion.div>
-                ))}
+              <div className="space-y-8">
+                {verifiedOrders.length > 0 && <OrderList orders={verifiedOrders} />}
+                {cachedOrders.length > 0 && (
+                  <OrderList
+                    title="Saved on this device"
+                    note="These were saved in this browser at checkout but aren’t in your account’s order records yet. If one is missing from your account after a day, email us with its reference."
+                    orders={cachedOrders}
+                  />
+                )}
               </div>
             )}
           </motion.div>
@@ -393,12 +451,65 @@ function AccountDashboard() {
             userName={userName}
             userEmail={userEmail}
             userPhone={userPhone}
-            orderCount={orders.length}
+            orderCount={loadingOrders || ordersError ? null : verifiedOrders.length}
             onSignOut={handleSignOut}
           />
         )}
       </div>
     </section>
+  )
+}
+
+// ─── Order List ─────────────────────────────────────────────────────────────
+
+function OrderList({ orders, title, note }: { orders: AccountOrder[]; title?: string; note?: string }) {
+  return (
+    <div>
+      {title && (
+        <div className="mb-3">
+          <h3 className="font-bold flex items-center gap-2"><HardDrive size={16} className="text-muted-foreground" /> {title}</h3>
+          {note && <p className="text-sm text-muted-foreground mt-1">{note}</p>}
+        </div>
+      )}
+      <div className="space-y-4">
+        {orders.map((order, i) => (
+          <motion.div key={order.id} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: i * 0.05 }}
+            className={`bg-card border rounded-2xl p-6 ${order.source === 'cached' ? 'border-dashed border-border' : 'border-border'}`}>
+            <div className="flex items-start justify-between gap-4">
+              <div className="min-w-0">
+                <p className="font-bold break-all">Order #{order.id.slice(0, 8)}</p>
+                <p className="text-xs text-muted-foreground mt-1">{formatDate(order.date)}</p>
+                <div className="mt-3 space-y-1">
+                  {order.items.slice(0, 3).map((item, j) => (
+                    <p key={j} className="text-sm text-muted-foreground">{item.name} x{item.quantity}</p>
+                  ))}
+                  {order.items.length > 3 && (
+                    <p className="text-xs text-muted-foreground">+{order.items.length - 3} more items</p>
+                  )}
+                </div>
+              </div>
+              <div className="text-right shrink-0">
+                <p className="text-xl font-black text-primary">${order.total}</p>
+                {order.source === 'cached' ? (
+                  <span className="inline-block mt-2 px-2.5 py-1 rounded-lg text-xs font-bold bg-muted/30 text-muted-foreground">
+                    Not confirmed
+                  </span>
+                ) : (
+                  <span className={`inline-block mt-2 px-2.5 py-1 rounded-lg text-xs font-bold ${
+                    order.status === 'completed' ? 'bg-green-400/10 text-green-400' :
+                    order.status === 'processing' ? 'bg-blue-400/10 text-blue-400' :
+                    'bg-yellow-400/10 text-yellow-400'
+                  }`}>
+                    {order.status}
+                  </span>
+                )}
+              </div>
+            </div>
+          </motion.div>
+        ))}
+      </div>
+    </div>
   )
 }
 
@@ -409,7 +520,7 @@ function ProfileTab({ user, userName, userEmail, userPhone, orderCount, onSignOu
   userName: string
   userEmail: string
   userPhone: string
-  orderCount: number
+  orderCount: number | null
   onSignOut: () => void
 }) {
   const [editName, setEditName] = useState(userName)
@@ -527,7 +638,7 @@ function ProfileTab({ user, userName, userEmail, userPhone, orderCount, onSignOu
           </div>
           <div className="bg-background border border-border rounded-xl p-4">
             <p className="text-xs text-muted-foreground uppercase tracking-wider mb-1">Total Orders</p>
-            <p className="font-medium">{orderCount}</p>
+            <p className="font-medium">{orderCount ?? '—'}</p>
           </div>
         </div>
 

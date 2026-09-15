@@ -70,7 +70,7 @@ export default async function cartHandler(req, res) {
         expires_at: new Date(Date.now() + 30 * 86400000).toISOString(),
         visitor_id: String(body.identity?.visitorId || '').slice(0, 120) || null,
         session_id: String(body.identity?.sessionId || '').slice(0, 120) || null,
-        attribution: body.identity?.attribution || null, is_test: body.isTest === true,
+        attribution: body.identity?.attribution || cart?.attribution || {}, is_test: body.isTest === true,
         ...(body.stage === 'checkout' ? { checkout_started_at: cart?.checkout_started_at || now } : {}),
         ...(body.stage === 'payment_issue' ? { payment_issue_at: now } : {}),
         ...(sourceId ? { recovery_source_id: sourceId } : {}),

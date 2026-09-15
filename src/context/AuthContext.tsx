@@ -1,3 +1,4 @@
+import { signInWithMigration } from '@/lib/signIn'
 import { createContext, useContext, useState, useEffect, type ReactNode } from 'react'
 import type { User } from '@supabase/supabase-js'
 
@@ -93,8 +94,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const signIn = async (email: string, password: string): Promise<{ error?: string }> => {
     try {
-      const supabase = await getSupabaseClient()
-      const { error } = await supabase.auth.signInWithPassword({ email, password })
+      const { error } = await signInWithMigration(email, password)
       if (error) return { error: error.message }
       return {}
     } catch {

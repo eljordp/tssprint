@@ -31,7 +31,7 @@ test('sync stores the secret hash, exact subtotal and an empty-cart update',asyn
   reset()
   assert.equal((await request('sync',{...credentials,items:[item],email:'Fixture@example.test'})).statusCode,200)
   assert.equal(row.access_token_hash,tokenHash(credentials.token)); assert.equal(row.total_price,50)
-  assert.equal(row.email,'fixture@example.test'); assert.equal(row.token,undefined)
+  assert.equal(row.email,'fixture@example.test'); assert.equal(row.token,undefined); assert.deepEqual(row.attribution,{})
   assert.equal((await request('sync',{...credentials,items:[]})).statusCode,200)
   assert.deepEqual(row.items,[])
 })
