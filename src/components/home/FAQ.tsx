@@ -36,17 +36,16 @@ const faqCategories = [
     faqs: [
       { question: 'How fast can I get my order?', answer: 'Standard production is 3-5 business days + shipping. Express production (1-2 days) is available for most products. Shipping is typically 2-5 business days via USPS/UPS. Bay Area customers can arrange local pickup.' },
       { question: 'Do you ship nationwide?', answer: 'Yes! We ship anywhere in the continental United States. Standard shipping is free on all orders. Expedited and overnight shipping options are available at checkout.' },
-      { question: 'What about large format items (signs, wraps)?', answer: 'Vehicle wraps and large signage are typically installed by our team in the Bay Area. For out-of-area customers, we can ship flat or rolled items. Installation-required items (wraps, window film) need an on-site appointment.' },
+      { question: 'What about large format items (signs, wraps)?', answer: 'Vehicle wraps and large signage are typically installed by our team in the Bay Area. For out-of-area customers, we can ship flat or rolled items. Installation-required items (wraps, large signage) need an on-site appointment.' },
       { question: 'Can I pick up my order locally?', answer: 'Yes! Bay Area customers can pick up orders from our location. Just select "Local Pickup" or contact us to arrange a pickup time. This is the fastest way to get your order.' },
     ],
   },
   {
     title: 'Services & Capabilities',
     faqs: [
-      { question: 'What services do you offer beyond stickers?', answer: 'We\'re a full-service print and branding shop: custom stickers & labels, vehicle wraps & graphics, business signage, event displays (tents, flags, banners), business print (cards, flyers, postcards), window film & tint, and mylar packaging.' },
+      { question: 'What services do you offer beyond stickers?', answer: 'We\'re a full-service print and branding shop: custom stickers & labels, vehicle wraps & graphics, business signage, event displays (tents, flags, banners), business print (cards, flyers, postcards), and mylar packaging.' },
       { question: 'Do you do vehicle wraps?', answer: 'Yes! We do full wraps, partial wraps, fleet branding, door/spot graphics, vinyl lettering, and perforated window graphics. We use premium 3M/Avery materials and offer professional installation in the Bay Area.' },
       { question: 'Do you handle event displays (tents, banners, flags)?', answer: 'Absolutely. We print custom canopy tents (5x5 to 10x20), retractable banners, backdrops, table covers, and feather flags. Perfect for trade shows, pop-ups, farmers markets, and events.' },
-      { question: 'Do you install window film and tint?', answer: 'Yes — we do frosted/decorative film, solar/UV film, security film, and automotive window tint. Commercial and residential. Bay Area installation included.' },
     ],
   },
 ]
@@ -56,7 +55,7 @@ const TOP_QUESTIONS = [
   { question: 'How do I place an order?', answer: 'Browse our products, customize your options (size, material, quantity), and add to cart. At checkout, fill out your info and pay via PayPal. You\'ll receive an order confirmation immediately.' },
   { question: 'What is your proof process?', answer: 'Every order includes a free digital proof within 24 hours. You\'ll see exactly how your stickers, signs, or prints will look before we produce them. We won\'t print until you approve.' },
   { question: 'How fast can I get my order?', answer: 'Standard production is 3-5 business days + shipping. Express production (1-2 days) is available for most products. Bay Area customers can arrange local pickup.' },
-  { question: 'What services do you offer beyond stickers?', answer: 'We\'re full-service: custom stickers & labels, vehicle wraps & graphics, business signage, event displays (tents, flags, banners), business print (cards, flyers), window film & tint, and mylar packaging.' },
+  { question: 'What services do you offer beyond stickers?', answer: 'We\'re full-service: custom stickers & labels, vehicle wraps & graphics, business signage, event displays (tents, flags, banners), business print (cards, flyers), and mylar packaging.' },
 ]
 
 type FAQProps = { compact?: boolean }

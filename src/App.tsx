@@ -17,7 +17,6 @@ const VehicleGraphics = lazy(() => import('@/pages/VehicleGraphics'))
 const BusinessSignage = lazy(() => import('@/pages/BusinessSignage'))
 const EventDisplays = lazy(() => import('@/pages/EventDisplays'))
 const BusinessPrint = lazy(() => import('@/pages/BusinessPrint'))
-const WindowFilm = lazy(() => import('@/pages/WindowFilm'))
 const MylarPackaging = lazy(() => import('@/pages/MylarPackaging'))
 const Cart = lazy(() => import('@/pages/Cart'))
 const Checkout = lazy(() => import('@/pages/Checkout'))
@@ -60,7 +59,7 @@ const pageMeta: Record<string, PageMeta> = {
   },
   '/services': {
     title: 'Print & Branding Services | The Sticker Smith',
-    description: 'Explore vehicle graphics, storefront signage, event displays, business print, window film, mylar packaging, and custom branding services.',
+    description: 'Explore vehicle graphics, storefront signage, event displays, business print, mylar packaging, and custom branding services.',
   },
   '/services/vehicle-graphics': {
     title: 'Vehicle Graphics Hayward & Bay Area | The Sticker Smith',
@@ -77,10 +76,6 @@ const pageMeta: Record<string, PageMeta> = {
   '/services/business-print': {
     title: 'Custom Printing in Hayward | Business Cards, Flyers & Stationery | The Sticker Smith',
     description: 'Custom printing company in Hayward and the Bay Area. Business cards, flyers, postcards, stationery, menus, and marketing materials on premium stock with a free proof before we print.',
-  },
-  '/services/window-film': {
-    title: 'Window Film, Tint & Graphics | The Sticker Smith',
-    description: 'Frosted film, solar tint, security film, privacy film, and custom window graphics for offices and storefronts.',
   },
   '/mylar': {
     title: 'Custom Mylar Bags Hayward & Bay Area | The Sticker Smith',
@@ -329,7 +324,7 @@ export default function App() {
                 <Route path="/services/business-signage" element={<BusinessSignage />} />
                 <Route path="/services/event-displays" element={<EventDisplays />} />
                 <Route path="/services/business-print" element={<BusinessPrint />} />
-                <Route path="/services/window-film" element={<WindowFilm />} />
+                <Route path="/services/window-film" element={<Navigate to="/services/business-signage" replace />} />
                 <Route path="/mylar" element={<MylarPackaging />} />
                 <Route path="/cart" element={<Cart />} />
                 <Route path="/checkout" element={<Checkout />} />

@@ -6,12 +6,9 @@ import EstimateForm from '@/components/EstimateForm'
 import PortfolioStrip from '@/components/PortfolioStrip'
 import StudioMockup from '@/components/StudioMockup'
 import ServicePageIntro from '@/components/ServicePageIntro'
-import bizCardsLuxury from '@/assets/projects/business-cards-luxury.jpg'
-import bizCardsFoil from '@/assets/projects/bp-cleopatra-discount-cards.jpg'
-import flyers from '@/assets/projects/flyers-full-color.jpg'
-import postcards from '@/assets/projects/bp-empire-automotive-flyer.jpg'
-import letterpress from '@/assets/projects/letterpress-detail.jpg'
-import pressroom from '@/assets/projects/bp-cleopatra-tattoo-flyer.jpg'
+import bizCardsFoil from '@/assets/optimized/projects/bp-cleopatra-discount-cards-800.webp'
+import postcards from '@/assets/optimized/projects/bp-empire-automotive-flyer-1000.jpg'
+import pressroom from '@/assets/optimized/projects/bp-cleopatra-tattoo-flyer-1000.jpg'
 
 const features = [
   'Business Cards',
@@ -121,14 +118,11 @@ export default function BusinessPrint() {
         <div className="section-container">
           <PortfolioStrip
             title="Print Work We're Proud Of"
-            subtitle="Business cards with foil, soft-touch flyers, full-color postcards."
+            subtitle="Printed cards, flyers, and promotional materials."
             projects={[
-              { src: bizCardsLuxury, alt: 'Premium black business cards', caption: 'Matte black + foil' },
-              { src: bizCardsFoil, alt: 'Printed discount cards for Cleopatra Ink', caption: 'Discount cards' },
-              { src: flyers, alt: 'Full color flyers', caption: 'Full-color flyers' },
-              { src: postcards, alt: 'Printed automotive promo flyers', caption: 'Automotive flyers' },
-              { src: letterpress, alt: 'Letterpress detail', caption: 'Letterpress texture' },
-              { src: pressroom, alt: 'Printed tattoo studio flyers', caption: 'Tattoo studio flyers' },
+              { src: bizCardsFoil, alt: 'Printed discount cards for Cleopatra Ink', caption: 'Cleopatra Ink · discount cards' },
+              { src: postcards, alt: 'Printed automotive promo flyers', caption: 'Empire Automotive · flyer artwork' },
+              { src: pressroom, alt: 'Printed tattoo studio flyers', caption: 'Cleopatra Ink · promotional flyers' },
             ]}
           />
         </div>

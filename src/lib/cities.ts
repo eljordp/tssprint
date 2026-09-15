@@ -158,7 +158,7 @@ export const cities: CityConfig[] = [
     intro:
       'Castro Valley is a six-mile hop over the hill. We deliver weekly to professional offices, service businesses, and storefronts along Castro Valley Boulevard.',
     whyHere:
-      'Castro Valley\'s business community leans toward professional services — dental, medical, legal, real estate, plus the retail along Castro Village and the Boulevard. Most projects we run here are clean, brand-consistent print work: office signage, window film for privacy, business cards, and the occasional event banner. Quiet, repeat-client work.',
+      'Castro Valley\'s business community leans toward professional services — dental, medical, legal, real estate, plus the retail along Castro Village and the Boulevard. Most projects we run here are clean, brand-consistent print work: office signage, storefront lettering, business cards, and the occasional event banner. Quiet, repeat-client work.',
     neighborhoods: [
       'Castro Valley Boulevard',
       'Castro Village',
@@ -169,7 +169,7 @@ export const cities: CityConfig[] = [
     ],
     commonProjects: [
       'Dental, medical, and professional office signage',
-      'Privacy and frosted window film for offices and conference rooms',
+      'Storefront logos and business-hours lettering',
       'Business cards, postcards, and marketing print',
       'Custom stickers for Castro Valley brands and youth sports teams',
     ],
@@ -177,8 +177,8 @@ export const cities: CityConfig[] = [
       'Free local delivery on orders $150+. Studio pickup in Hayward is a 10–15 minute drive.',
     faqs: [
       {
-        q: 'Do you install privacy window film in Castro Valley offices?',
-        a: 'Yes. Frosted film, gradient bands, security film, and decorative window graphics — measured, printed, and installed by our team.',
+        q: 'Do you install storefront graphics in Castro Valley?',
+        a: 'Yes. Storefront logos, window decals, and business-hours lettering — designed, printed, and installed by our team.',
       },
       {
         q: 'Can you print business cards and postcards for a Castro Valley business?',
@@ -189,9 +189,9 @@ export const cities: CityConfig[] = [
         a: 'Yes — custom stickers, banners, and event signage for school clubs, youth sports, and PTA fundraisers.',
       },
     ],
-    metaTitle: 'Castro Valley Signage, Window Film & Print | The Sticker Smith',
+    metaTitle: 'Castro Valley Signage & Business Print | The Sticker Smith',
     metaDescription:
-      'Local print + signage studio serving Castro Valley professional offices, storefronts, and brands. Window film, dental/medical signage, business print, custom stickers. Free delivery $150+.',
+      'Local print + signage studio serving Castro Valley professional offices, storefronts, and brands. Window decals, dental/medical signage, business print, custom stickers. Free delivery $150+.',
   },
   {
     slug: 'union-city',
@@ -353,7 +353,7 @@ export const cities: CityConfig[] = [
       },
       {
         q: 'Do you do retail window graphics for NewPark-area shops?',
-        a: 'Yes. Cut vinyl, printed vinyl, perforated window film, and one-way glass treatments. We design, print, and install.',
+        a: 'Yes. Cut vinyl, printed vinyl, and perforated window graphics. We design, print, and install.',
       },
       {
         q: 'Can you brand a Newark service vehicle?',

@@ -1,6 +1,6 @@
 import { Link, Navigate } from 'react-router-dom'
 import { motion } from 'framer-motion'
-import { ArrowRight, MapPin, Truck, Clock, CheckCircle, Sticker, Car, Building2, Tent, Printer, Film, Package } from 'lucide-react'
+import { ArrowRight, MapPin, Truck, Clock, CheckCircle, Sticker, Car, Building2, Tent, Printer, Package } from 'lucide-react'
 import { cityBySlug, type CityConfig } from '@/lib/cities'
 
 const services = [
@@ -9,7 +9,6 @@ const services = [
   { icon: Building2, title: (city: string) => `${city} Business Signs`, description: 'Storefront signs, wall graphics, A-frames, banners, and window vinyl.', href: '/services/business-signage#shop' },
   { icon: Tent, title: (city: string) => `${city} Canopies & Banners`, description: 'Custom canopy tents, feather flags, banners, table covers, and retractables.', href: '/services/event-displays#shop' },
   { icon: Printer, title: (city: string) => `${city} Business Print`, description: 'Business cards, flyers, brochures, postcards, and marketing collateral.', href: '/services/business-print#shop' },
-  { icon: Film, title: (city: string) => `${city} Window Film`, description: 'Privacy, frosted, security, solar, and decorative window graphics.', href: '/services/window-film#quote' },
   { icon: Package, title: (city: string) => `${city} Mylar Packaging`, description: 'Custom branded mylar bags, labels, and product packaging.', href: '/mylar#configure' },
 ]
 

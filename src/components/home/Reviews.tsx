@@ -40,15 +40,6 @@ const reviews = [
     avatarText: 'text-emerald-300',
   },
   {
-    name: 'James P.',
-    rating: 5,
-    text: 'Had window tint and privacy film installed at our office. Looks clean and professional. Great communication throughout the process.',
-    source: 'Google',
-    date: 'Nov 2025',
-    avatarBg: 'from-violet-400/25 to-violet-400/5',
-    avatarText: 'text-violet-300',
-  },
-  {
     name: 'Michelle W.',
     rating: 5,
     text: 'The storefront signage they did for us looks amazing. Gets compliments from customers every day. Worth every penny.',

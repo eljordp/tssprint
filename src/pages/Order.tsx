@@ -50,12 +50,12 @@ interface ArtworkAttachment {
 type ArtworkIntent = 'upload' | 'send_later' | 'design_help'
 
 const materialData = [
-  { value: 'Matte Vinyl', label: 'Matte', bg: 'radial-gradient(circle at 35% 35%, #f0ece8, #ccc7c0)' },
-  { value: 'Glossy Vinyl', label: 'Gloss', bg: 'radial-gradient(circle at 35% 35%, #e0e0e4, #b0b0b6)' },
-  { value: 'Clear', label: 'Clear', bg: 'radial-gradient(circle at 35% 35%, #bbbbc0, #88888e)' },
-  { value: 'Holographic', label: 'Holographic', bg: 'linear-gradient(135deg, #e4c8f8, #c4b5fd, #93c5fd)' },
-  { value: 'Paper', label: 'Paper', bg: 'radial-gradient(circle at 35% 35%, #f5e8a0, #d4c060)' },
-  { value: 'Embossed/UV', label: 'Embossed/UV', bg: 'radial-gradient(circle at 35% 35%, #ffffff, #d8d8d8)' },
+  { value: 'Matte Vinyl', label: 'Matte', description: 'Low-shine finish' },
+  { value: 'Glossy Vinyl', label: 'Gloss', description: 'Reflective finish' },
+  { value: 'Clear', label: 'Clear', description: 'Transparent base' },
+  { value: 'Holographic', label: 'Holographic', description: 'Rainbow reflection' },
+  { value: 'Paper', label: 'Paper', description: 'Paper label stock' },
+  { value: 'Embossed/UV', label: 'Embossed/UV', description: 'Specialty finish' },
 ]
 
 // Square-presets — used for Die-Cut, Kiss-Cut, Square (these shapes have equal W and H)
@@ -478,6 +478,7 @@ export default function Order() {
                 {materialData.map(m => (
                   <button
                     key={m.value}
+                    aria-pressed={material === m.value}
                     onClick={() => setMaterial(m.value)}
                     className={`flex flex-col items-center gap-2 p-4 rounded-xl border transition-all ${
                       material === m.value
@@ -485,12 +486,9 @@ export default function Order() {
                         : 'border-border hover:border-primary/30'
                     }`}
                   >
-                    <div
-                      className="w-12 h-12 rounded-full shadow-inner"
-                      style={{ background: m.bg, boxShadow: 'inset 0 -3px 6px rgba(0,0,0,0.12), inset 0 2px 4px rgba(255,255,255,0.15)' }}
-                    />
+                    <span className="text-sm font-bold">{m.label}</span>
                     <span className={`text-xs font-medium ${material === m.value ? 'text-primary' : 'text-muted-foreground'}`}>
-                      {m.label}
+                      {m.description}
                     </span>
                   </button>
                 ))}
