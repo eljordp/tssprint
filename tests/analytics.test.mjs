@@ -56,3 +56,9 @@ test('explicit debug session marks events as internal and includes commerce data
   assert.equal(event[2].send_to, 'G-4B9FXT1HQ9')
   assert.equal(event[2].items[0].price, 65)
 })
+
+
+test('the app has one GA initializer; no earlier bootstrap can shadow its queue', () => {
+  const main = readFileSync(new URL('../src/main.tsx', import.meta.url), 'utf8')
+  assert.doesNotMatch(main, /ga-bootstrap/)
+})
