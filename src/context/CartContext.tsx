@@ -71,6 +71,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
     if (email) localStorage.setItem('tss-cart-email', email)
     else localStorage.removeItem('tss-cart-email')
   }, [])
+  const [autoPromoDismissed, setAutoPromoDismissed] = useState(() => { try { return sessionStorage.getItem('tss_auto_promo_dismissed') === 'true' } catch { return false } })
   const [promoCode, setPromoCode] = useState<string | null>(null)
   const [promoDiscount, setPromoDiscount] = useState(0)
   const [promoLabel, setPromoLabel] = useState<string | null>(null)
@@ -218,7 +219,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
 
   // Auto-apply first-order discount for first-time buyers
   useEffect(() => {
-    if (items.length === 0) return
+    if (items.length === 0 || autoPromoDismissed) return
     if (promoCode) return // user already has a code applied
     const timer = window.setTimeout(() => {
       const hasOrdered = localStorage.getItem('tss_order_completed') === 'true'
@@ -232,7 +233,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
       }
     }, 0)
     return () => window.clearTimeout(timer)
-  }, [items.length, total, promoCode])
+  }, [items.length, total, promoCode, autoPromoDismissed])
 
   const applyPromo = (code: string): PromoResult => {
     const result = validatePromoCode(code, total)
@@ -249,6 +250,8 @@ export function CartProvider({ children }: { children: ReactNode }) {
   }
 
   const removePromo = () => {
+    setAutoPromoDismissed(true)
+    try { sessionStorage.setItem('tss_auto_promo_dismissed', 'true') } catch { /* Session persistence is optional. */ }
     setPromoCode(null)
     setPromoDiscount(0)
     setPromoLabel(null)

@@ -88,7 +88,8 @@ export function priceItem(item, config) {
     if (category === 'Mylar Packaging' && match[2]?.endsWith(' · Holo') && !item.addOns?.some(a => a.name === 'Holographic Upgrade')) throw checkoutError('Holographic upgrade is missing from the order.')
   }
   positive(price)
-  if (item.name !== name || (item.category && item.category !== category)) throw checkoutError('Product details changed. Please add this product again.')
+  const approvedDisplayLabel = category !== 'Stickers' && item.name === `${category} — ${item.size}`
+  if ((!approvedDisplayLabel && item.name !== name) || (item.category && item.category !== category)) throw checkoutError('Product details changed. Please add this product again.')
   const requestedAddOns = item.addOns ?? []
   if (!Array.isArray(requestedAddOns) || requestedAddOns.length > 10 || new Set(requestedAddOns.map(a => a?.name)).size !== requestedAddOns.length) throw checkoutError('Invalid item add-ons.')
   const addOns = requestedAddOns.map(a => {
