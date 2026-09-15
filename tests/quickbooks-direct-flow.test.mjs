@@ -1,7 +1,7 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
 import crypto from 'node:crypto'
-import { digest } from '../server/quickbooks-core.js'
+import { digest, QuickBooksError } from '../server/quickbooks-core.js'
 import { chargeCheckout, recoverDirectPayment } from '../server/quickbooks-direct.js'
 
 process.env.QUICKBOOKS_TOKEN_ENCRYPTION_KEY = 'ab'.repeat(32)
@@ -32,8 +32,15 @@ function fixture() {
     if(path==='/query') return {QueryResponse:{Invoice:[structuredClone(invoice)]}}
     if(path==='/payment/40') return {Payment:structuredClone(payment)}
     if(path==='/payment') {
-      accountingWrites++; assert.equal(opts.body.ProcessPayment,false)
-      payment={Id:'40',...opts.body};invoice.Balance=0;invoice.LinkedTxn=[{TxnType:'Payment',TxnId:'40'}]
+      accountingWrites++
+      assert.equal(opts.body.TxnSource,'IntuitPayment')
+      assert.deepEqual(opts.body.CreditCardPayment.CreditChargeInfo,{ProcessPayment:true})
+      assert.ok(!JSON.stringify(opts.body).includes('opaque-test-token'))
+      payment={Id:'40',...opts.body}
+      // Verified sandbox behavior: without the nested flag, QBO silently
+      // omits CreditChargeResponse, breaking recovery after a lost response.
+      if(!opts.body.CreditCardPayment.CreditChargeInfo?.ProcessPayment) delete payment.CreditCardPayment
+      invoice.Balance=0;invoice.LinkedTxn=[{TxnType:'Payment',TxnId:'40'}]
       if(lostAccounting) throw new Error('lost accounting response')
       return {Payment:structuredClone(payment)}
     }
@@ -82,4 +89,14 @@ test('concurrent charge submissions are serialized by the durable checkout lock'
   const f=fixture();f.row.lock_id='held-by-another-request'
   await assert.rejects(chargeCheckout(f.body,f.deps),/checkout_busy/)
   assert.equal(f.charges,0)
+})
+test('invalid-card rejection clears the token and permits a bounded new-card attempt',async()=>{
+  const f=fixture(), pay=f.deps.pay
+  f.deps.pay=async()=>{throw new QuickBooksError('invalid_card',402)}
+  const rejected=await chargeCheckout(f.body,f.deps)
+  assert.equal(rejected.chargeStatus,'DECLINED');assert.equal(f.orders,0)
+  assert.equal(f.row.direct_payment.encryptedPayload,null)
+  f.deps.pay=pay
+  const result=await chargeCheckout({...f.body,paymentAttemptId:crypto.randomUUID()},f.deps)
+  assert.ok(result.orderId);assert.equal(f.charges,1);assert.equal(f.row.direct_payment.attempts,2)
 })

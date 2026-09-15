@@ -48,3 +48,10 @@ test('validation, unauthorized, throttling and provider failures are distinct', 
   }
   assert.deepEqual(await readIntuitResponse(new Response('{"ok":true}'), 'test', () => {}), { ok: true })
 })
+test('verified invalid-card rejection is retryable but a Payments system HTTP 400 is not', async () => {
+  const read = errors => readIntuitResponse(new Response(JSON.stringify({ errors }), { status: 400 }), 'create_charge', () => {})
+  await assert.rejects(read([{ code:'PMT-4000', type:'invalid_request', detail:'card.number' }]), error => error.code === 'invalid_card')
+  for (const errors of [[{code:'PMT-6000',type:'system_error'}], [], [{code:'PMT-4000',type:'invalid_request',detail:'unknown'}]]) {
+    await assert.rejects(read(errors), error => error.code === 'provider_request_failed')
+  }
+})

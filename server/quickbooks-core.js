@@ -64,6 +64,12 @@ export async function readIntuitResponse(response, operation, logger = console.i
   logger(JSON.stringify({ provider: 'quickbooks', operation, status: response.status, ...(tid ? { intuit_tid: tid } : {}) }))
   const data = await response.json().catch(() => null)
   if (!response.ok) {
+    // Verified Intuit sandbox response for an invalid card. Other HTTP 400s
+    // include PMT-6000 system errors and must remain ambiguous, not retryable.
+    if (operation === 'create_charge' && response.status === 400 && Array.isArray(data?.errors) && data.errors.length &&
+        data.errors.every(error => error.code === 'PMT-4000' && error.type === 'invalid_request' && error.detail === 'card.number')) {
+      throw new QuickBooksError('invalid_card', 402, tid)
+    }
     const code = data?.error === 'invalid_grant' ? 'reconnect_required'
       : data?.error === 'invalid_client' ? 'invalid_client'
       : response.status === 401 ? 'unauthorized'

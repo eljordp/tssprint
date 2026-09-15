@@ -23,7 +23,13 @@ async function recoverLocked(row, save, ctx, deps, firstSubmission = false) {
     // until Intuit's production deduplication retention has been verified.
     if (!firstSubmission) throw new QuickBooksError('charge_review_required', 409)
     const payload = decryptTokens(attempt.encryptedPayload, encryptionKey(configuration().key), ctx.environment, `${ctx.realmId}:${row.id}`)
-    response = await deps.pay('/charges', { ...ctx, method: 'POST', requestId: attempt.requestId, body: payload })
+    try {
+      response = await deps.pay('/charges', { ...ctx, method: 'POST', requestId: attempt.requestId, body: payload })
+    } catch (error) {
+      if (error.code !== 'invalid_card') throw error
+      await save({ direct_payment: { ...attempt, status: 'DECLINED', encryptedPayload: null, rejection: 'invalid_card' }, last_error: null })
+      return publicCheckout(row)
+    }
   }
   const charge = verifiedCharge(response, { total: row.total, chargeId: attempt.chargeId })
   attempt = { ...attempt, ...charge, encryptedPayload: null }
@@ -44,11 +50,12 @@ async function recoverLocked(row, save, ctx, deps, firstSubmission = false) {
     } else {
       assertDirectInvoice(invoice, row)
       if (Date.now() - Date.parse(attempt.startedAt) > 23 * 3600000) throw new QuickBooksError('accounting_review_required', 409)
-      // Accounting entry for a charge that already happened: never charge again.
+      // Intuit's nested ProcessPayment flag stores the existing processor
+      // response for reconciliation. No card/token is sent to Accounting.
       const payment = (await deps.call('/payment', { ...ctx, method: 'POST', requestId: `tss-dp-${row.id}`, body: {
-        CustomerRef: { value: row.customer_id }, CurrencyRef: { value: 'USD' }, TotalAmt: row.total, ProcessPayment: false,
+        CustomerRef: { value: row.customer_id }, CurrencyRef: { value: 'USD' }, TotalAmt: row.total, TxnSource: 'IntuitPayment',
         PaymentRefNum: charge.chargeId, PrivateNote: `TSS captured charge ${charge.chargeId}; order ${row.id}`,
-        CreditCardPayment: { CreditChargeResponse: { CCTransId: charge.chargeId } },
+        CreditCardPayment: { CreditChargeInfo: { ProcessPayment: true }, CreditChargeResponse: { CCTransId: charge.chargeId } },
         Line: [{ Amount: row.total, LinkedTxn: [{ TxnId: row.invoice_id, TxnType: 'Invoice' }] }],
       } })).Payment
       if (!/^\d{1,32}$/.test(String(payment?.Id))) throw new QuickBooksError('invalid_payment_response')
