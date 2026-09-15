@@ -71,7 +71,7 @@ export default function Cart() {
         <RestoreCartWidget />
         <div className="space-y-4 mb-8">
           {items.map(item => (
-            <div key={item.id} className="bg-card border border-border rounded-2xl p-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div key={item.id} id={`item-${item.id}`} className="scroll-mt-24 bg-card border border-border rounded-2xl p-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
               <div>
                 <h3 className="font-bold">{item.name}</h3>
                 {item.configuration && <Link className="inline-block mt-2 text-xs font-bold text-primary" to={`/stickers?edit=${encodeURIComponent(item.id)}#configure`}>Edit size, finish, quantity or artwork</Link>}
@@ -104,7 +104,7 @@ export default function Cart() {
                     type="button"
                     onClick={() => updateQuantity(item.id, item.quantity - 1)}
                     aria-label={`Decrease batches for ${item.name}`}
-                    className="w-8 h-8 rounded-lg border border-border flex items-center justify-center hover:border-primary/50 transition-colors"
+                    className="w-11 h-11 rounded-lg border border-border flex items-center justify-center hover:border-primary/50 transition-colors"
                   >
                     <Minus size={14} />
                   </button>
@@ -113,7 +113,7 @@ export default function Cart() {
                     type="button"
                     onClick={() => updateQuantity(item.id, item.quantity + 1)}
                     aria-label={`Increase batches for ${item.name}`}
-                    className="w-8 h-8 rounded-lg border border-border flex items-center justify-center hover:border-primary/50 transition-colors"
+                    className="w-11 h-11 rounded-lg border border-border flex items-center justify-center hover:border-primary/50 transition-colors"
                   >
                     <Plus size={14} />
                   </button>
@@ -123,9 +123,9 @@ export default function Cart() {
                   type="button"
                   onClick={() => removeItem(item.id)}
                   aria-label={`Remove ${item.name} from cart`}
-                  className="text-muted-foreground hover:text-destructive transition-colors"
+                  className="inline-flex min-h-11 items-center gap-1.5 text-muted-foreground hover:text-destructive transition-colors"
                 >
-                  <Trash2 size={18} />
+                  <Trash2 size={16} /> <span className="text-sm">Remove</span>
                 </button>
               </div>
             </div>

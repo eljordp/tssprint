@@ -184,7 +184,14 @@ function normalizeAttribution(attribution) {
 export async function normalizeCheckout(body, dependencies = {}) {
   if (!Array.isArray(body?.items) || body.items.length > 100) throw checkoutError('Invalid cart.')
   const config = await (dependencies.loadPricing || loadServerPricing)()
-  const items = body.items.map(item => normalizeItem(priceItem(item, config)))
+  const items = body.items.map((item, index) => {
+    try { return normalizeItem(priceItem(item, config)) }
+    catch (error) {
+      if (error.status !== 400) throw error
+      const label = typeof item?.name === 'string' ? item.name.slice(0, 100) : `Item ${index + 1}`
+      throw checkoutError(`${label}: ${error.message} Edit or remove this item in your order summary.`)
+    }
+  })
   if (items.length === 0) throw new Error('Cart is empty.')
 
   const customer = normalizeCustomer(body?.customerInfo)

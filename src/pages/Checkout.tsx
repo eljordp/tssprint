@@ -30,14 +30,25 @@ interface CustomerInfo {
 }
 
 export default function Checkout() {
-  const { items, total, clearCart, markConverted, setCartEmail, setCartStage, promoCode, promoDiscount, promoLabel, applyPromo, removePromo, finalizePromo } = useCart()
+  const { items, total, removeItem, clearCart, markConverted, setCartEmail, setCartStage, promoCode, promoDiscount, promoLabel, applyPromo, removePromo, finalizePromo } = useCart()
   const navigate = useNavigate()
-  const [customerInfo, setCustomerInfo] = useState<CustomerInfo>({
-    deliveryMethod: 'shipping',
-    firstName: '', lastName: '', email: '', phone: '',
-    address: '', city: '', state: '', zip: '',
+  const [customerInfo, setCustomerInfo] = useState<CustomerInfo>(() => {
+    const empty: CustomerInfo = { deliveryMethod: 'shipping', firstName: '', lastName: '', email: '', phone: '', address: '', city: '', state: '', zip: '' }
+    try {
+      const saved = JSON.parse(sessionStorage.getItem('tss_checkout_draft') || 'null')
+      if (!saved || Date.now() - saved.savedAt > 30 * 60 * 1000) return empty
+      const draft = { ...empty }
+      for (const key of ['firstName', 'lastName', 'email', 'phone', 'address', 'city', 'state', 'zip'] as const) {
+        if (typeof saved.info?.[key] === 'string') draft[key] = saved.info[key]
+      }
+      draft.deliveryMethod = saved.info?.deliveryMethod === 'pickup' ? 'pickup' : 'shipping'
+      return draft
+    } catch { return empty }
   })
-  const [formValid, setFormValid] = useState(false)
+  useEffect(() => {
+    try { sessionStorage.setItem('tss_checkout_draft', JSON.stringify({ info: customerInfo, savedAt: Date.now() })) } catch { /* Browser storage may be unavailable. */ }
+  }, [customerInfo])
+  const [formValid, setFormValid] = useState(() => checkoutSchema.safeParse(customerInfo).success)
   const [errors, setErrors] = useState<CheckoutFormErrors>({})
   const [paymentError, setPaymentError] = useState('')
   const [processing, setProcessing] = useState(false)
@@ -437,6 +448,7 @@ export default function Checkout() {
 
     await markConverted()
     clearCart()
+    try { sessionStorage.removeItem('tss_checkout_draft') } catch { /* Payment is already recorded. */ }
     localStorage.setItem('tss_order_completed', 'true')
 
     toast.success(processingIssue ? 'Payment received — order needs review' : 'Payment successful!')
@@ -469,10 +481,10 @@ export default function Checkout() {
             Checkout
           </motion.h1>
 
-          <div className="grid lg:grid-cols-5 gap-8">
-            <div className="lg:col-span-3 space-y-6 min-w-0 order-2 lg:order-1">
+          <div className="grid lg:grid-cols-5 gap-5 items-start">
+            <div className="lg:col-span-3 lg:row-span-2 space-y-5 min-w-0 order-2 lg:order-1">
               <div className="bg-card border border-border rounded-2xl p-6">
-                <h2 className="text-xl font-bold mb-6">Contact Information</h2>
+                <h2 className="text-lg font-bold mb-4">Contact Information</h2>
                 <div className="grid sm:grid-cols-2 gap-4">
                   <div>
                     <label htmlFor="checkout-firstName" className="block text-sm font-medium text-muted-foreground mb-1.5">First Name *</label>
@@ -602,13 +614,54 @@ export default function Checkout() {
                 )}
               </fieldset>
 
-              {/* Promo Code */}
-              <div className="bg-card border border-border rounded-2xl p-6">
-                <div className="flex items-center gap-2 mb-4">
-                  <Tag size={18} className="text-primary" />
-                  <h2 className="text-xl font-bold">Promo Code</h2>
-                </div>
+            </div>
 
+            <div className="lg:col-span-2 min-w-0 order-1 lg:order-2">
+              <div className="bg-card border border-border rounded-2xl p-5">
+                <h2 className="text-lg font-bold mb-4">Order Summary</h2>
+                <div className="space-y-4 mb-6">
+                  {items.map(item => {
+                    const addOnTotal = item.addOns?.reduce((a, b) => a + b.price, 0) || 0
+                    const itemTotal = (item.price + addOnTotal) * item.quantity
+                    return (
+                      <div key={item.id} className="flex justify-between gap-4">
+                        <div className="min-w-0">
+                          <p className="font-medium break-words">{item.name}</p>
+                          <p className="text-sm text-muted-foreground">{item.option} · {item.size}</p>
+                          <p className="text-sm text-muted-foreground">Batches: {item.quantity}</p>
+                          {item.addOns && item.addOns.length > 0 && (
+                            <p className="text-xs text-muted-foreground mt-1">+ {item.addOns.map(a => a.name).join(', ')}</p>
+                          )}
+                          {item.artworkIntent === 'send_later' && <p className="text-xs text-primary mt-1">Artwork after checkout</p>}
+                          {item.artworkIntent === 'design_help' && <p className="text-xs text-primary mt-1">Design help requested</p>}
+                          {item.artwork && <p className="text-xs text-green-400 mt-1 break-words">Artwork: {item.artwork.fileName}</p>}
+                          <div className="mt-2 flex items-center gap-4 text-sm">
+                            <Link aria-disabled={processing} onClick={event => { if (processing) event.preventDefault() }} aria-label={`Edit ${item.name}`} to={item.configuration ? `/stickers?edit=${encodeURIComponent(item.id)}#configure` : `/cart#item-${encodeURIComponent(item.id)}`} className="min-h-10 inline-flex items-center font-semibold text-primary hover:underline">Edit</Link>
+                            <button type="button" aria-label={`Remove ${item.name} from order`} disabled={processing} onClick={() => removeItem(item.id)} className="min-h-10 text-muted-foreground hover:text-destructive hover:underline disabled:opacity-50">Remove</button>
+                          </div>
+                        </div>
+                        <span className="font-bold text-primary shrink-0">${itemTotal.toFixed(2)}</span>
+                      </div>
+                    )
+                  })}
+                </div>
+                <div className="border-t border-border pt-4 space-y-2">
+                  <div className="flex justify-between text-muted-foreground"><span>Subtotal</span><span>${total.toFixed(2)}</span></div>
+                  {promoCode && promoDiscount > 0 && (
+                    <div className="flex justify-between text-green-400">
+                      <span className="flex items-center gap-1.5">
+                        <Tag size={12} />
+                        Promo ({promoCode})
+                      </span>
+                      <span>-${promoDiscount.toFixed(2)}</span>
+                    </div>
+                  )}
+                  <div className="flex justify-between text-muted-foreground"><span>{customerInfo.deliveryMethod === 'pickup' ? 'Pickup' : 'Shipping'}</span><span className="text-green-400">Free</span></div>
+                  <div className="flex justify-between text-xl font-black pt-2 border-t border-border"><span>Total</span><span className="text-primary">${finalTotal.toFixed(2)}</span></div>
+                </div>
+                <details className="mt-4 border-t border-border pt-3">
+                  <summary className="cursor-pointer text-sm text-muted-foreground">{promoCode ? `Discount applied: ${promoCode} · Change` : 'Have a promo code?'}</summary>
+                  <div className="mt-3">
                 {promoCode ? (
                   <div className="flex items-center justify-between bg-green-400/10 border border-green-400/30 rounded-xl px-4 py-3">
                     <div className="flex items-center gap-2">
@@ -648,8 +701,15 @@ export default function Checkout() {
                     )}
                   </div>
                 )}
+                  </div>
+                </details>
+                <div className="mt-6 flex items-center gap-2 text-xs text-muted-foreground">
+                  <ShieldCheck size={16} className="text-green-400 shrink-0" aria-hidden="true" />
+                  <span>{squareAvailable ? 'Card details are handled by Square; PayPal remains available as a separate option.' : 'Payment details are handled securely by PayPal.'}</span>
+                </div>
               </div>
-
+            </div>
+            <div className="lg:col-span-2 lg:col-start-4 min-w-0 order-3">
               {/* Payment */}
               <div className="bg-card border border-border rounded-2xl p-6">
                 <h2 className="text-xl font-bold mb-2">Payment</h2>
@@ -659,7 +719,7 @@ export default function Checkout() {
 
                 {!formValid && (
                   <p className="text-sm text-muted-foreground mb-4 bg-muted/50 rounded-xl p-4">
-                    Fill out the required fields above to enable payment.
+                    Enter your contact and delivery details to enable payment.
                   </p>
                 )}
 
@@ -737,52 +797,6 @@ export default function Checkout() {
                     Online checkout is temporarily unavailable. Please contact us to complete your order.
                   </div>
                 )}
-              </div>
-            </div>
-
-            <div className="lg:col-span-2 min-w-0 order-1 lg:order-2">
-              <div className="bg-card border border-border rounded-2xl p-6 lg:sticky lg:top-24">
-                <h2 className="text-xl font-bold mb-6">Order Summary</h2>
-                <div className="space-y-4 mb-6">
-                  {items.map(item => {
-                    const addOnTotal = item.addOns?.reduce((a, b) => a + b.price, 0) || 0
-                    const itemTotal = (item.price + addOnTotal) * item.quantity
-                    return (
-                      <div key={item.id} className="flex justify-between gap-4">
-                        <div className="min-w-0">
-                          <p className="font-medium break-words">{item.name}</p>
-                          <p className="text-sm text-muted-foreground">{item.option} · {item.size}</p>
-                          <p className="text-sm text-muted-foreground">Batches: {item.quantity}</p>
-                          {item.addOns && item.addOns.length > 0 && (
-                            <p className="text-xs text-muted-foreground mt-1">+ {item.addOns.map(a => a.name).join(', ')}</p>
-                          )}
-                          {item.artworkIntent === 'send_later' && <p className="text-xs text-primary mt-1">Artwork after checkout</p>}
-                          {item.artworkIntent === 'design_help' && <p className="text-xs text-primary mt-1">Design help requested</p>}
-                          {item.artwork && <p className="text-xs text-green-400 mt-1 break-words">Artwork: {item.artwork.fileName}</p>}
-                        </div>
-                        <span className="font-bold text-primary shrink-0">${itemTotal.toFixed(2)}</span>
-                      </div>
-                    )
-                  })}
-                </div>
-                <div className="border-t border-border pt-4 space-y-2">
-                  <div className="flex justify-between text-muted-foreground"><span>Subtotal</span><span>${total.toFixed(2)}</span></div>
-                  {promoCode && promoDiscount > 0 && (
-                    <div className="flex justify-between text-green-400">
-                      <span className="flex items-center gap-1.5">
-                        <Tag size={12} />
-                        Promo ({promoCode})
-                      </span>
-                      <span>-${promoDiscount.toFixed(2)}</span>
-                    </div>
-                  )}
-                  <div className="flex justify-between text-muted-foreground"><span>{customerInfo.deliveryMethod === 'pickup' ? 'Pickup' : 'Shipping'}</span><span className="text-green-400">Free</span></div>
-                  <div className="flex justify-between text-xl font-black pt-2 border-t border-border"><span>Total</span><span className="text-primary">${finalTotal.toFixed(2)}</span></div>
-                </div>
-                <div className="mt-6 flex items-center gap-2 text-xs text-muted-foreground">
-                  <ShieldCheck size={16} className="text-green-400 shrink-0" aria-hidden="true" />
-                  <span>{squareAvailable ? 'Card details are handled by Square; PayPal remains available as a separate option.' : 'Payment details are handled securely by PayPal.'}</span>
-                </div>
               </div>
             </div>
           </div>

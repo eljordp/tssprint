@@ -140,3 +140,14 @@ test('PayPal gets stable product names, piece counts and separately priced upgra
   assert.equal(unit.amount.breakdown.discount.value, '27.00')
   assert.equal(unit.amount.value, '153.00')
 })
+
+test('an invalid item identifies what the shopper can edit or remove', async () => {
+  const request = body()
+  request.items.push({ id: 'expired-item', name: 'Saved sample sticker', option: 'Legacy format', size: 'Test', quantity: 1, price: 1 })
+  await assert.rejects(normalizeCheckout(request, dependencies), error => {
+    assert.equal(error.status, 400)
+    assert.match(error.message, /Saved sample sticker/)
+    assert.match(error.message, /Edit or remove this item/)
+    return true
+  })
+})
