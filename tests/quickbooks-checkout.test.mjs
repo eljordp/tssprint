@@ -118,3 +118,16 @@ test('changed paid invoices are flagged and a corrected invoice restores payment
   assert.equal((await refreshCheckout(f.row, { ...f, force: true })).status, 'payment_recorded')
   assert.equal(f.finalized, 1)
 })
+
+
+test('invalid cart validation returns a customer error before saving a checkout or calling Intuit', async () => {
+  let writes = 0, calls = 0
+  const body = { id: crypto.randomUUID(), token: crypto.randomBytes(32).toString('base64url'), checkout: { items: [] } }
+  await assert.rejects(prepareCheckout(body, 'rate', {
+    db: async (path, opts = {}) => { if (path.includes('allow_quickbooks_checkout')) return true; if (opts.method) writes++; return [] },
+    normalize: async () => { throw Object.assign(new Error('Unapproved price or promo'), { status: 400 }) },
+    call: async () => { calls++ },
+  }), { code: 'checkout_validation_failed', status: 400 })
+  assert.equal(writes, 0)
+  assert.equal(calls, 0)
+})

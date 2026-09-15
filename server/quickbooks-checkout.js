@@ -41,7 +41,12 @@ export async function prepareCheckout(body, rateKey, { db = supabaseFetch, norma
     if (row.request_hash !== requestHash) throw new QuickBooksError('checkout_changed', 409)
   } else {
     if (!await db('/rest/v1/rpc/allow_quickbooks_checkout', { method: 'POST', body: JSON.stringify({ p_key: rateKey }) })) throw new QuickBooksError('rate_limited', 429)
-    const checkout = await normalize(body.checkout)
+    let checkout
+    try { checkout = await normalize(body.checkout) }
+    catch (error) {
+      if (error?.status === 400) throw new QuickBooksError('checkout_validation_failed', 400)
+      throw error
+    }
     checkout.ga4 = /^\d{1,20}\.\d{1,20}$/.test(body.ga4?.clientId || '') ? { clientId: body.ga4.clientId, sessionId: /^\d{1,20}$/.test(body.ga4?.sessionId || '') ? body.ga4.sessionId : null } : null
     const ctx = await context()
     await db(`${table}?on_conflict=id`, { method: 'POST', headers: { Prefer: 'resolution=ignore-duplicates,return=representation' }, body: JSON.stringify({ id: body.id, token_hash: digest(body.token), request_hash: requestHash, environment: ctx.environment, realm_id: ctx.realmId, checkout, cart_session: body.checkout.cartSession || null }) })
