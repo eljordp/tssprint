@@ -8,6 +8,7 @@ export type InvoiceCheckout = {
 }
 const errors: Record<string, string> = {
   product_mapping_required: 'This product needs an item setup in QuickBooks. Contact the shop for an invoice.',
+  checkout_validation_failed: 'Your cart price, product options or discount no longer match. Edit the item or reapply your promo code before paying.',
   tax_configuration_required: 'Tax calculation is unavailable. Contact the shop before paying.',
   checkout_busy: 'This invoice is already being prepared. Please wait a moment and retry.',
   checkout_changed: 'This saved invoice belongs to your previous order details. Review it before starting another payment.',
