@@ -28,6 +28,23 @@ test('missing GA4 setup stays queued and can resume without a manual resend', as
   await processQuickBooksDelivery(null,{db:f.db,env:{GA4_API_SECRET:'test',VITE_GA4_MEASUREMENT_ID:'G-TEST'},send:async (_,request)=>{sent=JSON.parse(request.body);return {ok:true}}})
   assert.equal(f.job.status,'accepted');assert.equal(sent.events[0].params.transaction_id,'QB-1');assert.equal(sent.events[0].params.value,50);assert.equal(sent.events[0].params.tax,5)
   assert.doesNotMatch(JSON.stringify(sent),/qa@example.com|firstName/)
+  assert.equal(sent.events[0].params.debug_mode, undefined)
+  assert.equal(sent.events[0].params.traffic_type, undefined)
+})
+test('an explicitly marked paid verification purchase remains internal in GA4', async () => {
+  const f=fixture('analytics'); f.row.checkout.ga4.debugMode=true
+  let sent
+  await processQuickBooksDelivery(null,{db:f.db,env:{GA4_API_SECRET:'test',VITE_GA4_MEASUREMENT_ID:'G-TEST'},send:async (_,request)=>{sent=JSON.parse(request.body);return {ok:true}}})
+  assert.equal(sent.events[0].params.debug_mode,true)
+  assert.equal(sent.events[0].params.traffic_type,'internal')
+  assert.doesNotMatch(JSON.stringify(sent),/qa@example.com|firstName/)
+})
+test('an unpaid invoice cannot send a purchase or receipt', async () => {
+  for (const kind of ['analytics','customer_email']) {
+    const f=fixture(kind); f.row.status='awaiting_payment'; f.row.order_id=null
+    await processQuickBooksDelivery(null,{db:f.db,env:{},send:()=>assert.fail('unpaid invoice must not send')})
+    assert.equal(f.job.status,'retry')
+  }
 })
 test('expired GA4 events and ambiguous old email sends require review instead of creating misleading duplicates',async()=>{
   for (const kind of ['analytics','customer_email']) { const f=fixture(kind);f.job.created_at=new Date(Date.now()-71*3600000).toISOString();f.job.first_send_at=f.job.created_at;await processQuickBooksDelivery(null,{db:f.db,env:{},send:()=>assert.fail('must not send')});assert.equal(f.job.status,'needs_review') }

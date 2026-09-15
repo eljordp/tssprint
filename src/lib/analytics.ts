@@ -193,7 +193,7 @@ function cleanProperties(properties: AnalyticsProperties) {
 
 const STAFF_OPTOUT_KEY = 'tss_analytics_optout'
 
-function isGa4DebugSession() {
+export function isGa4DebugSession() {
   return typeof window !== 'undefined' && new URLSearchParams(window.location.search).get('analytics_debug') === '1'
 }
 

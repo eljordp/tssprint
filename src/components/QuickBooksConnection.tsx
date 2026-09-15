@@ -12,7 +12,7 @@ type Status = {
   companyName: string | null
   redirectUri: string
 }
-type Readiness = { currency: string | null; salesTaxEnabled: boolean | null; automatedSalesTax: boolean | null; onlinePayments: boolean | null; autoEmail: boolean | null; items: { id: string; name: string; type: string; taxable: boolean | null; incomeAccount: string | null }[] }
+type Readiness = { currency: string | null; salesTaxEnabled: boolean | null; automatedSalesTax: boolean | null; onlinePayments: boolean | null; autoEmail: boolean | null; serverPurchaseTracking: boolean; items: { id: string; name: string; type: string; taxable: boolean | null; incomeAccount: string | null }[] }
 const messages: Record<string, string> = {
   website_product_conflict: 'A website product already exists with different tax or income settings. Review it in QuickBooks before retrying.',
   product_income_account_required: 'The existing Custom Card Stock product must have a product-income account before setup.',
@@ -119,6 +119,7 @@ export default function QuickBooksConnection() {
           <dt>Automated sales tax</dt><dd>{readiness.automatedSalesTax === null ? 'Not reported' : readiness.automatedSalesTax ? 'Yes' : 'No'}</dd>
           <dt>Online card preference</dt><dd>{readiness.onlinePayments === null ? 'Not reported — verify on an invoice' : readiness.onlinePayments ? 'Enabled' : 'Disabled'}</dd>
           <dt>Automatic invoice email</dt><dd>{readiness.autoEmail === null ? 'Not reported' : readiness.autoEmail ? 'Enabled' : 'Disabled'}</dd>
+          <dt>GA4 purchase tracking</dt><dd>{readiness.serverPurchaseTracking ? 'Server configured · verify a paid transaction in GA4' : 'Server configuration missing'}</dd>
         </dl>
         <div className="rounded-lg border border-border p-4 space-y-3">
           <h4 className="font-semibold">Website product tax setup</h4>

@@ -1,4 +1,5 @@
 import { lazy, Suspense, useEffect, useState } from 'react'
+import { bootRoute } from '@/lib/bootRoutes'
 import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom'
 import { Analytics } from '@vercel/analytics/react'
 import { AuthProvider } from '@/context/AuthContext'
@@ -10,30 +11,30 @@ import { cityBySlug } from '@/lib/cities'
 import { getStructuredData, SITE_URL } from '@/lib/structuredData'
 import { stickerSupportPageBySlug } from '@/lib/stickerSupportPages'
 
-const Home = lazy(() => import('@/pages/Home'))
-const Order = lazy(() => import('@/pages/Order'))
-const Services = lazy(() => import('@/pages/Services'))
-const VehicleGraphics = lazy(() => import('@/pages/VehicleGraphics'))
-const BusinessSignage = lazy(() => import('@/pages/BusinessSignage'))
-const EventDisplays = lazy(() => import('@/pages/EventDisplays'))
-const BusinessPrint = lazy(() => import('@/pages/BusinessPrint'))
-const MylarPackaging = lazy(() => import('@/pages/MylarPackaging'))
-const Cart = lazy(() => import('@/pages/Cart'))
-const Checkout = lazy(() => import('@/pages/Checkout'))
-const PaymentStatus = lazy(() => import('@/pages/PaymentStatus'))
-const OrderConfirmation = lazy(() => import('@/pages/OrderConfirmation'))
-const Contact = lazy(() => import('@/pages/Contact'))
-const About = lazy(() => import('@/pages/About'))
-const Projects = lazy(() => import('@/pages/Projects'))
-const CaseStudyDetail = lazy(() => import('@/pages/CaseStudyDetail'))
-const Referral = lazy(() => import('@/pages/Referral'))
-const Legal = lazy(() => import('@/pages/Legal'))
-const OrderHelp = lazy(() => import('@/pages/OrderHelp'))
-const Account = lazy(() => import('@/pages/Account'))
-const Admin = lazy(() => import('@/pages/Admin'))
-const NotFound = lazy(() => import('@/pages/NotFound'))
-const CityPage = lazy(() => import('@/pages/CityPage'))
-const StickerSupportPage = lazy(() => import('@/pages/StickerSupportPage'))
+const Home = bootRoute('Home', () => import('@/pages/Home'))
+const Order = bootRoute('Order', () => import('@/pages/Order'))
+const Services = bootRoute('Services', () => import('@/pages/Services'))
+const VehicleGraphics = bootRoute('VehicleGraphics', () => import('@/pages/VehicleGraphics'))
+const BusinessSignage = bootRoute('BusinessSignage', () => import('@/pages/BusinessSignage'))
+const EventDisplays = bootRoute('EventDisplays', () => import('@/pages/EventDisplays'))
+const BusinessPrint = bootRoute('BusinessPrint', () => import('@/pages/BusinessPrint'))
+const MylarPackaging = bootRoute('MylarPackaging', () => import('@/pages/MylarPackaging'))
+const Cart = bootRoute('Cart', () => import('@/pages/Cart'))
+const Checkout = bootRoute('Checkout', () => import('@/pages/Checkout'))
+const PaymentStatus = bootRoute('PaymentStatus', () => import('@/pages/PaymentStatus'))
+const OrderConfirmation = bootRoute('OrderConfirmation', () => import('@/pages/OrderConfirmation'))
+const Contact = bootRoute('Contact', () => import('@/pages/Contact'))
+const About = bootRoute('About', () => import('@/pages/About'))
+const Projects = bootRoute('Projects', () => import('@/pages/Projects'))
+const CaseStudyDetail = bootRoute('CaseStudyDetail', () => import('@/pages/CaseStudyDetail'))
+const Referral = bootRoute('Referral', () => import('@/pages/Referral'))
+const Legal = bootRoute('Legal', () => import('@/pages/Legal'))
+const OrderHelp = bootRoute('OrderHelp', () => import('@/pages/OrderHelp'))
+const Account = bootRoute('Account', () => import('@/pages/Account'))
+const Admin = bootRoute('Admin', () => import('@/pages/Admin'))
+const NotFound = bootRoute('NotFound', () => import('@/pages/NotFound'))
+const CityPage = bootRoute('CityPage', () => import('@/pages/CityPage'))
+const StickerSupportPage = bootRoute('StickerSupportPage', () => import('@/pages/StickerSupportPage'))
 const PrinterIntro = lazy(() => import('@/components/PrinterIntro'))
 
 const DEFAULT_OG_IMAGE = `${SITE_URL}/og-image.jpg`

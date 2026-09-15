@@ -26,7 +26,7 @@ export default function CaseStudyDetail() {
           >
             <ArrowLeft size={14} /> All projects
           </Link>
-          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="max-w-4xl">
+          <motion.div initial={false} animate={{ opacity: 1, y: 0 }} className="max-w-4xl">
             <p className="text-primary font-bold text-xs uppercase tracking-widest mb-3">
               {study.category} · {study.client}
             </p>

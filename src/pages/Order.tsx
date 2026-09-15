@@ -4,7 +4,6 @@ import { Link, useSearchParams, useNavigate } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import { ShoppingCart, Sparkles, FileUp, Check, Clock, MapPin, Shield, Zap, Palette, Droplets, Sticker as StickerIcon, Hand, PanelsTopLeft, ScrollText, ArrowRight, Send } from 'lucide-react'
 import { useCart } from '@/context/CartContext'
-import { supabase } from '@/lib/supabase'
 import { getPricing, loadPricing, getBasePrice, getMaterialMultiplier, getSizeMultiplier } from '@/lib/pricing'
 import { STICKER_QUANTITIES, MIN_STICKER_QUANTITY, MIN_ORDER_SUBTOTAL, isValidStickerQuantity, getStickerPrice, formatPriceAdjustment } from '@/lib/stickerPricing'
 import { createArtworkPreview, readArtworkPreview, saveArtworkPreview, type ArtworkPreview } from '@/lib/artworkPreview'
@@ -360,6 +359,8 @@ export default function Order({ embedded = false, initialShape = 'Die-Cut', init
       if (!response.ok) throw new Error(data.error || 'Could not prepare artwork upload.')
       if (generation !== artworkGeneration.current) return
 
+      const { supabase } = await import('@/lib/supabase')
+      if (generation !== artworkGeneration.current) return
       const { error } = await supabase.storage
         .from(data.bucket)
         .uploadToSignedUrl(data.path, data.token, file, {

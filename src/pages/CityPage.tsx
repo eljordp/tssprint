@@ -23,7 +23,7 @@ function CityPageInner({ city }: { city: CityConfig }) {
         <div className="absolute -top-32 -left-32 w-[500px] h-[500px] rounded-full bg-cyan-500/[0.07] blur-3xl pointer-events-none" />
         <div className="absolute -bottom-32 -right-32 w-[500px] h-[500px] rounded-full bg-pink-500/[0.06] blur-3xl pointer-events-none" />
         <div className="section-container relative grid md:grid-cols-[1.25fr_1fr] gap-8 items-center">
-          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }} className="max-w-3xl">
+          <motion.div initial={false} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }} className="max-w-3xl">
             <div className="flex items-center gap-2 mb-5">
               <MapPin className="w-4 h-4 text-primary" />
               <span className="text-[10px] md:text-xs font-mono uppercase tracking-widest text-primary">

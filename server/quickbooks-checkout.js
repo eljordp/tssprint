@@ -48,7 +48,7 @@ export async function prepareCheckout(body, rateKey, { db = supabaseFetch, norma
       if (error?.status === 400) throw new QuickBooksError('checkout_validation_failed', 400)
       throw error
     }
-    checkout.ga4 = /^\d{1,20}\.\d{1,20}$/.test(body.ga4?.clientId || '') ? { clientId: body.ga4.clientId, sessionId: /^\d{1,20}$/.test(body.ga4?.sessionId || '') ? body.ga4.sessionId : null } : null
+    checkout.ga4 = /^\d{1,20}\.\d{1,20}$/.test(body.ga4?.clientId || '') ? { clientId: body.ga4.clientId, sessionId: /^\d{1,20}$/.test(body.ga4?.sessionId || '') ? body.ga4.sessionId : null, ...(body.ga4.debugMode === true ? { debugMode: true } : {}) } : null
     const ctx = await context()
     await db(`${table}?on_conflict=id`, { method: 'POST', headers: { Prefer: 'resolution=ignore-duplicates,return=representation' }, body: JSON.stringify({ id: body.id, token_hash: digest(body.token), request_hash: requestHash, environment: ctx.environment, realm_id: ctx.realmId, checkout, cart_session: body.checkout.cartSession || null }) })
     row = await ownedCheckout(body, db)
