@@ -1,7 +1,7 @@
-import dieCutImage from '@/assets/projects/stickers-die-cut-stack.jpg'
-import holographicImage from '@/assets/projects/stickers-holographic.jpg'
+import dieCutImage from '@/assets/optimized/projects/stickers-die-cut-stack-1000.webp'
+import holographicImage from '@/assets/optimized/projects/stickers-holographic-1000.webp'
 import sheetImage from '@/assets/projects/stickers-sheet.jpg'
-import rollImage from '@/assets/projects/stickers-roll.jpg'
+import rollImage from '@/assets/optimized/projects/stickers-roll-1000.webp'
 import labelsImage from '@/assets/stickers/custom-labels-showcase.png'
 
 export type StickerSupportPageConfig = {

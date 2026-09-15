@@ -5,8 +5,8 @@ import { ArrowRight } from 'lucide-react'
 import vehicleGraphics from '@/assets/optimized/services/vehicle-graphics-800.webp'
 import eventDisplays from '@/assets/optimized/services/event-displays-800.webp'
 import businessPrint from '@/assets/optimized/projects/bp-cleopatra-discount-cards-800.webp'
-import businessSignage from '@/assets/optimized/services/business-signage-800.webp'
-import mylarPackaging from '@/assets/optimized/services/mylar-packaging-800.webp'
+import businessSignage from '@/assets/optimized/projects/atlas-pizza-signage-800.webp'
+import mylarPackaging from '@/assets/optimized/projects/ig-elevated925-mystery-snack-pack-800.webp'
 
 const services = [
   { image: vehicleGraphics, title: 'Bay Area Vehicle Graphics', description: 'Wraps, fleet branding & door graphics', href: '/services/vehicle-graphics#quote' },

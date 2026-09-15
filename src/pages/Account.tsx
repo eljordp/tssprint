@@ -1,3 +1,4 @@
+import { orderProgress, orderSupportLink } from '@/lib/orderProgress'
 import { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
 import { Link, useSearchParams } from 'react-router-dom'
@@ -501,10 +502,15 @@ function OrderList({ orders, title, note }: { orders: AccountOrder[]; title?: st
                     order.status === 'processing' ? 'bg-blue-400/10 text-blue-400' :
                     'bg-yellow-400/10 text-yellow-400'
                   }`}>
-                    {order.status}
+                    {orderProgress(order.status).label}
                   </span>
                 )}
               </div>
+            </div>
+            {order.source === 'verified' && <p className="mt-4 border-t border-border pt-3 text-sm text-muted-foreground">{orderProgress(order.status).detail}</p>}
+            <div className="mt-3 flex flex-wrap gap-4 text-sm">
+              <a className="text-primary font-semibold" href={orderSupportLink(order.id)}>Ask about this order</a>
+              <Link className="text-primary" to="/order-help">How proof approval works</Link>
             </div>
           </motion.div>
         ))}

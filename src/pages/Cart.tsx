@@ -72,8 +72,8 @@ export default function Cart() {
         <div className="space-y-4 mb-8">
           {items.map(item => (
             <div key={item.id} id={`item-${item.id}`} className="scroll-mt-24 bg-card border border-border rounded-2xl p-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-              <div>
-                <h3 className="font-bold">{item.name}</h3>
+              <div className="min-w-0">
+                <h3 className="font-bold break-words">{item.name}</h3>
                 {item.configuration && <Link className="inline-block mt-2 text-xs font-bold text-primary" to={`/stickers?edit=${encodeURIComponent(item.id)}#configure`}>Edit size, finish, quantity or artwork</Link>}
                 <p className="text-sm text-muted-foreground">{item.option} · {item.size}</p>
                 <p className="text-xs text-muted-foreground mt-1">{item.quantity} {item.quantity === 1 ? 'batch' : 'batches'}{item.pieceCount ? ` · ${item.pieceCount * item.quantity} pieces total` : ''}. Changing batches repeats this exact configuration.</p>
@@ -81,13 +81,13 @@ export default function Cart() {
                   <div className="mt-2 flex flex-wrap gap-2">
                     {item.addOns.map(addOn => (
                       <span key={addOn.name} className="rounded-full bg-primary/10 px-2.5 py-1 text-xs font-medium text-primary">
-                        {addOn.name} +${addOn.price.toFixed(2)}
+                        {addOn.name} +${addOn.price.toFixed(2)} per batch
                       </span>
                     ))}
                   </div>
                 ) : null}
                 {item.artwork && (
-                  <p className="mt-2 text-xs font-medium text-green-400">
+                  <p className="mt-2 text-xs font-medium text-green-400 break-words">
                     Artwork attached: {item.artwork.fileName}
                   </p>
                 )}
@@ -98,13 +98,14 @@ export default function Cart() {
                   <p className="mt-2 text-xs font-medium text-primary">Design help requested</p>
                 )}
               </div>
-              <div className="flex items-center gap-4">
+              <div className="flex flex-wrap items-center gap-3 sm:justify-end">
                 <div className="flex items-center gap-2">
                   <button
                     type="button"
                     onClick={() => updateQuantity(item.id, item.quantity - 1)}
+                    disabled={item.quantity <= 1}
                     aria-label={`Decrease batches for ${item.name}`}
-                    className="w-11 h-11 rounded-lg border border-border flex items-center justify-center hover:border-primary/50 transition-colors"
+                    className="w-11 h-11 rounded-lg border border-border flex items-center justify-center hover:border-primary/50 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
                   >
                     <Minus size={14} />
                   </button>
@@ -113,7 +114,7 @@ export default function Cart() {
                     type="button"
                     onClick={() => updateQuantity(item.id, item.quantity + 1)}
                     aria-label={`Increase batches for ${item.name}`}
-                    className="w-11 h-11 rounded-lg border border-border flex items-center justify-center hover:border-primary/50 transition-colors"
+                    className="w-11 h-11 rounded-lg border border-border flex items-center justify-center hover:border-primary/50 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
                   >
                     <Plus size={14} />
                   </button>

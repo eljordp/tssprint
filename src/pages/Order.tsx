@@ -14,12 +14,12 @@ import { projects } from '@/lib/projects'
 import ServicePageIntro from '@/components/ServicePageIntro'
 import MobileOrderAction from '@/components/MobileOrderAction'
 import PortfolioStrip from '@/components/PortfolioStrip'
-import stkDieCut from '@/assets/projects/stickers-die-cut-stack.jpg'
-import stkHolo from '@/assets/projects/stickers-holographic.jpg'
-import stkLaptop from '@/assets/projects/stickers-on-laptop.jpg'
+import stkDieCut from '@/assets/optimized/projects/stickers-die-cut-stack-1000.webp'
+import stkHolo from '@/assets/optimized/projects/stickers-holographic-1000.webp'
+import stkLaptop from '@/assets/optimized/projects/stickers-on-laptop-1000.webp'
 import stkSheet from '@/assets/projects/stickers-sheet.jpg'
-import stkRoll from '@/assets/projects/stickers-roll.jpg'
-import stkMatte from '@/assets/projects/drive-bottle-labels.jpg'
+import stkRoll from '@/assets/optimized/projects/stickers-roll-1000.webp'
+import stkMatte from '@/assets/optimized/projects/drive-bottle-labels-1000.webp'
 
 const stickerSpecs = [
   { icon: Droplets, label: 'Material', value: 'Chosen for your application' },
@@ -767,7 +767,7 @@ export default function Order({ embedded = false, initialShape = 'Die-Cut', init
             </div>
 </div>
           </div>
-          <MobileOrderAction regionId="configure" price={quantityValid ? `$${totalPrice.toFixed(2)}` : '—'} detail={`${effectiveQty || 0} stickers`} label={added ? 'Added!' : 'Add to Cart'} disabled={!quantityValid || (Boolean(artworkFile) && artworkStatus !== 'uploaded')} onClick={() => handleAddToCart(true)} />
+          <MobileOrderAction regionId="configure" price={quantityValid ? `$${totalPrice.toFixed(2)}` : '—'} detail={`${effectiveQty || 0} stickers`} label={added ? 'Saved!' : editingItem ? 'Save changes' : 'Continue to Checkout'} disabled={!quantityValid || (Boolean(artworkFile) && artworkStatus !== 'uploaded')} onClick={() => handleAddToCart(true)} />
           {/* Specs grid — trust signal, small, under the cart not blocking it */}
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -808,7 +808,7 @@ export default function Order({ embedded = false, initialShape = 'Die-Cut', init
               </h2>
               <div className="space-y-4 text-muted-foreground leading-relaxed">
                 <p>
-                  The Sticker Smith prints custom stickers in Hayward for customers across the East Bay and the wider Bay Area. If you need a small run for a launch, waterproof vinyl for packaging, or a fast reorder before an event, you can approve your proof online and pick up locally at the shop.
+                  The Sticker Smith prints custom stickers in Hayward for customers across the East Bay and the wider Bay Area. If you need a small run for a launch, waterproof vinyl for packaging, or a fast reorder before an event, you can review your proof by email and pick up locally at the shop.
                 </p>
                 <p>
                   Every order gets a real digital proof before production. We check cut lines, bleed, sizing, material choice, and whether your artwork will hold up as a sticker before anything hits the printer.
@@ -913,13 +913,13 @@ export default function Order({ embedded = false, initialShape = 'Die-Cut', init
         <div className="section-container">
           <PortfolioStrip
             title="Sticker Work"
-            subtitle="Die-cut, holographic, sheets, rolls — we've printed them all."
+            subtitle="Finished stickers, print production and labeled format examples."
             projects={[
               { src: stkDieCut, alt: 'Die-cut sticker stack', caption: 'Die-cut vinyl' },
               { src: stkHolo, alt: 'Holographic stickers', caption: 'Holographic' },
-              { src: stkLaptop, alt: 'Stickers on laptop', caption: 'In the wild' },
-              { src: stkSheet, alt: 'Sticker sheet', caption: 'Kiss-cut sheets' },
-              { src: stkRoll, alt: 'Sticker roll', caption: 'Rolls for retail' },
+              { src: stkLaptop, alt: 'EPIC RANE artwork in the print shop', caption: 'Behind the scenes' },
+              { src: stkSheet, alt: 'Illustration of a kiss-cut sticker sheet', caption: 'Sticker sheets · format illustration' },
+              { src: stkRoll, alt: 'Sticker artwork on roll-fed print equipment', caption: 'Roll-fed print production' },
               { src: stkMatte, alt: 'Sticker Smith labels on bottles', caption: 'Bottle labels' },
             ]}
           />

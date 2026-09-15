@@ -4,7 +4,7 @@ import { ArrowRight, Clock, MapPin, MessageSquare, Shield, Star, Sticker } from 
 import Hero from '@/components/home/Hero'
 import ProductCategories from '@/components/home/ProductCategories'
 import HowItWorks from '@/components/home/HowItWorks'
-import mobileStickers from '@/assets/projects/stickers-die-cut-stack.jpg'
+import mobileStickers from '@/assets/optimized/projects/drive-magdre-die-cut-stacks.webp'
 import mobileSignage from '@/assets/optimized/projects/atlas-pizza-signage-800.webp'
 import mobileEvent from '@/assets/projects/event-booth-sticker-smith.jpeg'
 

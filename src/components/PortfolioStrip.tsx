@@ -2,7 +2,7 @@ import { motion } from 'framer-motion'
 import { Link } from 'react-router-dom'
 import { ArrowRight } from 'lucide-react'
 
-type Project = { src: string; alt: string; caption?: string }
+type Project = { src: string; alt: string; caption?: string; fit?: 'contain' | 'cover'; href?: string }
 
 type Props = {
   eyebrow?: string
@@ -39,14 +39,15 @@ export default function PortfolioStrip({ eyebrow = 'Recent Work', title, subtitl
               alt={p.alt}
               loading="lazy"
               decoding="async"
-              className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+              className={`w-full h-full ${p.fit === 'contain' ? 'object-contain bg-white' : 'object-cover'} group-hover:scale-105 transition-transform duration-500`}
             />
-            <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+            <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent transition-opacity" />
             {p.caption && (
-              <div className="absolute inset-x-0 bottom-0 p-3 opacity-0 group-hover:opacity-100 transition-opacity">
+              <div className="absolute inset-x-0 bottom-0 p-3 transition-opacity">
                 <p className="text-xs font-bold text-white">{p.caption}</p>
               </div>
             )}
+            {p.href && <Link to={p.href} aria-label={`View ${p.caption || p.alt}`} className="absolute inset-0 rounded-2xl focus-visible:outline-2 focus-visible:outline-offset-[-4px] focus-visible:outline-primary" />}
           </motion.div>
         ))}
       </div>

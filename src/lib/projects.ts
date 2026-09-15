@@ -1,3 +1,6 @@
+import magdreStacks from '@/assets/optimized/projects/drive-magdre-die-cut-stacks.webp'
+import otaiMockup from '@/assets/optimized/projects/drive-otai-event-mockup.webp'
+import oliveLandArtwork from '@/assets/optimized/projects/drive-olive-land-pita-artwork.webp'
 import albertsonsVan from '@/assets/projects/albertsons-van.jpeg'
 import atlasPizza from '@/assets/projects/atlas-pizza-signage.jpeg'
 import bhogal from '@/assets/projects/bhogal-construction.jpeg'
@@ -17,11 +20,11 @@ import culturalDanceFloor2 from '@/assets/projects/cultural-dance-floor-2.jpeg'
 import weddingDisplay from '@/assets/projects/wedding-display-signage-1.jpeg'
 import safewayInstall from '@/assets/projects/safeway-install.jpeg'
 // Stickers
-import stkDieCut from '@/assets/projects/stickers-die-cut-stack.jpg'
-import stkHolo from '@/assets/projects/stickers-holographic.jpg'
-import stkLaptop from '@/assets/projects/stickers-on-laptop.jpg'
+import stkDieCut from '@/assets/optimized/projects/stickers-die-cut-stack-1000.webp'
+import stkHolo from '@/assets/optimized/projects/stickers-holographic-1000.webp'
+import stkLaptop from '@/assets/optimized/projects/stickers-on-laptop-1000.webp'
 import stkSheet from '@/assets/projects/stickers-sheet.jpg'
-import stkRoll from '@/assets/projects/stickers-roll.jpg'
+import stkRoll from '@/assets/optimized/projects/stickers-roll-1000.webp'
 // Mylar + packaging
 import mylarCandyshockGreen from '@/assets/projects/mylar-candyshock-green.jpg'
 import mylarCandyshockBlue from '@/assets/projects/mylar-candyshock-blue.jpg'
@@ -77,9 +80,30 @@ export type Project = {
   year?: string
   caseStudySlug?: string
   hideOnMobile?: boolean
+  imageKind?: 'Artwork' | 'Illustration' | 'Design mockup'
 }
 
 export const projects: Project[] = [
+  {
+    slug: 'magdre-die-cut-stacks', image: magdreStacks, title: 'MagDre — Die-Cut Sticker Stacks',
+    client: 'MagDre', category: 'Stickers', scope: 'Illustrated die-cut stickers',
+    description: 'Finished stacks of custom-shaped MagDre stickers, photographed for the shop’s marketing portfolio. A close look at the artwork, cut outlines and individual pieces.',
+  },
+  {
+    slug: 'otai-event-design-mockup', image: otaiMockup, title: 'OTAI — Banner & Table Cover Design',
+    category: 'Events', imageKind: 'Design mockup', scope: 'Coordinated event graphics',
+    description: 'A shop marketing mockup showing coordinated banner and table-cover artwork. This is a design presentation, not a photograph of a finished installation.',
+  },
+  {
+    slug: 'olive-land-pita-packaging-artwork',
+    image: oliveLandArtwork,
+    title: 'Olive Land — Pita Chips Packaging Artwork',
+    client: 'Olive Land',
+    category: 'Mylar Packaging',
+    imageKind: 'Artwork',
+    description: 'Garlic pita-chip packaging artwork from the shop’s marketing portfolio. The flat layout shows the brand, product photography and information panels before production.',
+    scope: 'Food packaging artwork',
+  },
   // ── Vehicle Graphics ──────────────────────────────────────────
   {
     slug: 'albertsons-fleet-graphics',
@@ -338,35 +362,37 @@ export const projects: Project[] = [
   {
     slug: 'stickers-laptop',
     image: stkLaptop,
-    title: 'Sticker Collection',
+    title: 'Sticker Printing — Behind the Scenes',
     category: 'Stickers',
     description:
-      'Mixed-design die-cut packs — the kind that end up on every laptop, water bottle, and toolbox in the city.',
-    scope: 'Variety pack',
+      'A shop production photo showing colorful sticker graphics and EPIC RANE artwork on the printer.',
+    scope: 'Print production',
     materials: 'Vinyl + laminate',
   },
   {
     slug: 'stickers-sheet',
     image: stkSheet,
-    title: 'Kiss-Cut Sticker Sheets',
+    title: 'Kiss-Cut Sticker Sheets — Format Example',
+    imageKind: 'Illustration',
     category: 'Stickers',
     description:
       'Kiss-cut sheets — multiple designs on one peel-back backer. Great for merch packs and giveaway drops.',
     scope: 'Multi-design sheets',
-    materials: 'Vinyl on kraft backer',
+    materials: 'Choose stock when ordering',
   },
   {
     slug: 'stickers-roll',
     image: stkRoll,
-    title: 'Stickers on Roll',
+    title: 'Roll-Fed Sticker Printing',
     category: 'Stickers',
     description:
-      'Roll-format stickers built for production lines — labels for product packaging, hand-applied or machine-fed.',
-    scope: 'Production roll',
-    materials: 'BOPP or vinyl on liner',
+      'Sticker artwork running through roll-fed print production. Finished label roll size, winding and applicator requirements are confirmed separately.',
+    scope: 'Print production',
+    materials: 'Confirm stock for your application',
   },
   {
     slug: 'floodline-sticker',
+    imageKind: 'Artwork',
     image: stkFloodline,
     title: 'Flood Line — Sticker Design',
     client: 'Flood Line',
@@ -534,6 +560,7 @@ export const projects: Project[] = [
   },
   {
     slug: 'triple-a-cannabis',
+    imageKind: 'Artwork',
     image: mylarTripleA,
     title: 'Triple A — Cannabis Flower',
     client: 'Triple A',
@@ -569,6 +596,7 @@ export const projects: Project[] = [
   },
   {
     slug: 'cleopatra-ink-tattoo-flyer',
+    imageKind: 'Artwork',
     image: bpCleopatraFlyer,
     title: 'Cleopatra Ink — Tattoo Flyer',
     client: 'Cleopatra Ink Tattoo & Piercing',
@@ -580,17 +608,19 @@ export const projects: Project[] = [
   },
   {
     slug: 'empire-automotive-flyer',
+    imageKind: 'Artwork',
     image: bpEmpireAuto,
     title: 'Empire Automotive — Flyer + Coupon Pack',
     client: 'Empire Automotive Services',
     category: 'Business Print',
     description:
-      'Service flyer + 4-up coupon sheet for Empire Automotive (Hayward, CA). Oil change, brake inspection, smog check, and 15% service offers — all printed as a coordinated pack.',
+      'Service flyer + 4-up coupon sheet for Empire Automotive (Hayward, CA). Oil change, brake inspection, smog check, and 15% service offers — shown together in the promotional artwork.',
     scope: 'Flyer + coupon sheet',
     materials: 'Full-color print',
   },
   {
     slug: 'cleopatra-ink-wall-poster',
+    imageKind: 'Artwork',
     image: bpCleopatraPoster,
     title: 'Cleopatra Ink — Wall Poster',
     client: 'Cleopatra Ink Tattoo & Piercing',

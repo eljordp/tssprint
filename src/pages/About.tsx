@@ -4,10 +4,10 @@ import { ArrowRight, Car, Building2, Tent, Printer, Package, Star, Clock, FileCh
 import aboutCraft from '@/assets/pages/about-craft.jpg'
 import aboutShop from '@/assets/pages/about-shop-real.jpg'
 import svcVehicle from '@/assets/optimized/services/vehicle-graphics-800.webp'
-import svcSignage from '@/assets/optimized/services/business-signage-800.webp'
+import svcSignage from '@/assets/optimized/projects/atlas-pizza-signage-800.webp'
 import svcEvent from '@/assets/optimized/services/event-displays-800.webp'
 import svcPrint from '@/assets/optimized/projects/bp-cleopatra-discount-cards-800.webp'
-import svcMylar from '@/assets/optimized/services/mylar-packaging-800.webp'
+import svcMylar from '@/assets/optimized/projects/ig-elevated925-mystery-snack-pack-800.webp'
 
 const services = [
   { icon: Car, title: 'Vehicle Graphics', description: 'Full and partial wraps, fleet branding, door and spot graphics.', image: svcVehicle, href: '/services/vehicle-graphics#quote' },

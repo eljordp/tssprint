@@ -1,3 +1,4 @@
+import oliveLandArtwork from '@/assets/optimized/projects/drive-olive-land-pita-artwork.webp'
 import MobileOrderAction from '@/components/MobileOrderAction'
 import { useState, useCallback, useRef, useEffect } from 'react'
 import { motion } from 'framer-motion'
@@ -540,13 +541,14 @@ export default function MylarPackaging() {
       <section className="py-12 md:py-20 border-t border-border/50">
         <div className="section-container">
           <PortfolioStrip
-            title="Custom Mylar We've Printed"
-            subtitle="Real pouch projects, launch runs, and large-format packaging."
+            title="Packaging projects & artwork"
+            subtitle="Explore pouch projects and flat artwork for food and retail packaging."
             projects={[
+              { src: oliveLandArtwork, alt: 'Flat Olive Land garlic pita-chip packaging artwork', caption: 'Olive Land · food packaging artwork', fit: 'contain', href: '/projects?project=olive-land-pita-packaging-artwork' },
               { src: mylarCandyshockGreen, alt: 'Candy Shock green custom mylar pouch', caption: 'Candy Shock — Green' },
               { src: mylarCandyshockBlue, alt: 'Candy Shock blue custom mylar pouch', caption: 'Candy Shock — Blue' },
               { src: mylarAtomicshock, alt: 'Atomic Shock custom mylar pouch', caption: 'Atomic Shock' },
-              { src: mylarTripleA, alt: 'Triple A cannabis flower mylar packaging', caption: 'Triple A — Cannabis Flower' },
+              { src: mylarTripleA, alt: 'Triple A cannabis flower mylar packaging', caption: 'Triple A · packaging artwork' },
               { src: mylarElevatedSnack, alt: 'Elevated 925 mystery exotic snack pack mylar packaging', caption: 'Elevated 925 — Snack Pack' },
             ]}
           />

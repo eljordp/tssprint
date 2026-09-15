@@ -86,11 +86,11 @@ export default function BusinessPrint() {
         <div className="section-container">
           <PortfolioStrip
             title="Print Work We're Proud Of"
-            subtitle="Printed cards, flyers, and promotional materials."
+            subtitle="Printed cards and promotional artwork from the shop portfolio."
             projects={[
               { src: bizCardsFoil, alt: 'Printed discount cards for Cleopatra Ink', caption: 'Cleopatra Ink · discount cards' },
-              { src: postcards, alt: 'Printed automotive promo flyers', caption: 'Empire Automotive · flyer artwork' },
-              { src: pressroom, alt: 'Printed tattoo studio flyers', caption: 'Cleopatra Ink · promotional flyers' },
+              { src: postcards, alt: 'Empire Automotive promotional flyer artwork', caption: 'Empire Automotive · flyer artwork' },
+              { src: pressroom, alt: 'Cleopatra Ink promotional flyer artwork', caption: 'Cleopatra Ink · flyer artwork' },
             ]}
           />
         </div>

@@ -1,3 +1,4 @@
+import otaiMockup from '@/assets/optimized/projects/drive-otai-event-mockup.webp'
 import { useState } from 'react'
 import { motion } from 'framer-motion'
 import { CheckCircle, Clock, Shield, Package, Zap } from 'lucide-react'
@@ -137,6 +138,7 @@ export default function EventCanopies() {
             title="Events We've Shown Up For"
             subtitle="Trade shows, weddings, pop-ups — full booth and floor setups."
             projects={[
+              { src: otaiMockup, alt: 'OTAI coordinated banner and table-cover design mockup', caption: 'OTAI · design mockup', fit: 'contain', href: '/projects?project=otai-event-design-mockup' },
               { src: eventBooth, alt: 'Sticker Smith event booth setup', caption: 'Event booth setup' },
               { src: featherFlags, alt: 'Feather flags setup', caption: 'Feather flags' },
               { src: weddingSignage, alt: 'Wedding display signage', caption: 'Wedding signage' },

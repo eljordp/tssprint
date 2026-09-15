@@ -45,14 +45,14 @@ export default function ProjectModal({ project, onClose }: Props) {
                 <img
                   src={project.image}
                   alt={project.title}
-                  className="absolute inset-0 w-full h-full object-cover"
+                  className={`absolute inset-0 w-full h-full ${project.imageKind ? 'object-contain bg-white' : 'object-cover'}`}
                 />
               </div>
 
               <div className="p-5 sm:p-6 md:p-8 flex flex-col">
                 <div className="flex items-center gap-2 mb-3">
                   <span className="text-[10px] font-bold uppercase tracking-widest text-primary">
-                    {project.category}
+                    {project.category}{project.imageKind ? ` · ${project.imageKind}` : ''}
                   </span>
                   {project.year && (
                     <span className="text-[10px] font-mono text-muted-foreground">· {project.year}</span>

@@ -1,3 +1,4 @@
+import { orderSupportLink } from '@/lib/orderProgress'
 import { Link, useLocation } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import { AlertTriangle, CheckCircle, Package, Mail, FileImage } from 'lucide-react'
@@ -12,9 +13,9 @@ export default function OrderConfirmation() {
     return (
       <section className="py-16 md:py-24">
         <div className="section-container text-center">
-          <h1 className="text-3xl font-black mb-4">No Order Found</h1>
-          <p className="text-muted-foreground mb-8">It looks like you navigated here directly.</p>
-          <Link to="/" className="btn-primary">Go Home</Link>
+          <h1 className="text-3xl font-black mb-4">Find your order</h1>
+          <p className="text-muted-foreground mb-8">This page needs the checkout reference. Check your confirmation email or sign in with the email used for your order.</p>
+          <Link to="/account" className="btn-primary">View my orders</Link>
         </div>
       </section>
     )
@@ -76,7 +77,7 @@ export default function OrderConfirmation() {
               <p className="font-bold">What happens next</p>
               <ol className="text-muted-foreground text-sm list-decimal pl-4 space-y-1 mt-1">
                 <li>If you uploaded artwork, we&apos;ll check it. If you chose to send it later or asked for design help, email it or your notes to us with the reference above.</li>
-                <li>We&apos;ll prepare a digital proof and email it to you to approve.</li>
+                <li>We&apos;ll email your production proof. Review the spelling, size, layout and cut lines, then reply to that email with approval or the changes you need.</li>
                 <li>Production starts only after you approve the proof. We&apos;ll email you when it ships or is ready for pickup.</li>
               </ol>
             </div>
@@ -87,15 +88,6 @@ export default function OrderConfirmation() {
           </div>
         </motion.div>
 
-        <div className="mb-8 rounded-2xl border border-border bg-card p-5 text-left">
-          <h2 className="font-bold mb-3">What happens next</h2>
-          <ol className="space-y-3 text-sm text-muted-foreground list-decimal pl-5">
-            <li><strong className="text-foreground">Artwork check.</strong> We review your file, or contact you if artwork is still needed.</li>
-            <li><strong className="text-foreground">Your approval.</strong> We send a digital proof for you to review.</li>
-            <li><strong className="text-foreground">Production.</strong> Printing starts after proof approval.</li>
-            <li><strong className="text-foreground">Shipping or pickup.</strong> We send tracking or a ready-for-pickup message when available.</li>
-          </ol>
-        </div>
         <motion.p
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
@@ -104,7 +96,7 @@ export default function OrderConfirmation() {
         >
           {needsManualReview ? 'Keep the reference above handy. ' : 'Keep the reference above for your records. '}
           If you have any questions, reach out to us at{' '}
-          <a href="mailto:thestickersmith@gmail.com" className="text-primary hover:underline">
+          <a href={orderSupportLink(orderId)} className="text-primary hover:underline">
             thestickersmith@gmail.com
           </a>
         </motion.p>
@@ -115,8 +107,8 @@ export default function OrderConfirmation() {
           transition={{ delay: 0.6 }}
           className="flex flex-col sm:flex-row gap-4 justify-center"
         >
-          <Link to="/" className="btn-primary">Back to Home</Link>
-          <Link to="/stickers" className="btn-secondary">Order More Stickers</Link>
+          <Link to="/account" className="btn-primary">View my orders</Link>
+          <a href={orderSupportLink(orderId)} className="btn-secondary">Send artwork or ask a question</a>
         </motion.div>
       </div>
     </section>

@@ -57,8 +57,8 @@ export default function Projects() {
     <>
       <PageHero
         eyebrow="Our Work"
-        title="Real jobs, real clients."
-        subtitle="Bay Area fleets, storefronts, weddings, and brands. Every project is shipped, installed, and standing today."
+        title="Print, installs & design work."
+        subtitle="Explore shop projects, finished installations and artwork for Bay Area brands. Design files and format illustrations are labeled."
         primaryCta={{ label: 'Start a Project', href: '/contact' }}
         secondaryCta={{ label: 'All Services', href: '/services' }}
       />
@@ -163,7 +163,8 @@ export default function Projects() {
                   }`}
                   aria-label={`View ${project.title}`}
                 >
-                  <img src={project.image} alt={project.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+                  <img src={project.image} alt={project.title} loading="lazy" decoding="async" className={`w-full h-full ${project.imageKind ? 'object-contain bg-white' : 'object-cover'} group-hover:scale-105 transition-transform duration-500`} />
+                  {project.imageKind && <span className="absolute top-3 left-3 rounded-full bg-black/80 px-3 py-1 text-xs font-semibold text-white">{project.imageKind}</span>}
                   <div className="absolute inset-x-0 bottom-0 p-4 bg-gradient-to-t from-black/85 via-black/40 to-transparent">
                     <p className="text-[10px] font-bold uppercase tracking-widest text-primary/90 mb-0.5">{project.category}</p>
                     <h3 className="text-white font-bold leading-tight">{project.title}</h3>

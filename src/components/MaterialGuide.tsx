@@ -1,8 +1,8 @@
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { trackEvent } from '@/lib/analytics'
-import bottlePhoto from '@/assets/projects/drive-bottle-labels.jpg'
-import holographicPhoto from '@/assets/projects/stickers-holographic.jpg'
+import bottlePhoto from '@/assets/optimized/projects/drive-bottle-labels-1000.webp'
+import holographicPhoto from '@/assets/optimized/projects/stickers-holographic-1000.webp'
 
 const materialGuide = [
   { value: 'Matte Vinyl', label: 'Matte vinyl', appearance: 'A soft, low-shine look that keeps the artwork easy to read.', use: 'Brand artwork, packaging and illustrated designs.', care: 'Tell us about water, sun or heavy handling so we can confirm the right stock and finish.' },
