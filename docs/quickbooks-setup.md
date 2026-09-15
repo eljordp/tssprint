@@ -47,3 +47,15 @@ Before marking the Intuit questionnaire's sandbox test complete:
 5. Review authorization expiry, failure, database access and concurrency behavior in the deployed environment.
 
 Before offering customer card/Apple Pay checkout, implement and verify itemized invoices, tax treatment, idempotency, hosted payment links, payment status reconciliation, receipt behavior, and eligible-device Apple Pay. Existing PayPal/Square connectors must not be duplicated.
+
+## Itemized sandbox invoice test (September 14)
+
+Apply `supabase/migrations/20260915043000_quickbooks_invoice_tests.sql`. In the signed-in admin QuickBooks panel, create the sandbox test invoice, recheck it, then simulate an accounting payment. The test uses a server-priced 250-card batch, soft-touch and WELCOME15, a reserved example.com address, and one persistent invoice per sandbox company. No `/send` call is made; Intuit can auto-email imported invoices according to merchant settings, so the fixture has no real recipient and clears CC/BCC.
+
+The local ledger is service-role-only. It preserves the exact invoice payload before writing, uses stable Intuit `requestid` values, serializes attempts, and binds reads/writes to the sandbox realm. A lost response can be retried without creating another invoice. The test cannot run against production and never writes to storefront orders, sends a purchase event or confirms a real charge.
+
+Payment checks require the expected invoice/customer/USD total plus linked payment allocations. Zero balance alone, partial payments, credits, voided totals and mismatched records do not become a paid result. A simulated entry explicitly sets `ProcessPayment:false`; “payment recorded” establishes accounting linkage only. Real card/Apple Pay authorization, settlement, hosted invoice link behavior, email delivery and order fulfillment still need separate verification.
+
+### Still required before public checkout
+
+Production credentials and merchant consent; reviewed product/account mapping and sales-tax treatment; persisted customer checkout attempts and a protected return/status page; server-side order finalization and notification retry handling; webhook or scheduled reconciliation when the browser closes; live payment and refund tests with the owner; privacy/terms publication after the drafts in `docs/policies/` are reviewed. Do not enable a public QuickBooks button on the strength of the sandbox accounting test.

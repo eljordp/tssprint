@@ -6,9 +6,9 @@ function res() {
   return { headers: {}, statusCode: 0, body: '', setHeader(name, value) { this.headers[name] = value }, end(value = '') { this.body = value } }
 }
 test('connection settings and mutations require an admin session', async () => {
-  for (const action of ['status', 'connect', 'check', 'disconnect']) {
+  for (const action of ['status', 'connect', 'check', 'disconnect', 'invoice-tests', 'test-invoice', 'test-payment']) {
     const output = res()
-    await handler({ method: action === 'status' ? 'GET' : 'POST', url: `/api/quickbooks/${action}`, headers: {} }, output)
+    await handler({ method: ['status', 'invoice-tests'].includes(action) ? 'GET' : 'POST', url: `/api/quickbooks/${action}`, headers: {} }, output)
     assert.equal(output.statusCode, 403)
     assert.equal(output.headers['Cache-Control'], 'no-store')
     assert.ok(!output.body.includes('CLIENT_SECRET'))

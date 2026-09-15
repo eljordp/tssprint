@@ -1,14 +1,15 @@
 import { requireAdmin, sendJson } from '../../server/square-api.js'
 import { beginConnection, checkConnection, configuration, disconnectConnection, finishConnection, getConnection, stateCookie } from '../../server/quickbooks-api.js'
 import { QuickBooksError } from '../../server/quickbooks-core.js'
+import { listInvoiceTests, runInvoiceTest } from '../../server/quickbooks-invoices.js'
 
 export default async function handler(req, res) {
   res.setHeader('Cache-Control', 'no-store')
   res.setHeader('Referrer-Policy', 'no-referrer')
   res.setHeader('X-Content-Type-Options', 'nosniff')
   const action = new URL(req.url, 'https://tssprint.com').pathname.split('/').at(-1)
-  if (!['connect', 'callback', 'status', 'check', 'disconnect'].includes(action)) return sendJson(res, 404, { error: 'Not found' })
-  const expectedMethod = ['status', 'callback'].includes(action) ? 'GET' : 'POST'
+  if (!['connect', 'callback', 'status', 'check', 'disconnect', 'invoice-tests', 'test-invoice', 'test-payment'].includes(action)) return sendJson(res, 404, { error: 'Not found' })
+  const expectedMethod = ['status', 'callback', 'invoice-tests'].includes(action) ? 'GET' : 'POST'
   if (req.method !== expectedMethod) { res.setHeader('Allow', expectedMethod); return sendJson(res, 405, { error: 'Method not allowed' }) }
   if (action === 'callback') {
     let result = 'connected'
@@ -41,6 +42,8 @@ export default async function handler(req, res) {
       return sendJson(res, 200, { authorizationUrl: result.authorizationUrl })
     }
     if (action === 'check') return sendJson(res, 200, await checkConnection())
+    if (action === 'invoice-tests') return sendJson(res, 200, { invoices: await listInvoiceTests() })
+    if (action === 'test-invoice' || action === 'test-payment') return sendJson(res, 200, await runInvoiceTest({ recordPayment: action === 'test-payment' }))
     await disconnectConnection()
     return sendJson(res, 200, { disconnected: true })
   } catch (error) {

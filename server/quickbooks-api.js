@@ -153,6 +153,39 @@ export async function checkConnection() {
   await supabaseFetch(`${connectionPath(configuration().environment)}&version=eq.${connection.version}&status=eq.connected`, { method: 'PATCH', body: JSON.stringify({ company_name: companyName }) })
   return { companyName, environment: configuration().environment, connected: true }
 }
+
+// Bind every accounting call to the company recorded with the local invoice.
+// A reconnect to another company must never redirect a pending write/read.
+export async function accountingRequest(path, { method = 'GET', body, requestId, realmId, environment } = {}) {
+  const config = requireConfig()
+  if (!/^\/(query|invoice(?:\/\d+)?|payment(?:\/\d+)?|customer|item|preferences)$/.test(path)) throw new QuickBooksError('invalid_accounting_path', 400)
+  if (environment !== config.environment || !/^\d{1,32}$/.test(realmId || '')) throw new QuickBooksError('connection_changed', 409)
+  if (!['GET', 'POST'].includes(method) || (method === 'POST' && !/^[a-zA-Z0-9_-]{1,50}$/.test(requestId || ''))) throw new QuickBooksError('invalid_request_id', 400)
+  const run = async connection => {
+    if (connection.realm_id !== realmId) throw new QuickBooksError('different_company_connected', 409)
+    const host = environment === 'sandbox' ? 'sandbox-quickbooks.api.intuit.com' : 'quickbooks.api.intuit.com'
+    const url = new URL(`https://${host}/v3/company/${realmId}${path}`)
+    url.searchParams.set('minorversion', '75')
+    if (requestId) url.searchParams.set('requestid', requestId)
+    if (path === '/query') {
+      if (method !== 'GET' || typeof body?.query !== 'string') throw new QuickBooksError('invalid_query', 400)
+      url.searchParams.set('query', body.query)
+      url.searchParams.set('include', 'invoiceLink')
+    }
+    const tokens = decryptTokens(connection.encrypted_tokens, encryptionKey(config.key), environment, realmId)
+    const response = await fetch(url.toString(), { method, redirect: 'error', signal: AbortSignal.timeout(15_000),
+      headers: { Authorization: `Bearer ${tokens.accessToken}`, Accept: 'application/json', 'Content-Type': 'application/json' },
+      ...(method === 'POST' ? { body: JSON.stringify(body) } : {}),
+    })
+    return readIntuitResponse(response, `${method.toLowerCase()}_${path.split('/')[1]}`)
+  }
+  const connection = await accessConnection()
+  try { return await run(connection) }
+  catch (error) {
+    if (error.code !== 'unauthorized') throw error
+    return run(await accessConnection(connection.version))
+  }
+}
 export async function disconnectConnection() {
   return withLock(async (connection, save, config) => {
     if (connection.encrypted_tokens) {

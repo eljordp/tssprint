@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useState } from 'react'
+import QuickBooksInvoiceTests from './QuickBooksInvoiceTests'
 import { supabase } from '@/lib/supabase'
 
 type Status = {
@@ -11,6 +12,12 @@ type Status = {
   redirectUri: string
 }
 const messages: Record<string, string> = {
+  sandbox_only: 'This test is available only for the sandbox company.',
+  invoice_busy: 'The same invoice test is already running. Try again shortly.',
+  invoice_mapping_required: 'The sandbox needs an active service item before testing.',
+  invoice_service_unavailable: 'Invoice setup or storage is unavailable. Check the migration and retry the same test.',
+  test_catalog_changed: 'The sample product changed. Update the sandbox test before continuing.',
+  payment_review_required: 'The invoice changed in QuickBooks. Review it before recording a test payment.',
   connected: 'QuickBooks connected. Check the connection to verify the company.',
   reconnect_required: 'QuickBooks needs to be reconnected.',
   connection_declined: 'Connection was cancelled in QuickBooks.',
@@ -92,6 +99,7 @@ export default function QuickBooksConnection() {
         <button className="rounded-lg border border-border px-4 py-2 disabled:opacity-50" disabled={busy} onClick={() => refresh().catch(error => setMessage(error.message))}>Refresh status</button>
       </div>
       <p className="text-sm text-muted-foreground">{status.environment === 'sandbox' ? 'Sandbox uses test company data. ' : ''}This connection does not enable customer payments yet. Invoice creation and payment confirmation still need verification.</p>
+      {status.environment === 'sandbox' && status.status === 'connected' && <QuickBooksInvoiceTests request={request} />}
     </> : <p className="text-muted-foreground">Loading connection settings…</p>}
   </div>
 }
