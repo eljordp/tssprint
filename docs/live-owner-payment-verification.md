@@ -68,3 +68,22 @@ The user asked to continue after the successful Apple Pay test without another c
 ### Resend verification completed
 
 The owner signed into the actual `thestickersmith` Resend workspace. The exact customer and staff receipt IDs for transaction `224553862Y4866814` both show Delivered. This verifies recipient-mail-server delivery, not inbox placement or reading. Signed delivery tracking is now activated in production and verified with delivered/bounced provider simulations; see [receipt delivery tracking](receipt-delivery-tracking.md). The historical receipts predate webhook setup and were not artificially marked delivered in the callback table. Next remaining payment-scope check is the QuickBooks PayPal accounting import/tax/fees, followed by settlement reconciliation. No second card charge was requested or made.
+
+### QuickBooks recheck after Resend activation — September 15 evening
+
+The owner restored QuickBooks access again. Read-only checks in **The Sticker Smith** company:
+
+- PayPal connector `be72a87d-4851-4434-a45b-36d4c8933e92`, September 15–16 filter: For review, Categorized and Excluded all empty. No current reconnect error was shown.
+- Linked **PayPal balance account**, register account `175`: all 33 entries displayed, newest dated August 19, 2026. No September entry or the test capture was present.
+- Advanced transaction search for capture reference `70B01520W0866370S`: no matching result. Then removed the reference filter and checked all transaction types September 15–16: 12 entries, comprising invoices and estimates, with no posted payment/deposit/sales receipt for this capture.
+- The correct owner Apple Pay tax estimate (`c8197469`) appears for $1.00; it is not evidence of the PayPal sale posting. The skipped native-card test (`4fb932f8`, invoice `3287`) appears as an unpaid $1 invoice. Several earlier verification invoices are also still open; review explicitly identified test records for accounting cleanup before relying on receivables. No records were voided, deleted, reclassified, or recreated.
+- The site's private record still shows `payment_recorded`, PayPal COMPLETED, order `224553862Y4866814`, capture `70B01520W0866370S`, $1.00 total and $0.10 tax.
+
+The register also exposed two **possible historical duplicate expense pairs**, unrelated to this test. Matching dates, amounts and provider IDs warrant owner/CPA review; the inspection does not prove which entry should be removed:
+
+| Date | Amount | PayPal transaction | QuickBooks register row transaction IDs |
+| --- | ---: | --- | --- |
+| 2026-08-19 | $112.61 | `6YE25142P5135592H` | `2975`, `2973` |
+| 2026-07-31 | $376.00 | `4K989252263673002` | `2976`, `2974` |
+
+Opened the exact PayPal capture in Chrome at `https://www.paypal.com/activity/payment/70B01520W0866370S`; PayPal requires owner sign-in. Asked the owner to sign in there to verify merchant account, gross, fee and net directly. The connector import and fee remain unverified. No assumption was made about settlement timing or the amount of the fee. No additional charge or replacement accounting sale was made.
