@@ -35,7 +35,16 @@ Payment checkout **8.5/10**; tracking/recovery **8/10**, up from 8 and 7 respect
 
 ## Follow-up verification and next order of work
 
-The later September 15 recheck still shows the same completed $1 payment, no checkout error, and one attempt for each follow-up job. QuickBooks remains at its password screen; no additional signed-in accounting tab is available. Inbox confirmation remains pending.
+The later September 15 recheck still shows the same completed $1 payment, no checkout error, and one attempt for each follow-up job. The owner subsequently restored QuickBooks access. Inbox confirmation remains pending.
+
+### Signed-in QuickBooks check
+
+- Correct company: **The Sticker Smith**. Opened Accounting → Integration transactions → PayPal, connection `be72a87d-4851-4434-a45b-36d4c8933e92`.
+- Applied a September 15–16, 2026 date filter. **For review, Categorized and Excluded all contain no transactions for this range.** Therefore the $1 capture's accounting import, tax and fees are still unverified; this is no longer a login blocker.
+- Connector settings: sync start date January 1, 2025; automatic posting, product tracking, customer tracking and supplier tracking are all ON. No settings were changed, no transactions were confirmed/excluded, and no replacement accounting sale was created.
+- The home page's bank card reported its last PayPal update 21 hours earlier. This is a bank-feed timestamp, not proof of the connector's exact last sync. Intuit documents automatic checks throughout the day and no on-demand refresh for this connector.
+- The home page separately warns that some QuickBooks Payments deposits were not automatically recorded. Their relationship to historical transactions has not been investigated; do not attribute that warning to this PayPal test. Flag for the owner/CPA's reconciliation review.
+- The connector's deposit account is currently also set to “PayPal balance account.” Confirm the intended transfer destination with the owner/CPA before changing it; this inspection did not establish the correct bank account.
 
 1. Finish receipt and accounting verification for this exact transaction before calling the full Apple Pay flow verified. Check the connector's imported sale, tax, fee and duplicate status; do not manually create a replacement sale just because an import is delayed.
 2. Verify a small native Intuit card payment separately, with explicit approval for any additional real charge. Then check a normal customer order with actual artwork and customer analytics consent.
