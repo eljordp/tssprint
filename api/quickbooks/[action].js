@@ -17,6 +17,7 @@ import { directPaymentsEnabled, chargeCheckout } from '../../server/quickbooks-d
 
 import { walletConfiguration, createWalletOrder, captureWalletOrder } from '../../server/paypal-wallet.js'
 import { prepareOwnerPaymentTest } from '../../server/owner-payment-test.js'
+import { acceptResendDelivery } from '../../server/resend-delivery.js'
 
 export const config = { api: { bodyParser: false } }
 const followUp = id => processQuickBooksDelivery(id).catch(() => console.warn('QuickBooks follow-up remains queued'))
@@ -26,6 +27,11 @@ export default async function handler(req, res) {
   res.setHeader('Referrer-Policy', 'no-referrer')
   res.setHeader('X-Content-Type-Options', 'nosniff')
   const action = new URL(req.url, 'https://tssprint.com').pathname.split('/').at(-1)
+  if (action === 'email-webhook') {
+    if (req.method !== 'POST') return sendJson(res, 405, { error: 'Method not allowed' })
+    try { return sendJson(res, 200, await acceptResendDelivery(await boundedBody(req), req.headers)) }
+    catch (error) { return sendJson(res, error instanceof QuickBooksError ? error.status : 503, { error: error instanceof QuickBooksError ? error.code : 'email_tracking_unavailable' }) }
+  }
   if (action === 'worker') {
     if (req.method !== 'POST') return sendJson(res, 405, { error: 'Method not allowed' })
     try {

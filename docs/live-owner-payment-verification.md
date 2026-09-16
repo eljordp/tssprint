@@ -35,13 +35,13 @@ Payment checkout **8.5/10**; tracking/recovery **8/10**, up from 8 and 7 respect
 
 ## Follow-up verification and next order of work
 
-### Next test prepared: native Intuit card
+### Native Intuit card test: prepared, then skipped by the user
 
 - Live source `36f0d3b`, deployment `dpl_8AU5RdfzWUf3aRUzdnFuKRCMsRK7`, adds a card option to the authenticated owner test. The completed Apple Pay attempt stays separate and is not reused or repeated.
 - Method is server-validated; prices, recipient and discount remain server-fixed. The direct-charge path checks the exact $1 total and $0.10 tax again before submitting to the provider, including under the checkout lock.
 - Seventeen owner/card/route tests, changed-component ESLint and production build passed. Staged configuration showed direct cards enabled in production; unauthenticated test preparation was rejected.
-- Live owner card checkout `4fb932f8-b132-47c5-bb27-cab081c93138`, invoice `3287`, returned $0.90 subtotal + $0.10 tax = $1.00. Card fields and “Pay $1.00” are open in Chrome. Last verified state: awaiting payment, no order ID, no charge attempt.
-- This is a **second real $1 charge** only if the user enters their card and approves it. User handoff offered success/error/skip choices. Do not inspect the card fields while the user enters them. Verify the server record after their response.
+- Live owner card checkout `4fb932f8-b132-47c5-bb27-cab081c93138`, invoice `3287`, returned $0.90 subtotal + $0.10 tax = $1.00. The owner card form was displayed, then closed after the user clarified that they already paid with Apple Pay. Read-only recheck confirmed awaiting payment with no order ID. No second payment was made.
+- This is a **second real $1 charge** only if the user enters their card and approves it. The user replied that they already paid with Apple Pay, so no further card payment was requested. The separate native-card live check remains unverified; it does not invalidate the successful Apple Pay check.
 - Live admin also visibly confirms the original Apple Pay order as payment recorded, $1 including $0.10 tax, transaction `224553862Y4866814`. The worker's last run completed, with zero follow-ups pending or needing review. The accounting-import delay does not negate the verified captured payment.
 
 The later September 15 recheck still shows the same completed $1 payment, no checkout error, and one attempt for each follow-up job. The owner subsequently restored QuickBooks access. Inbox confirmation remains pending.
@@ -60,3 +60,7 @@ The later September 15 recheck still shows the same completed $1 payment, no che
 3. Add verified Resend delivery, bounce and delay callbacks to the existing admin delivery records. Current code stops at API acceptance. Resend's `email.delivered` means recipient-mail-server acceptance, not proof of inbox placement or reading. [Resend event definitions](https://resend.com/docs/webhooks/event-types).
 4. Confirm PayPal product matching and fees in QuickBooks. The connector matches products by name; unmatched items can use the default PayPal Sales item while retaining the original name in the description. Verify the resulting records before changing product mappings. [Intuit connector documentation](https://quickbooks.intuit.com/learn-support/en-us/help-article/mobile-apps/use-paypal-connector-quickbooks-app/L5eoHQvLj_US_en_US).
 5. Check the eventual settlement/deposit. Keep native-card, wallet, customer receipt, analytics and accounting statuses distinct in the readiness report.
+
+### Receipt tracking follow-up
+
+The user asked to continue after the successful Apple Pay test without another charge. The next change exposes completed receipt/analytics jobs in admin and prepares signed delivery/bounce/delay callbacks. See [receipt delivery tracking](receipt-delivery-tracking.md) for implementation, validation and the remaining Resend account activation.

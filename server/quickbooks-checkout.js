@@ -6,6 +6,7 @@ import { normalizeCheckout } from './paypal-api.js'
 import { supabaseFetch } from './square-api.js'
 import { safeInvoiceLink } from './quickbooks-invoices.js'
 import { mappedInvoice, verifiedInvoicePayment, invoiceAmounts } from './quickbooks-checkout-core.js'
+import { emailDeliveryDetails } from './resend-delivery.js'
 
 const table = '/rest/v1/quickbooks_checkouts'
 const uuid = value => /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(value || '')
@@ -177,9 +178,14 @@ export async function reconcileCheckouts({ realmId, invoiceIds, deadline = Date.
   }
   return checked
 }
-export async function listCheckouts() {
-  const ctx = await checkoutContext()
-  const rows = await supabaseFetch(`${table}?environment=eq.${ctx.environment}&realm_id=eq.${ctx.realmId}&order=created_at.desc&limit=50`)
-  const jobs = await supabaseFetch('/rest/v1/quickbooks_delivery_jobs?status=in.(pending,retry,processing,needs_review)&select=checkout_id,kind,status,last_error&limit=100')
-  return rows.map(row => ({ ...publicCheckout(row), createdAt: row.created_at, jobs: jobs.filter(job => job.checkout_id === row.id) }))
+export async function listCheckouts({ db = supabaseFetch, context = checkoutContext, env = process.env } = {}) {
+  const ctx = await context()
+  const rows = await db(`${table}?environment=eq.${ctx.environment}&realm_id=eq.${ctx.realmId}&order=created_at.desc&limit=50`)
+  const ids = rows.map(row => row.id).filter(uuid)
+  // Include completed work: hiding accepted jobs prevented staff from seeing receipts.
+  const jobs = ids.length ? await db(`/rest/v1/quickbooks_delivery_jobs?checkout_id=in.(${ids.join(',')})&select=checkout_id,kind,status,last_error,provider_id,attempts&limit=200`) : []
+  const tracking = await emailDeliveryDetails(jobs, { db, env })
+  return rows.map(row => ({ ...publicCheckout(row), createdAt: row.created_at,
+    emailTracking: { configured: tracking.configured, available: tracking.available },
+    jobs: tracking.jobs.filter(job => job.checkout_id === row.id) }))
 }
