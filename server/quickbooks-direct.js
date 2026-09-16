@@ -72,7 +72,9 @@ export async function chargeCheckout(body, overrides = {}) {
   const deps = { ...defaults, ...overrides }
   const row = await ownedCheckout(body, deps.db)
   if (row.payment_mode !== 'direct') throw new QuickBooksError('payment_not_ready', 409)
+  if (row.checkout?.ownerTest && (Number(row.total) !== 1 || Number(row.tax) !== 0.10)) throw new QuickBooksError('owner_test_total_mismatch', 409)
   return withCheckoutLock(row, async (record, save, ctx) => {
+    if (record.checkout?.ownerTest && (Number(record.total) !== 1 || Number(record.tax) !== 0.10)) throw new QuickBooksError('owner_test_total_mismatch', 409)
     const previous = record.direct_payment
     const retryDecline = previous?.status === 'DECLINED' && previous.requestId !== body.paymentAttemptId
     if (previous && !retryDecline) return recoverLocked(record, save, ctx, deps)

@@ -18,12 +18,14 @@ export function ownerTestCheckout(user) {
 }
 
 export async function prepareOwnerPaymentTest(body, user, dependencies = {}) {
+  const paymentMode = body.paymentMode ?? 'wallet'
+  if (!['wallet', 'direct'].includes(paymentMode)) throw new QuickBooksError('invalid_payment_mode', 400)
   const checkout = ownerTestCheckout(user)
   const result = await (dependencies.prepare || prepareCheckout)({
     id: body.id, token: body.token,
-    checkout: { ownerPaymentTest: user.id, paymentMode: 'wallet' },
+    checkout: { ownerPaymentTest: user.id, paymentMode },
     ga4: body.ga4 ? { ...body.ga4, debugMode: true } : null,
-  }, `owner-payment-test:${user.id}`, { normalize: async () => checkout, paymentMode: 'wallet' })
+  }, `owner-payment-test:${user.id}`, { normalize: async () => checkout, paymentMode })
   // The real tax quote must fit the user's exact $1 authorization.
   if (result.total !== 1 || result.tax !== 0.10) throw new QuickBooksError('owner_test_total_mismatch', 409)
   return result

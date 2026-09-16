@@ -2,6 +2,7 @@ import test from 'node:test'
 import assert from 'node:assert/strict'
 import { ownerTestCheckout, prepareOwnerPaymentTest } from '../server/owner-payment-test.js'
 import { orderEmailPayload, purchaseAnalyticsPayload } from '../server/quickbooks-delivery.js'
+import { chargeCheckout } from '../server/quickbooks-direct.js'
 
 const user = { id: 'verified-owner-id', email: 'owner@example.com' }
 test('owner test ignores browser prices, recipient, products and discounts', async () => {
@@ -23,6 +24,29 @@ test('owner test rejects absent identity and any tax quote above or below one do
   assert.throws(() => ownerTestCheckout(null), /admin_access_required/)
   for (const quote of [{total:1.01,tax:0.11},{total:0.90,tax:0},{total:1,tax:0}]) {
     await assert.rejects(prepareOwnerPaymentTest({},user,{prepare:async()=>quote}),/owner_test_total_mismatch/)
+  }
+})
+test('card test binds a distinct direct request and rejects unsupported methods', async () => {
+  let calls = 0
+  const dependencies = {prepare: async (body, rateKey, options) => {
+    calls++
+    assert.deepEqual(body.checkout, { ownerPaymentTest: user.id, paymentMode: 'direct' })
+    assert.equal(options.paymentMode, 'direct')
+    assert.equal((await options.normalize()).customer.email, user.email)
+    return {total:1,tax:0.10}
+  }}
+  await prepareOwnerPaymentTest({paymentMode:'direct'},user,dependencies)
+  await assert.rejects(prepareOwnerPaymentTest({paymentMode:'invoice'},user,dependencies), /invalid_payment_mode/)
+  assert.equal(calls,1)
+})
+test('card owner test cannot charge a saved quote outside the one-dollar cap', async () => {
+  for (const amounts of [{total:1.01,tax:0.11},{total:1,tax:0},{total:0.90,tax:0.10}]) {
+    let providerCalls = 0
+    await assert.rejects(chargeCheckout({id:'11111111-1111-4111-8111-111111111111',token:'a'.repeat(43),paymentAttemptId:'22222222-2222-4222-8222-222222222222',expectedTotal:amounts.total}, {
+      db:async()=>[{...amounts,payment_mode:'direct',checkout:{ownerTest:true}}],
+      call:async()=>{providerCalls++},pay:async()=>{providerCalls++},
+    }),/owner_test_total_mismatch/)
+    assert.equal(providerCalls,0)
   }
 })
 test('test receipts explicitly prohibit fulfillment and purchases are labelled internal', () => {

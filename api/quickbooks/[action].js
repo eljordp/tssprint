@@ -99,9 +99,14 @@ export default async function handler(req, res) {
     const config = configuration()
     if (req.method === 'POST' && req.headers.origin !== config.origin) return sendJson(res, 403, { error: 'Use the admin page on the configured site.' })
     if (action === 'owner-payment-test') {
-      if (!checkoutEnabled() || !walletConfiguration().enabled) throw new QuickBooksError('wallet_unavailable', 409)
+      const body = JSON.parse((await boundedBody(req)).toString('utf8'))
+      const paymentMode = body.paymentMode ?? 'wallet'
+      if (!['wallet', 'direct'].includes(paymentMode)) throw new QuickBooksError('invalid_payment_mode', 400)
+      if (!checkoutEnabled()) throw new QuickBooksError('checkout_unavailable', 409)
+      if (paymentMode === 'wallet' && !walletConfiguration().enabled) throw new QuickBooksError('wallet_unavailable', 409)
+      if (paymentMode === 'direct' && !await directPaymentsEnabled()) throw new QuickBooksError('direct_payments_unavailable', 409)
       if (!consumeRateLimit(req, { key: `owner-payment-test:${user.id}`, limit: 3, windowMs: 60000 }).allowed) throw new QuickBooksError('rate_limited', 429)
-      return sendJson(res, 200, await prepareOwnerPaymentTest(JSON.parse((await boundedBody(req)).toString('utf8')), user))
+      return sendJson(res, 200, await prepareOwnerPaymentTest(body, user))
     }
     if (action === 'status') {
       let connection = null
