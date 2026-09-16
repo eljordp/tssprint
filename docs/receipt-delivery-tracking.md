@@ -26,3 +26,9 @@ Sign into the existing Resend workspace that sends tssprint.com receipts. Curren
 Migration `20260916030000_resend_delivery_tracking.sql` applied through Supabase SQL editor; success verified in UI and REST reads. Service-role access succeeds; anonymous reads are rejected for both table and summary view. No fabricated delivered status was inserted for a real receipt.
 
 Until activation and a real callback are verified, admin explicitly says delivery tracking setup is pending. Local tests do not establish receipt delivery.
+
+## Deployment
+
+Source `3900904` promoted to production as `dpl_BTLVeJcfaJVw4kavrryRdt5RFX29`. The deployed callback rejects requests while the signing secret is unconfigured; unauthenticated admin reads return 403. Production checkout configuration still reports enabled, native cards enabled, and Apple Pay enabled. The full payment/owner/email regression run passed 78 tests. No second charge or replacement receipt was sent.
+
+Live authenticated admin verification succeeded after promotion: Apple Pay order `224553862Y4866814` shows payment recorded, $1 including $0.10 tax, customer and staff receipts accepted with delivery unconfirmed, cart linking completed, and GA4 transport accepted. Recovery worker completed with zero pending/review follow-ups. The separate skipped card test still shows awaiting payment. Resend login is the remaining activation blocker.
