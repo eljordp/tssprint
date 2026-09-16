@@ -32,3 +32,13 @@ That correction was deployed and verified on the paid order. Reload also exposed
 ## Readiness judgment
 
 Payment checkout **8.5/10**; tracking/recovery **8/10**, up from 8 and 7 respectively. These are judgments for the payment scope based on the verified live capture/order/GA4 flow. They are not an overall-site audit, measured conversion improvements, proof of every recovery scenario, or verification of the separate native-card path.
+
+## Follow-up verification and next order of work
+
+The later September 15 recheck still shows the same completed $1 payment, no checkout error, and one attempt for each follow-up job. QuickBooks remains at its password screen; no additional signed-in accounting tab is available. Inbox confirmation remains pending.
+
+1. Finish receipt and accounting verification for this exact transaction before calling the full Apple Pay flow verified. Check the connector's imported sale, tax, fee and duplicate status; do not manually create a replacement sale just because an import is delayed.
+2. Verify a small native Intuit card payment separately, with explicit approval for any additional real charge. Then check a normal customer order with actual artwork and customer analytics consent.
+3. Add verified Resend delivery, bounce and delay callbacks to the existing admin delivery records. Current code stops at API acceptance. Resend's `email.delivered` means recipient-mail-server acceptance, not proof of inbox placement or reading. [Resend event definitions](https://resend.com/docs/webhooks/event-types).
+4. Confirm PayPal product matching and fees in QuickBooks. The connector matches products by name; unmatched items can use the default PayPal Sales item while retaining the original name in the description. Verify the resulting records before changing product mappings. [Intuit connector documentation](https://quickbooks.intuit.com/learn-support/en-us/help-article/mobile-apps/use-paypal-connector-quickbooks-app/L5eoHQvLj_US_en_US).
+5. Check the eventual settlement/deposit. Keep native-card, wallet, customer receipt, analytics and accounting statuses distinct in the readiness report.
