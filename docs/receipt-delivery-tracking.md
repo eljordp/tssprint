@@ -9,15 +9,26 @@
 - Out-of-order sent/delay events cannot hide delivery. Bounce/failure/suppression/complaint reports remain visible, including mixed staff-recipient outcomes. No callbacks resend emails or alter payment status.
 - Receipt history is limited to the same latest 50 company checkouts that admin displays. Unavailable delivery storage does not hide the existing payment/send evidence.
 
-## Activation still required
+## Activated in production — September 15, 2026 (Pacific)
 
-Sign into the existing Resend workspace that sends tssprint.com receipts. Current local key can send only; it cannot retrieve email delivery history or configure webhooks. The previously inspected Google-login workspaces were empty.
+The correct Resend workspace is `thestickersmith`, signed in as `thestickersmith@gmail.com`. Both original Apple Pay emails are marked **Delivered** in this workspace:
 
-1. In that workspace, create a webhook for the endpoint above.
-2. Subscribe to `email.sent`, `email.delivered`, `email.delivery_delayed`, `email.bounced`, `email.failed`, `email.complained`, `email.suppressed`.
-3. Save its signing secret as protected production server variable `RESEND_WEBHOOK_SECRET`; deploy so the callback can verify it. Never expose the secret in frontend code or notes.
-4. Use Resend's event replay for the two existing $1-test receipts where available; do not send replacement receipts just to obtain a webhook. If historical events cannot be replayed to the new endpoint, inspect their delivery logs separately and leave admin history unconfirmed until real signed events arrive.
-5. Verify one provider delivery report matches the stored provider ID and admin status, and check webhook response is 200. Verify repeated delivery/replay does not create new emails, orders or purchases.
+- Customer receipt: `4be65515-9899-4c52-90c1-f9e65a37014d`
+- Staff notification: `61e8cb75-5bbf-45ac-96bc-6e8db432b41c`
+- Both subjects reference transaction `224553862Y4866814`.
+
+Webhook `a364758a-69eb-4599-b23f-d28bf31b555c` is enabled for the seven implemented events. Its signing key is saved as a Secret, Production only, in the existing Vercel project. Deployment `dpl_FE4X9NH7VYHzzTX4NyLG3kkznvgY` (source `3c23a69`) activates the configuration. An unsigned POST returns 401.
+
+Two emails were sent only to Resend's official simulation destinations, with idempotency keys and no customer/order data:
+
+- Delivered simulation: `9b115ad4-939f-4b8e-aaaa-a6acb2eae00d`; signed sent + delivered callbacks returned HTTP 200 and persisted.
+- Bounced simulation: `4922bdde-4b24-4504-b544-7c3790acf2db`; signed sent + bounced callbacks returned HTTP 200 and persisted.
+
+The stored summaries correctly show delivered and bounced. The delivered callback was replayed; Resend shows HTTP 200 with two attempts, and its stored event count remained two (one sent, one delivered). The original payment follow-ups still have exactly one attempt each. No additional payment or replacement customer receipt was sent.
+
+The old $1 receipts predate webhook creation, so their dashboard delivery evidence is verified separately; admin has no historical signed callbacks for them and still labels their delivery unconfirmed. Future callbacks join automatically by provider ID. No historical delivery events were fabricated or backfilled from test data.
+
+[Resend test addresses](https://resend.com/docs/dashboard/emails/send-test-emails) and [replay documentation](https://resend.com/docs/webhooks/retries-and-replays).
 
 ## Validation
 
@@ -25,10 +36,10 @@ Sign into the existing Resend workspace that sends tssprint.com receipts. Curren
 
 Migration `20260916030000_resend_delivery_tracking.sql` applied through Supabase SQL editor; success verified in UI and REST reads. Service-role access succeeds; anonymous reads are rejected for both table and summary view. No fabricated delivered status was inserted for a real receipt.
 
-Until activation and a real callback are verified, admin explicitly says delivery tracking setup is pending. Local tests do not establish receipt delivery.
+Live admin now explicitly confirms signed callbacks are configured. The original receipt delivery was verified from Resend, and the new callback pipeline was separately verified using provider-generated simulated events.
 
 ## Deployment
 
 Source `3900904` promoted to production as `dpl_BTLVeJcfaJVw4kavrryRdt5RFX29`. The deployed callback rejects requests while the signing secret is unconfigured; unauthenticated admin reads return 403. Production checkout configuration still reports enabled, native cards enabled, and Apple Pay enabled. The full payment/owner/email regression run passed 78 tests. No second charge or replacement receipt was sent.
 
-Live authenticated admin verification succeeded after promotion: Apple Pay order `224553862Y4866814` shows payment recorded, $1 including $0.10 tax, customer and staff receipts accepted with delivery unconfirmed, cart linking completed, and GA4 transport accepted. Recovery worker completed with zero pending/review follow-ups. The separate skipped card test still shows awaiting payment. Resend login is the remaining activation blocker.
+Live authenticated admin verification succeeded after promotion: Apple Pay order `224553862Y4866814` shows payment recorded, $1 including $0.10 tax, customer and staff receipts accepted with delivery unconfirmed, cart linking completed, and GA4 transport accepted. Recovery worker completed with zero pending/review follow-ups. The separate skipped card test still shows awaiting payment. This was the pre-activation state; the activation and live provider tests above resolve that blocker.

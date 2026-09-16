@@ -64,3 +64,7 @@ The later September 15 recheck still shows the same completed $1 payment, no che
 ### Receipt tracking follow-up
 
 The user asked to continue after the successful Apple Pay test without another charge. The next change exposes completed receipt/analytics jobs in admin and prepares signed delivery/bounce/delay callbacks. See [receipt delivery tracking](receipt-delivery-tracking.md) for implementation, validation and the remaining Resend account activation.
+
+### Resend verification completed
+
+The owner signed into the actual `thestickersmith` Resend workspace. The exact customer and staff receipt IDs for transaction `224553862Y4866814` both show Delivered. This verifies recipient-mail-server delivery, not inbox placement or reading. Signed delivery tracking is now activated in production and verified with delivered/bounced provider simulations; see [receipt delivery tracking](receipt-delivery-tracking.md). The historical receipts predate webhook setup and were not artificially marked delivered in the callback table. Next remaining payment-scope check is the QuickBooks PayPal accounting import/tax/fees, followed by settlement reconciliation. No second card charge was requested or made.
